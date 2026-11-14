@@ -7,7 +7,7 @@ class KnowledgeGraph:
 
     def read(self, *, admin: bool = False) -> dict:
         # Read all three collections from one snapshot while administrators edit.
-        visible_course = "c.deleted_at IS NULL" + ("" if admin else " AND c.active=1")
+        visible_course = "TRUE" if admin else "c.active=1"
         with self.database.connect() as connection:
             connection.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY")
             courses = [dict(row) for row in connection.execute(

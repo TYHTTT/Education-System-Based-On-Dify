@@ -253,7 +253,7 @@ export function createCourse(
 export function updateCourse(
   token: string,
   id: string,
-  payload: Omit<CourseInput, "id">,
+  payload: CourseInput,
 ): Promise<CourseRecord> {
   return request<CourseRecord>(
     `/api/v1/admin/courses/${encodeURIComponent(id)}`,

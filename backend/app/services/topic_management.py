@@ -6,6 +6,7 @@ from fastapi import HTTPException
 
 from app.core.exceptions import CourseNotFoundError, TopicNotFoundError
 from app.db.database import PostgresDatabase
+from app.services.curriculum_cleanup import delete_topics
 
 
 def fail(message, status=409):
@@ -21,7 +22,7 @@ class TopicManagement:
 
     @staticmethod
     def _course(connection, course, *, lock=False):
-        row = connection.execute("SELECT * FROM courses WHERE id=? AND deleted_at IS NULL" + (" FOR UPDATE" if lock else ""), (str(course),)).fetchone()
+        row = connection.execute("SELECT * FROM courses WHERE id=?" + (" FOR UPDATE" if lock else ""), (str(course),)).fetchone()
         if row is None: raise CourseNotFoundError()
         return dict(row)
 
@@ -56,7 +57,7 @@ class TopicManagement:
         if not topic_ids:
             return result
         rows = connection.execute("""SELECT e.topic_a_id,e.topic_b_id,t.id,t.title,t.course,c.title AS course_title,
-            t.active,c.active AS course_active,c.deleted_at
+            t.active,c.active AS course_active
             FROM topic_relations e
             CROSS JOIN LATERAL (VALUES (e.topic_a_id,e.topic_b_id),(e.topic_b_id,e.topic_a_id)) AS pair(topic_id,related_id)
             JOIN curriculum_topics t ON t.id=pair.related_id JOIN courses c ON c.id=t.course
@@ -65,7 +66,7 @@ class TopicManagement:
             source = row["topic_b_id"] if row["id"] == row["topic_a_id"] else row["topic_a_id"]
             result[source].append({"id": row["id"], "title": row["title"], "course": row["course"],
                                    "course_title": row["course_title"], "course_active": bool(row["course_active"]),
-                                   "available": bool(row["active"] and row["deleted_at"] is None)})
+                                   "available": bool(row["active"])})
         return result
 
     @staticmethod
@@ -76,7 +77,7 @@ class TopicManagement:
         added = list(set(ids) - old)
         if added:
             valid = connection.execute("""SELECT t.id FROM curriculum_topics t JOIN courses c ON c.id=t.course
-                WHERE t.id=ANY(?) AND t.active=1 AND c.deleted_at IS NULL""", (added,)).fetchall()
+                WHERE t.id=ANY(?) AND t.active=1""", (added,)).fetchall()
             if len(valid) != len(added):
                 fail("部分相关知识点不存在或不可用，请刷新后重试。", 422)
         connection.execute("""DELETE FROM topic_relations WHERE relation_type='related'
@@ -89,8 +90,8 @@ class TopicManagement:
 
     def related_candidates(self, query="", course=None, exclude=None, page=1, page_size=30):
         with self.database.connect() as connection:
-            courses = [dict(row) for row in connection.execute("SELECT id,title,active FROM courses WHERE deleted_at IS NULL ORDER BY title,id")]
-            where = "t.active=1 AND c.deleted_at IS NULL AND (t.title ILIKE ? OR t.id ILIKE ? OR c.title ILIKE ?)"
+            courses = [dict(row) for row in connection.execute("SELECT id,title,active FROM courses ORDER BY title,id")]
+            where = "t.active=1 AND (t.title ILIKE ? OR t.id ILIKE ? OR c.title ILIKE ?)"
             params = [f"%{query}%"] * 3
             if course is not None:
                 where += " AND t.course=?"; params.append(str(course))
@@ -165,35 +166,13 @@ class TopicManagement:
             connection.execute("UPDATE courses SET updated_at=? WHERE id=?", (now, str(course)))
         return self.outline(course)
 
-    @staticmethod
-    def _delete_topics(connection, topic_ids):
-        """Clean one topic or an entire chapter inside the caller's transaction."""
-        connection.execute("SELECT id FROM curriculum_topics WHERE id=ANY(?) ORDER BY id FOR UPDATE", (topic_ids,)).fetchall()
-        # Block new historical questions/submissions while their parent sets go away.
-        connection.execute("SELECT id FROM practice_sets WHERE topic_id=ANY(?) ORDER BY id FOR UPDATE", (topic_ids,)).fetchall()
-        connection.execute("""SELECT q.id FROM practice_questions q JOIN practice_sets s ON s.id=q.practice_set_id
-            WHERE s.topic_id=ANY(?) ORDER BY q.id FOR UPDATE OF q""", (topic_ids,)).fetchall()
-        # Attempts restrict deletion of their questions, so remove them first.
-        connection.execute("""DELETE FROM practice_attempts WHERE question_id IN
-            (SELECT q.id FROM practice_questions q JOIN practice_sets s ON s.id=q.practice_set_id WHERE s.topic_id=ANY(?))""", (topic_ids,))
-        # Sets cascade to questions, submissions, their attempts and misconception events.
-        connection.execute("DELETE FROM practice_sets WHERE topic_id=ANY(?)", (topic_ids,))
-        connection.execute("DELETE FROM misconception_events WHERE topic_id=ANY(?)", (topic_ids,))
-        connection.execute("DELETE FROM student_dimension_states WHERE topic_id=ANY(?)", (topic_ids,))
-        connection.execute("DELETE FROM student_topic_states WHERE topic_id=ANY(?)", (topic_ids,))
-        # Explicit deletion avoids leaving SET NULL sessions behind.
-        connection.execute("DELETE FROM learning_sessions WHERE topic_id=ANY(?)", (topic_ids,))
-        connection.execute("DELETE FROM topic_relations WHERE topic_a_id=ANY(?) OR topic_b_id=ANY(?)", (topic_ids, topic_ids))
-        connection.execute("DELETE FROM topic_placements WHERE topic_id=ANY(?)", (topic_ids,))
-        connection.execute("DELETE FROM curriculum_topics WHERE id=ANY(?)", (topic_ids,))
-
     def remove(self, course, topic_id):
         with self.database.connect() as connection:
             # Use the same lock order as relation edits, including cross-course edges.
             connection.execute("SELECT pg_advisory_xact_lock(725498104)")
             self._course(connection, course, lock=True)
             self._owned(connection, course, topic_id)
-            self._delete_topics(connection, [topic_id])
+            delete_topics(connection, [topic_id])
             connection.execute("UPDATE courses SET updated_at=? WHERE id=?", (self._now(), str(course)))
         return self.outline(course)
 
@@ -205,7 +184,7 @@ class TopicManagement:
             rows = connection.execute("SELECT id FROM curriculum_topics WHERE course=? AND chapter_id=? ORDER BY id", (str(course), chapter_id)).fetchall()
             if {row["id"] for row in rows} != set(topic_ids) or chapter["title"] != title:
                 fail("章节名称或知识点已变化，请刷新目录后重新确认删除。")
-            if rows: self._delete_topics(connection, [row["id"] for row in rows])
+            delete_topics(connection, [row["id"] for row in rows])
             connection.execute("DELETE FROM course_chapters WHERE id=? AND course_id=?", (chapter_id, str(course)))
             connection.execute("UPDATE courses SET updated_at=? WHERE id=?", (self._now(), str(course)))
         return self.outline(course)

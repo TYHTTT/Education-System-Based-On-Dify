@@ -35,7 +35,6 @@ export function CourseEditor({
     setError("");
     try {
       await onSave({
-        id: String(data.get("id")),
         title: String(data.get("title")).trim(),
         description: String(data.get("description")).trim(),
         active: data.get("active") === "on",
@@ -56,7 +55,7 @@ export function CourseEditor({
       </h2>
       <form aria-label="课程信息" onSubmit={submit} className="mt-5">
         <fieldset disabled={saving} className="grid gap-4 sm:grid-cols-2">
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-slate-700 sm:col-span-2">
             课程名称
             <input
               ref={firstInput}
@@ -67,23 +66,15 @@ export function CourseEditor({
               className={inputClass}
             />
           </label>
-          <label className="text-sm font-medium text-slate-700">
-            课程标识
-            <input
-              required
-              name="id"
-              minLength={2}
-              maxLength={64}
-              pattern="[a-z][a-z0-9_]{1,63}"
-              placeholder="例如 data_structures"
-              readOnly={Boolean(course)}
-              defaultValue={course?.id}
-              className={`${inputClass} read-only:bg-slate-50 read-only:text-slate-500`}
-            />
-            <span className="mt-1 block text-xs font-normal text-slate-500">
-              小写字母、数字和下划线，创建后不可修改。
-            </span>
-          </label>
+          {course ? (
+            <p className="break-all text-xs text-slate-500 sm:col-span-2">
+              课程 ID：<span className="select-all font-mono">{course.id}</span>
+            </p>
+          ) : (
+            <p className="text-xs text-slate-500 sm:col-span-2">
+              课程 ID 由系统自动生成，创建后固定不变。
+            </p>
+          )}
           <label className="text-sm font-medium text-slate-700 sm:col-span-2">
             课程简介
             <textarea
@@ -175,9 +166,9 @@ export function DeleteDialog({
         删除课程
       </h2>
       <p className="mt-4 break-words text-sm leading-6 text-slate-600">
-        确定删除“{course.title}
-        ”？删除后课程将从列表移除，已有知识点和学习记录会保留。
+        确定永久删除“{course.title}”？该课程的全部章节、知识点、图谱连线及学生学习记录（含历史练习和作答）将一并删除。
       </p>
+      <p className="mt-3 text-sm font-semibold text-rose-700">此操作无法恢复。</p>
       {error && (
         <p role="alert" className="mt-4 text-sm text-rose-700">
           {error}

@@ -1,6 +1,5 @@
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
-from app.core.types import Course
 
 
 class CourseFields(BaseModel):
@@ -18,7 +17,7 @@ class CourseFields(BaseModel):
 
 
 class CreateCourseRequest(CourseFields):
-    id: Course
+    pass
 
 
 class UpdateCourseRequest(BaseModel):

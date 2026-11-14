@@ -1,9 +1,11 @@
 from datetime import datetime, timezone
+from uuid import uuid4
 
 from psycopg.errors import UniqueViolation
 
 from app.core.exceptions import CourseNotFoundError, CourseConflictError
 from app.db.database import PostgresDatabase
+from app.services.curriculum_cleanup import delete_course
 
 
 COURSE_SELECT = """SELECT c.*,
@@ -17,7 +19,7 @@ class CourseRepository:
         self.database = PostgresDatabase(database_url)
 
     def list(self, *, query="", status="all", page=1, page_size=20, public=False):
-        where = "c.deleted_at IS NULL"
+        where = "TRUE"
         parameters = []
         if public or status != "all":
             where += " AND c.active=?"
@@ -36,7 +38,7 @@ class CourseRepository:
 
     def get(self, course_id, *, detail=False):
         with self.database.connect() as connection:
-            row = connection.execute(COURSE_SELECT + " WHERE c.id=? AND c.deleted_at IS NULL", (str(course_id),)).fetchone()
+            row = connection.execute(COURSE_SELECT + " WHERE c.id=?", (str(course_id),)).fetchone()
             if row is None:
                 raise CourseNotFoundError()
             result = dict(row)
@@ -48,15 +50,16 @@ class CourseRepository:
         return result
 
     def create(self, values):
+        course_id = str(uuid4())
         now = datetime.now(timezone.utc).isoformat()
         try:
             with self.database.connect() as connection:
                 connection.execute("""INSERT INTO courses(id,title,description,active,created_at,updated_at)
-                    VALUES (?,?,?,?,?,?)""", (str(values["id"]), values["title"], values["description"],
+                    VALUES (?,?,?,?,?,?)""", (course_id, values["title"], values["description"],
                     int(values["active"]), now, now))
         except UniqueViolation:
             raise CourseConflictError() from None
-        return self.get(values["id"])
+        return self.get(course_id)
 
     def update(self, course_id, values):
         # Column names come only from the validated request's fixed allowlist.
@@ -68,16 +71,12 @@ class CourseRepository:
             values["active"] = int(values["active"])
         assignments = ", ".join(f"{name}=?" for name in values)
         with self.database.connect() as connection:
-            row = connection.execute(f"UPDATE courses SET {assignments} WHERE id=? AND deleted_at IS NULL RETURNING id",
+            row = connection.execute(f"UPDATE courses SET {assignments} WHERE id=? RETURNING id",
                                      (*values.values(), str(course_id))).fetchone()
             if row is None:
                 raise CourseNotFoundError()
         return self.get(course_id)
 
     def delete(self, course_id):
-        now = datetime.now(timezone.utc).isoformat()
         with self.database.connect() as connection:
-            row = connection.execute("""UPDATE courses SET active=0,deleted_at=?,updated_at=?
-                WHERE id=? AND deleted_at IS NULL RETURNING id""", (now, now, str(course_id))).fetchone()
-            if row is None:
-                raise CourseNotFoundError()
+            delete_course(connection, course_id)

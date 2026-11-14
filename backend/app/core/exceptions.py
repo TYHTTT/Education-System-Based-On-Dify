@@ -59,4 +59,4 @@ class CourseNotFoundError(AppError):
 class CourseConflictError(AppError):
     status_code = 409
     code = "COURSE_ID_CONFLICT"
-    public_message = "课程标识已被使用，请更换标识"
+    public_message = "课程创建冲突，请重试"

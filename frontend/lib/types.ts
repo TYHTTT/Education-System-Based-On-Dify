@@ -12,7 +12,6 @@ export interface CourseRecord {
 }
 
 export interface CourseInput {
-  id: string;
   title: string;
   description: string;
   active: boolean;

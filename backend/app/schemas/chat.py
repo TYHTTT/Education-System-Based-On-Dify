@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from app.core.types import Course
+from app.core.types import Course, TOPIC_ID_PATTERN
 
 
 class HistoryMessage(BaseModel):
@@ -30,7 +30,7 @@ class ChatRequest(BaseModel):
     # absolute safety ceiling so deployments may choose a value above 8,000.
     message: str = Field(min_length=1, max_length=100_000)
     history: list[HistoryMessage] = Field(default_factory=list, max_length=100)
-    topic_id: str | None = Field(default=None, pattern=r"^[a-z][a-z0-9_]*\.[a-z0-9_]+$")
+    topic_id: str | None = Field(default=None, pattern=TOPIC_ID_PATTERN)
     conversation_token: str | None = Field(default=None, min_length=1, max_length=2048)
     learning_mode: Literal[
         "free_qa",

@@ -1,10 +1,11 @@
 from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from app.core.types import TOPIC_ID_PATTERN, UUID_ID_PATTERN
 
 TopicId = Annotated[
-    str, Field(pattern=r"^[a-z][a-z0-9_]*\.[a-z0-9_]+$", max_length=160)
+    str, Field(pattern=TOPIC_ID_PATTERN, max_length=160)
 ]
-ChapterId = Annotated[str, Field(pattern=r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")]
+ChapterId = Annotated[str, Field(pattern=rf"^{UUID_ID_PATTERN}$")]
 
 
 class TopicWrite(BaseModel):

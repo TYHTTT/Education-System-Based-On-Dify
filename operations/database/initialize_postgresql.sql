@@ -38,13 +38,12 @@ CREATE TABLE IF NOT EXISTS student_sessions (
 );
 
 CREATE TABLE IF NOT EXISTS courses (
-    id TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     title TEXT NOT NULL,
     active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1)),
     description TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL DEFAULT to_char(CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"+00:00"'),
-    updated_at TEXT NOT NULL DEFAULT to_char(CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"+00:00"'),
-    deleted_at TEXT
+    updated_at TEXT NOT NULL DEFAULT to_char(CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"+00:00"')
 );
 
 INSERT INTO courses(id, title, description) VALUES
@@ -204,7 +203,7 @@ CREATE INDEX IF NOT EXISTS idx_student_sessions_token_hash ON student_sessions(t
 
 CREATE OR REPLACE FUNCTION enforce_registered_course() RETURNS trigger AS $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM courses WHERE id = NEW.course AND deleted_at IS NULL) THEN
+    IF NOT EXISTS (SELECT 1 FROM courses WHERE id = NEW.course) THEN
         RAISE EXCEPTION 'unregistered_course';
     END IF;
     RETURN NEW;

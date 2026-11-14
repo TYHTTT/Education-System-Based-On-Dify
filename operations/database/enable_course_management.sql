@@ -1,7 +1,6 @@
 ALTER TABLE courses ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT '';
 ALTER TABLE courses ADD COLUMN IF NOT EXISTS created_at TEXT NOT NULL DEFAULT to_char(CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"+00:00"');
 ALTER TABLE courses ADD COLUMN IF NOT EXISTS updated_at TEXT NOT NULL DEFAULT to_char(CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"+00:00"');
-ALTER TABLE courses ADD COLUMN IF NOT EXISTS deleted_at TEXT;
 
 UPDATE courses SET description=CASE id
     WHEN 'machine_learning' THEN '模型、算法与实践'
@@ -25,7 +24,7 @@ $$;
 
 CREATE OR REPLACE FUNCTION enforce_registered_course() RETURNS trigger AS $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM courses WHERE id=NEW.course AND deleted_at IS NULL) THEN
+    IF NOT EXISTS (SELECT 1 FROM courses WHERE id=NEW.course) THEN
         RAISE EXCEPTION 'unregistered_course';
     END IF;
     RETURN NEW;

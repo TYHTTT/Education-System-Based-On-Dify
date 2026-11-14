@@ -265,7 +265,7 @@ class LearningRepository:
     def require_course(self, course: Course | str) -> dict[str, Any]:
         with self._connect() as connection:
             row = connection.execute(
-                "SELECT * FROM courses WHERE id=? AND active=1 AND deleted_at IS NULL", (course.value if isinstance(course, Course) else course,)
+                "SELECT * FROM courses WHERE id=? AND active=1", (course.value if isinstance(course, Course) else course,)
             ).fetchone()
         if row is None:
             raise CourseNotFoundError()
@@ -330,7 +330,7 @@ class LearningRepository:
                 f"""
                 SELECT t.*, {state_columns}
                 FROM curriculum_topics t
-                JOIN courses owner_course ON owner_course.id=t.course AND owner_course.active=1 AND owner_course.deleted_at IS NULL
+                JOIN courses owner_course ON owner_course.id=t.course AND owner_course.active=1
                 {join}
                 WHERE t.id = ? AND t.active = 1
                 """,
