@@ -42,29 +42,31 @@ CREATE TABLE IF NOT EXISTS courses (
     title TEXT NOT NULL,
     active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1)),
     description TEXT NOT NULL DEFAULT '',
-    sort_order INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT to_char(CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"+00:00"'),
     updated_at TEXT NOT NULL DEFAULT to_char(CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"+00:00"'),
     deleted_at TEXT
 );
 
-INSERT INTO courses(id, title, description, sort_order) VALUES
-    ('machine_learning', '机器学习', '模型、算法与实践', 1),
-    ('advanced_mathematics', '高等数学', '极限、微积分与定理', 2),
-    ('linear_algebra', '线性代数', '向量、矩阵与几何', 3),
-    ('probability_statistics', '概率论与统计基础', '概率、分布与统计', 4)
+INSERT INTO courses(id, title, description) VALUES
+    ('machine_learning', '机器学习', '模型、算法与实践'),
+    ('advanced_mathematics', '高等数学', '极限、微积分与定理'),
+    ('linear_algebra', '线性代数', '向量、矩阵与几何'),
+    ('probability_statistics', '概率论与统计基础', '概率、分布与统计')
 ON CONFLICT (id) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS course_chapters (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     course_id TEXT NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
-    stage INTEGER NOT NULL CHECK (stage > 0),
+    sort_order INTEGER NOT NULL CHECK (sort_order > 0),
     title TEXT NOT NULL CHECK (length(btrim(title)) BETWEEN 1 AND 100),
-    PRIMARY KEY(course_id, stage)
+    CONSTRAINT course_chapters_id_course_key UNIQUE(id,course_id),
+    CONSTRAINT course_chapters_course_order_key UNIQUE(course_id,sort_order) DEFERRABLE INITIALLY DEFERRED
 );
 
 CREATE TABLE IF NOT EXISTS curriculum_topics (
     id TEXT PRIMARY KEY,
     course TEXT NOT NULL REFERENCES courses(id),
+    chapter_id TEXT NOT NULL,
     slug TEXT NOT NULL,
     title TEXT NOT NULL,
     stage INTEGER NOT NULL CHECK (stage > 0),
@@ -80,7 +82,9 @@ CREATE TABLE IF NOT EXISTS curriculum_topics (
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     UNIQUE(course, slug),
-    CONSTRAINT curriculum_topics_id_course_key UNIQUE(id, course)
+    CONSTRAINT curriculum_topics_id_course_key UNIQUE(id, course),
+    CONSTRAINT curriculum_topics_id_course_chapter_key UNIQUE(id,course,chapter_id),
+    CONSTRAINT curriculum_topics_chapter_course_fkey FOREIGN KEY(chapter_id,course) REFERENCES course_chapters(id,course_id)
 );
 
 -- Undirected related-topic edges, independent of course directory placements.
@@ -180,8 +184,10 @@ CREATE TABLE IF NOT EXISTS topic_placements (
     course_id TEXT NOT NULL REFERENCES courses(id), topic_id TEXT NOT NULL,
     parent_group_id TEXT NOT NULL, group_title TEXT NOT NULL, order_index INTEGER NOT NULL,
     PRIMARY KEY(course_id, topic_id),
-    CONSTRAINT topic_placements_topic_course_fkey FOREIGN KEY(topic_id, course_id) REFERENCES curriculum_topics(id, course)
+    CONSTRAINT topic_placements_topic_course_fkey FOREIGN KEY(topic_id, course_id) REFERENCES curriculum_topics(id, course),
+    CONSTRAINT topic_placements_topic_chapter_fkey FOREIGN KEY(topic_id,course_id,parent_group_id) REFERENCES curriculum_topics(id,course,chapter_id) DEFERRABLE INITIALLY DEFERRED
 );
+CREATE INDEX IF NOT EXISTS idx_curriculum_topics_chapter ON curriculum_topics(chapter_id,active,order_index);
 
 CREATE INDEX IF NOT EXISTS idx_curriculum_topics_course_stage_order ON curriculum_topics(course, active, stage, order_index);
 CREATE INDEX IF NOT EXISTS idx_student_topic_states_topic_status ON student_topic_states(topic_id, status);

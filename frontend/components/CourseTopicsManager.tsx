@@ -113,7 +113,6 @@ export default function CourseTopicsManager({
     method: string,
     suffix: string,
     body?: unknown,
-    reorderedGroups?: string[],
   ) {
     setBusy(true);
     setError("");
@@ -122,18 +121,11 @@ export default function CourseTopicsManager({
       const data = await withAdmin((token) =>
         manageTopics(token, courseId, method, suffix, body),
       );
-      // Reordering renumbers stage IDs; keep the fold state with the chapter.
       setCollapsedGroups(
         (current) =>
           new Set(
             data.groups
-              .filter((group) =>
-                current.has(
-                  group.stage !== null
-                    ? (reorderedGroups?.[group.stage - 1] ?? group.id)
-                    : group.id,
-                ),
-              )
+              .filter((group) => current.has(group.id))
               .map((group) => group.id),
           ),
       );
@@ -165,12 +157,10 @@ export default function CourseTopicsManager({
     );
   }
   function moveGroup(group: TopicGroup, offset: number) {
-    const ids = outline!.groups
-      .filter((g) => g.stage !== null)
-      .map((g) => g.id);
+    const ids = outline!.groups.map((g) => g.id);
     const index = ids.indexOf(group.id);
     [ids[index], ids[index + offset]] = [ids[index + offset], ids[index]];
-    void act(() => mutate("POST", "/groups/order", { group_ids: ids }, ids));
+    void act(() => mutate("POST", "/groups/order", { group_ids: ids }));
   }
   function toggleGroup(id: string) {
     setCollapsedGroups((current) => {
@@ -190,15 +180,12 @@ export default function CourseTopicsManager({
   useEffect(() => {
     onInteractionChange?.(interactionBusy);
   }, [interactionBusy, onInteractionChange]);
-  const chapters = outline?.groups.filter((g) => g.stage !== null) ?? [];
+  const chapters = outline?.groups ?? [];
   return (
     <section aria-label="章节编排" className="mt-8">
       <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-900">章节编排</h2>
-          <p className="mt-2 text-sm text-slate-500">
-            管理章节和学习顺序，讲解内容由 Dify Agent 提供。
-          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
@@ -300,7 +287,7 @@ export default function CourseTopicsManager({
             setVersion((value) => value + 1);
           }}
           onDelete={async () => {
-            await mutate("DELETE", `/groups/${removingGroup.group.stage}`, {
+            await mutate("DELETE", `/groups/${removingGroup.group.id}`, {
               title: removingGroup.group.title,
               topic_ids: removingGroup.topics.map((topic) => topic.id),
             });
@@ -319,11 +306,12 @@ export default function CourseTopicsManager({
               new FormData(e.currentTarget).get("chapter_title"),
             ).trim();
             void act(async () => {
-              await mutate("PATCH", `/groups/${renaming.stage}`, { title });
+              await mutate("PATCH", `/groups/${renaming.id}`, { title });
               setRenaming(null);
             });
           }}
         >
+          <p className="w-full break-all text-xs text-slate-400">章节 ID：{renaming.id}</p>
           <label className="flex-1 text-sm text-slate-600">
             章节名称
             <input
@@ -412,13 +400,13 @@ export default function CourseTopicsManager({
                   <ArrowRightIcon
                     className={`size-4 shrink-0 text-slate-400 transition-transform ${collapsedGroups.has(group.id) ? "" : "rotate-90"}`}
                   />
-                  <span className="break-words">{group.title}</span>
+                  <span className="break-words" title={`章节 ID：${group.id}`}>{group.title}</span>
                   <span className="shrink-0 text-xs font-normal text-slate-400">
                     {group.topics.length} 个知识点
                   </span>
                 </button>
               </h2>
-              {group.stage !== null && (
+              {group.sort_order > 0 && (
                 <div className="flex flex-wrap gap-2">
                   <button
                     disabled={interactionBusy || group.id === chapters[0]?.id}

@@ -5,7 +5,6 @@ export interface CourseRecord {
   title: string;
   description: string;
   active: boolean;
-  sort_order: number;
   topic_count: number;
   stage_count: number;
   created_at: string;
@@ -17,7 +16,6 @@ export interface CourseInput {
   title: string;
   description: string;
   active: boolean;
-  sort_order: number;
 }
 
 export interface CourseList {

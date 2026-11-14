@@ -1,13 +1,14 @@
-from fastapi import APIRouter, Depends, Query, Request, Path
+from fastapi import APIRouter, Depends, Query, Request
 from app.api.admins import require_admin
 from app.core.types import Course
 from app.schemas.topic_management import (
     TopicId,
     TopicWrite,
     TopicOrder,
-    StageRename,
-    StageOrder,
-    StageDelete,
+    ChapterId,
+    ChapterWrite,
+    ChapterOrder,
+    ChapterDelete,
 )
 from app.services.topic_management import TopicManagement
 
@@ -46,34 +47,34 @@ def reorder(course_id: Course, payload: TopicOrder, manager=Depends(service)):
     return manager.reorder(course_id, payload.group_id, payload.topic_ids)
 
 
-@router.patch(PREFIX + "/groups/{stage}")
+@router.patch(PREFIX + "/groups/{chapter_id}")
 def rename_group(
     course_id: Course,
-    payload: StageRename,
-    stage: int = Path(ge=1, le=999),
+    payload: ChapterWrite,
+    chapter_id: ChapterId,
     manager=Depends(service),
 ):
-    return manager.rename_stage(course_id, stage, payload.title)
+    return manager.rename_chapter(course_id, chapter_id, payload.title)
 
 
 @router.post(PREFIX + "/groups", status_code=201)
-def create_group(course_id: Course, payload: StageRename, manager=Depends(service)):
-    return manager.create_stage(course_id, payload.title)
+def create_group(course_id: Course, payload: ChapterWrite, manager=Depends(service)):
+    return manager.create_chapter(course_id, payload.title)
 
 
-@router.delete(PREFIX + "/groups/{stage}")
+@router.delete(PREFIX + "/groups/{chapter_id}")
 def remove_group(
     course_id: Course,
-    payload: StageDelete,
-    stage: int = Path(ge=1, le=999),
+    payload: ChapterDelete,
+    chapter_id: ChapterId,
     manager=Depends(service),
 ):
-    return manager.remove_stage(course_id, stage, payload.title, payload.topic_ids)
+    return manager.remove_chapter(course_id, chapter_id, payload.title, payload.topic_ids)
 
 
 @router.post(PREFIX + "/groups/order")
-def reorder_groups(course_id: Course, payload: StageOrder, manager=Depends(service)):
-    return manager.reorder_stages(course_id, payload.group_ids)
+def reorder_groups(course_id: Course, payload: ChapterOrder, manager=Depends(service)):
+    return manager.reorder_chapters(course_id, payload.group_ids)
 
 
 @router.put(PREFIX + "/{topic_id}")

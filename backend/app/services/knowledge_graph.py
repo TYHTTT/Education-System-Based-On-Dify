@@ -11,15 +11,16 @@ class KnowledgeGraph:
         with self.database.connect() as connection:
             connection.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY")
             courses = [dict(row) for row in connection.execute(
-                f"SELECT c.id,c.title,c.active,c.sort_order FROM courses c WHERE {visible_course} ORDER BY c.sort_order,c.id"
+                f"SELECT c.id,c.title,c.active FROM courses c WHERE {visible_course} ORDER BY c.title,c.id"
             ).fetchall()]
             for course in courses:
                 course["active"] = bool(course["active"])
             nodes = [dict(row) for row in connection.execute(f"""
-                SELECT t.id,t.course,t.title,t.description,t.stage,t.stage_title,t.order_index
+                SELECT t.id,t.course,t.title,t.description,ch.sort_order AS stage,ch.title AS stage_title,t.order_index
                 FROM curriculum_topics t JOIN courses c ON c.id=t.course
+                JOIN course_chapters ch ON ch.id=t.chapter_id AND ch.course_id=t.course
                 WHERE t.active=1 AND {visible_course}
-                ORDER BY c.sort_order,c.id,t.stage,t.order_index,t.id
+                ORDER BY c.title,c.id,ch.sort_order,t.order_index,t.id
             """).fetchall()]
             ids = [node["id"] for node in nodes]
             edges = [dict(row) for row in connection.execute("""

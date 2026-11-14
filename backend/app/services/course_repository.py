@@ -27,7 +27,7 @@ class CourseRepository:
             parameters.extend([f"%{query.strip()}%"] * 2)
         with self.database.connect() as connection:
             total = connection.execute(f"SELECT count(*) AS count FROM courses c WHERE {where}", tuple(parameters)).fetchone()["count"]
-            query_sql = COURSE_SELECT + f" WHERE {where} ORDER BY c.sort_order,c.created_at,c.id"
+            query_sql = COURSE_SELECT + f" WHERE {where} ORDER BY c.title,c.id"
             if not public:
                 query_sql += " LIMIT ? OFFSET ?"
                 parameters.extend([page_size, (page - 1) * page_size])
@@ -51,16 +51,16 @@ class CourseRepository:
         now = datetime.now(timezone.utc).isoformat()
         try:
             with self.database.connect() as connection:
-                connection.execute("""INSERT INTO courses(id,title,description,active,sort_order,created_at,updated_at)
-                    VALUES (?,?,?,?,?,?,?)""", (str(values["id"]), values["title"], values["description"],
-                    int(values["active"]), values["sort_order"], now, now))
+                connection.execute("""INSERT INTO courses(id,title,description,active,created_at,updated_at)
+                    VALUES (?,?,?,?,?,?)""", (str(values["id"]), values["title"], values["description"],
+                    int(values["active"]), now, now))
         except UniqueViolation:
             raise CourseConflictError() from None
         return self.get(values["id"])
 
     def update(self, course_id, values):
         # Column names come only from the validated request's fixed allowlist.
-        allowed = {"title", "description", "active", "sort_order"}
+        allowed = {"title", "description", "active"}
         if not values or not set(values) <= allowed:
             raise ValueError("Invalid course update fields")
         values = {**values, "updated_at": datetime.now(timezone.utc).isoformat()}

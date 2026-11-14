@@ -8,7 +8,6 @@ class CourseFields(BaseModel):
     title: str = Field(min_length=1, max_length=100)
     description: str = Field(default="", max_length=1000)
     active: bool = True
-    sort_order: int = Field(default=0, ge=0, le=99999)
 
     @field_validator("title")
     @classmethod
@@ -27,7 +26,6 @@ class UpdateCourseRequest(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=100)
     description: str | None = Field(default=None, max_length=1000)
     active: bool | None = None
-    sort_order: int | None = Field(default=None, ge=0, le=99999)
 
     @model_validator(mode="after")
     def check_update(self):
@@ -47,7 +45,6 @@ class CourseResponse(BaseModel):
     title: str
     description: str
     active: bool
-    sort_order: int
     topic_count: int
     stage_count: int
     created_at: datetime

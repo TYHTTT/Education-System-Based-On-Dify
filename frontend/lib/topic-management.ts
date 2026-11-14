@@ -3,14 +3,12 @@ import { request } from "@/lib/api";
 export interface TopicValues {
   title: string;
   description: string;
-  stage: number;
-  stage_title: string;
+  chapter_id: string;
   learning_objectives: string[];
   aliases: string[];
   retrieval_keywords: string[];
   difficulty: "easy" | "medium" | "hard";
   related_topic_ids?: string[];
-  existing_stage?: boolean;
 }
 export interface RelatedTopic {
   id: string;
@@ -32,6 +30,8 @@ export interface ManagedTopic extends TopicValues {
   course: string;
   active: boolean;
   parent_group_id: string;
+  stage: number;
+  stage_title: string;
   related_topic_ids: string[];
   related_topics: RelatedTopic[];
 }
@@ -55,7 +55,7 @@ export function getRelatedTopicCandidates(
 export interface TopicGroup {
   id: string;
   title: string;
-  stage: number | null;
+  sort_order: number;
   topics: ManagedTopic[];
 }
 export interface ManagedOutline {

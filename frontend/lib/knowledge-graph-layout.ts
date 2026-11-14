@@ -2,7 +2,6 @@ export interface GraphCourse {
   id: string;
   title: string;
   active: boolean;
-  sort_order: number;
 }
 export interface GraphNode {
   id: string;
@@ -116,9 +115,8 @@ export function stepGraph(simulation: GraphSimulation, alpha = 1) {
 
 /** A seeded force layout: no concentric rings, group boundaries or synthetic edges. */
 export function layoutGraph(data: KnowledgeGraphData) {
-  const courses = [...data.courses].sort(
-    (a, b) => a.sort_order - b.sort_order || a.id.localeCompare(b.id),
-  );
+  // The API returns courses in name order, shared with the course catalog.
+  const courses = [...data.courses];
   const byCourse = new Map(
     courses.map((course) => [course.id, [] as GraphNode[]]),
   );

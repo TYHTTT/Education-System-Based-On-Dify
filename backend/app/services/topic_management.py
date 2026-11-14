@@ -1,5 +1,4 @@
 import json
-import re
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -34,25 +33,21 @@ class TopicManagement:
         return dict(row)
 
     @staticmethod
-    def _stage(connection, course, stage, title, *, required=False):
-        row = connection.execute("SELECT title FROM course_chapters WHERE course_id=? AND stage=?", (str(course), stage)).fetchone()
-        if row and row["title"] != title:
-            fail("目标章节已存在，请使用现有名称，或通过“重命名章节”修改。")
-        if row is None:
-            if required: fail("所在章节已变化或被删除，请刷新目录后重试。")
-            connection.execute("INSERT INTO course_chapters(course_id,stage,title) VALUES (?,?,?)", (str(course), stage, title))
+    def _chapter(connection, course, chapter_id):
+        row = connection.execute("SELECT * FROM course_chapters WHERE id=? AND course_id=?", (chapter_id, str(course))).fetchone()
+        if row is None: fail("章节不存在或不属于当前课程，请刷新目录后重试。", 404)
+        return dict(row)
 
     @staticmethod
-    def _place(connection, course, topic_id, stage, title):
-        group = f"stage-{stage}"
+    def _place(connection, course, topic_id, chapter):
         existing = connection.execute("SELECT parent_group_id,order_index FROM topic_placements WHERE course_id=? AND topic_id=?", (str(course), topic_id)).fetchone()
-        if existing and existing["parent_group_id"] == group:
+        if existing and existing["parent_group_id"] == chapter["id"]:
             return existing["order_index"]
-        position = connection.execute("SELECT coalesce(max(order_index),0)+1 AS position FROM topic_placements WHERE course_id=? AND parent_group_id=?", (str(course), group)).fetchone()["position"]
+        position = connection.execute("SELECT coalesce(max(order_index),0)+1 AS position FROM topic_placements WHERE course_id=? AND parent_group_id=?", (str(course), chapter["id"])).fetchone()["position"]
         connection.execute("""INSERT INTO topic_placements(course_id,topic_id,parent_group_id,group_title,order_index)
             VALUES (?,?,?,?,?) ON CONFLICT(course_id,topic_id) DO UPDATE SET parent_group_id=excluded.parent_group_id,
             group_title=excluded.group_title,order_index=excluded.order_index""",
-            (str(course), topic_id, group, title, position))
+            (str(course), topic_id, chapter["id"], chapter["title"], position))
         return position
 
     @staticmethod
@@ -94,7 +89,7 @@ class TopicManagement:
 
     def related_candidates(self, query="", course=None, exclude=None, page=1, page_size=30):
         with self.database.connect() as connection:
-            courses = [dict(row) for row in connection.execute("SELECT id,title,active FROM courses WHERE deleted_at IS NULL ORDER BY sort_order,id")]
+            courses = [dict(row) for row in connection.execute("SELECT id,title,active FROM courses WHERE deleted_at IS NULL ORDER BY title,id")]
             where = "t.active=1 AND c.deleted_at IS NULL AND (t.title ILIKE ? OR t.id ILIKE ? OR c.title ILIKE ?)"
             params = [f"%{query}%"] * 3
             if course is not None:
@@ -104,7 +99,7 @@ class TopicManagement:
             total = connection.execute("SELECT count(*) AS n FROM curriculum_topics t JOIN courses c ON c.id=t.course WHERE " + where, params).fetchone()["n"]
             rows = connection.execute("""SELECT t.id,t.title,t.course,c.title AS course_title,c.active AS course_active
                 FROM curriculum_topics t JOIN courses c ON c.id=t.course WHERE """ + where +
-                " ORDER BY c.sort_order,c.id,t.stage,t.order_index,t.id LIMIT ? OFFSET ?", (*params, page_size, (page - 1) * page_size)).fetchall()
+                " ORDER BY c.title,c.id,t.stage,t.order_index,t.id LIMIT ? OFFSET ?", (*params, page_size, (page - 1) * page_size)).fetchall()
         return {"items": [{**dict(row), "course_active": bool(row["course_active"]), "available": True} for row in rows],
                 "courses": [{**course, "active": bool(course["active"])} for course in courses],
                 "total": total, "page": page, "page_size": page_size}
@@ -114,12 +109,13 @@ class TopicManagement:
     def outline(self, course):
         with self.database.connect() as connection:
             record = self._course(connection, course)
-            chapters = connection.execute("SELECT stage,title FROM course_chapters WHERE course_id=? ORDER BY stage", (str(course),)).fetchall()
-            rows = connection.execute("""SELECT t.*,p.parent_group_id,p.group_title,p.order_index AS placement_order
+            chapters = connection.execute("SELECT id,title,sort_order FROM course_chapters WHERE course_id=? ORDER BY sort_order,id", (str(course),)).fetchall()
+            rows = connection.execute("""SELECT t.*,p.parent_group_id,p.order_index AS placement_order
                 FROM topic_placements p JOIN curriculum_topics t ON t.id=p.topic_id AND t.course=p.course_id
-                WHERE p.course_id=? ORDER BY p.order_index,t.id""", (str(course),)).fetchall()
+                JOIN course_chapters ch ON ch.id=t.chapter_id AND ch.course_id=t.course
+                WHERE p.course_id=? ORDER BY ch.sort_order,p.order_index,t.id""", (str(course),)).fetchall()
             related = self._related(connection, [row["id"] for row in rows])
-        groups = {f"stage-{chapter['stage']}": {"id": f"stage-{chapter['stage']}", "title": chapter["title"], "stage": chapter["stage"], "topics": []} for chapter in chapters}
+        groups = {chapter["id"]: {**dict(chapter), "topics": []} for chapter in chapters}
         removed = []
         for raw in rows:
             item = dict(raw)
@@ -128,27 +124,17 @@ class TopicManagement:
             item["active"] = bool(item["active"])
             item["related_topics"] = related[item["id"]]
             item["related_topic_ids"] = [topic["id"] for topic in item["related_topics"]]
-            group_id = item["parent_group_id"]
-            match = re.fullmatch(r"stage-(\d+)", group_id)
-            stage = int(match[1]) if match else None
-            group_title = item["group_title"]
-            group = groups.setdefault(group_id, {"id": group_id, "title": group_title, "stage": stage, "topics": []})
-            if not item["active"]:
-                removed.append(item); continue
-            group["topics"].append(item)
-        ordered = sorted(groups.values(), key=lambda group: (group["stage"] is not None, group["stage"] or 0, group["id"]))
-        return {"course": {"id": record["id"], "title": record["title"], "active": bool(record["active"])}, "groups": ordered, "removed_topics": removed}
+            if item["active"]: groups[item["chapter_id"]]["topics"].append(item)
+            else: removed.append(item)
+        return {"course": {"id": record["id"], "title": record["title"], "active": bool(record["active"])}, "groups": list(groups.values()), "removed_topics": removed}
 
-    def create_stage(self, course, title):
+    def create_chapter(self, course, title):
         with self.database.connect() as connection:
             self._course(connection, course, lock=True)
-            stage = connection.execute("SELECT coalesce(max(stage),0)+1 AS stage FROM course_chapters WHERE course_id=?", (str(course),)).fetchone()["stage"]
-            if stage > 999:
-                fail("章节数量或编号已达上限，请整理章节后重试。")
-            connection.execute("INSERT INTO course_chapters(course_id,stage,title) VALUES (?,?,?)", (str(course), stage, title))
+            order = connection.execute("SELECT coalesce(max(sort_order),0)+1 AS position FROM course_chapters WHERE course_id=?", (str(course),)).fetchone()["position"]
+            connection.execute("INSERT INTO course_chapters(id,course_id,sort_order,title) VALUES (?,?,?,?)", (str(uuid4()), str(course), order, title))
             connection.execute("UPDATE courses SET updated_at=? WHERE id=?", (self._now(), str(course)))
         return self.outline(course)
-
 
     def save(self, course, values, topic_id=None):
         with self.database.connect() as connection:
@@ -157,28 +143,27 @@ class TopicManagement:
             self._course(connection, course, lock=True)
             if topic_id: self._owned(connection, course, topic_id)
             else: topic_id = f"{course}.t_{uuid4().hex[:12]}"
-            self._stage(connection, course, values["stage"], values["stage_title"], required=values.get("existing_stage", False))
+            chapter = self._chapter(connection, course, values["chapter_id"])
             existing = connection.execute("SELECT id FROM curriculum_topics WHERE id=?", (topic_id,)).fetchone()
             now = self._now()
             if not existing:
                 position = connection.execute("SELECT coalesce(max(order_index),0)+1 AS position FROM curriculum_topics WHERE course=?", (str(course),)).fetchone()["position"]
-                connection.execute("""INSERT INTO curriculum_topics(id,course,slug,title,stage,stage_title,order_index,description,
+                connection.execute("""INSERT INTO curriculum_topics(id,course,chapter_id,slug,title,stage,stage_title,order_index,description,
                     learning_objectives_json,aliases_json,retrieval_keywords_json,difficulty,required_dimensions_json,created_at,updated_at)
-                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", (topic_id, str(course), topic_id.split('.',1)[1], values["title"], values["stage"],
-                    values["stage_title"], position, values["description"], json.dumps(values["learning_objectives"]), json.dumps(values["aliases"]),
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", (topic_id, str(course), chapter["id"], topic_id.split('.',1)[1], values["title"], chapter["sort_order"],
+                    chapter["title"], position, values["description"], json.dumps(values["learning_objectives"]), json.dumps(values["aliases"]),
                     json.dumps(values["retrieval_keywords"] or [values["title"]]), values["difficulty"], '["concept"]', now, now))
             else:
-                connection.execute("""UPDATE curriculum_topics SET title=?,stage=?,stage_title=?,description=?,learning_objectives_json=?,
-                    aliases_json=?,retrieval_keywords_json=?,difficulty=?,updated_at=? WHERE id=?""", (values["title"], values["stage"], values["stage_title"],
+                connection.execute("""UPDATE curriculum_topics SET title=?,chapter_id=?,stage=?,stage_title=?,description=?,learning_objectives_json=?,
+                    aliases_json=?,retrieval_keywords_json=?,difficulty=?,updated_at=? WHERE id=?""", (values["title"], chapter["id"], chapter["sort_order"], chapter["title"],
                     values["description"], json.dumps(values["learning_objectives"]), json.dumps(values["aliases"]),
                     json.dumps(values["retrieval_keywords"] or [values["title"]]), values["difficulty"], now, topic_id))
-            position = self._place(connection, course, topic_id, values["stage"], values["stage_title"])
+            position = self._place(connection, course, topic_id, chapter)
             connection.execute("UPDATE curriculum_topics SET order_index=? WHERE id=?", (position, topic_id))
             if values.get("related_topic_ids") is not None:
                 self._save_related(connection, topic_id, values["related_topic_ids"])
             connection.execute("UPDATE courses SET updated_at=? WHERE id=?", (now, str(course)))
         return self.outline(course)
-
 
     @staticmethod
     def _delete_topics(connection, topic_ids):
@@ -212,28 +197,23 @@ class TopicManagement:
             connection.execute("UPDATE courses SET updated_at=? WHERE id=?", (self._now(), str(course)))
         return self.outline(course)
 
-    def remove_stage(self, course, stage, title, topic_ids):
+    def remove_chapter(self, course, chapter_id, title, topic_ids):
         with self.database.connect() as connection:
             connection.execute("SELECT pg_advisory_xact_lock(725498104)")
             self._course(connection, course, lock=True)
-            chapter = connection.execute("SELECT title FROM course_chapters WHERE course_id=? AND stage=?", (str(course), stage)).fetchone()
-            if chapter is None:
-                fail("章节不存在，请刷新目录后重试。", 404)
-            rows = connection.execute("""SELECT p.topic_id,p.group_title FROM topic_placements p
-                JOIN curriculum_topics t ON t.id=p.topic_id AND t.course=p.course_id
-                WHERE p.course_id=? AND p.parent_group_id=? ORDER BY p.topic_id""", (str(course), f"stage-{stage}")).fetchall()
-            # Stage numbers can change after reordering. Never delete another chapter
-            # or unseen members added/moved by a different administrator.
-            if {row["topic_id"] for row in rows} != set(topic_ids) or chapter["title"] != title:
+            chapter = self._chapter(connection, course, chapter_id)
+            rows = connection.execute("SELECT id FROM curriculum_topics WHERE course=? AND chapter_id=? ORDER BY id", (str(course), chapter_id)).fetchall()
+            if {row["id"] for row in rows} != set(topic_ids) or chapter["title"] != title:
                 fail("章节名称或知识点已变化，请刷新目录后重新确认删除。")
-            if rows: self._delete_topics(connection, [row["topic_id"] for row in rows])
-            connection.execute("DELETE FROM course_chapters WHERE course_id=? AND stage=?", (str(course), stage))
+            if rows: self._delete_topics(connection, [row["id"] for row in rows])
+            connection.execute("DELETE FROM course_chapters WHERE id=? AND course_id=?", (chapter_id, str(course)))
             connection.execute("UPDATE courses SET updated_at=? WHERE id=?", (self._now(), str(course)))
         return self.outline(course)
 
     def reorder(self, course, group_id, ids):
         with self.database.connect() as connection:
             self._course(connection, course, lock=True)
+            self._chapter(connection, course, group_id)
             rows = connection.execute("""SELECT p.topic_id FROM topic_placements p JOIN curriculum_topics t ON t.id=p.topic_id
                 WHERE p.course_id=? AND p.parent_group_id=? AND t.active=1 AND t.course=p.course_id""", (str(course), group_id)).fetchall()
             if set(ids) != {row["topic_id"] for row in rows}: fail("目录已变化，请刷新后重新排序。")
@@ -242,29 +222,26 @@ class TopicManagement:
                 connection.execute("UPDATE curriculum_topics SET order_index=?,updated_at=? WHERE id=?", (position, self._now(), topic_id))
         return self.outline(course)
 
-    def rename_stage(self, course, stage, title):
+    def rename_chapter(self, course, chapter_id, title):
         with self.database.connect() as connection:
             self._course(connection, course, lock=True)
-            result = connection.execute("UPDATE course_chapters SET title=? WHERE course_id=? AND stage=? RETURNING stage", (title, str(course), stage)).fetchone()
-            if not result: fail("章节不存在，请刷新后重试。", 404)
-            connection.execute("UPDATE topic_placements SET group_title=? WHERE course_id=? AND parent_group_id=?", (title, str(course), f"stage-{stage}"))
-            connection.execute("UPDATE curriculum_topics SET stage_title=?,updated_at=? WHERE course=? AND stage=?", (title, self._now(), str(course), stage))
+            self._chapter(connection, course, chapter_id)
+            connection.execute("UPDATE course_chapters SET title=? WHERE id=? AND course_id=?", (title, chapter_id, str(course)))
+            connection.execute("UPDATE topic_placements SET group_title=? WHERE course_id=? AND parent_group_id=?", (title, str(course), chapter_id))
+            connection.execute("UPDATE curriculum_topics SET stage_title=?,updated_at=? WHERE course=? AND chapter_id=?", (title, self._now(), str(course), chapter_id))
+            connection.execute("UPDATE courses SET updated_at=? WHERE id=?", (self._now(), str(course)))
         return self.outline(course)
 
-    def reorder_stages(self, course, ids):
+    def reorder_chapters(self, course, ids):
         with self.database.connect() as connection:
             self._course(connection, course, lock=True)
-            groups = connection.execute("SELECT stage FROM course_chapters WHERE course_id=?", (str(course),)).fetchall()
-            if set(ids) != {f"stage-{group['stage']}" for group in groups}:
+            groups = connection.execute("SELECT id FROM course_chapters WHERE course_id=?", (str(course),)).fetchall()
+            if set(ids) != {group["id"] for group in groups}:
                 fail("章节已变化，请刷新后重新排序。")
-            temporary = "reorder-" + uuid4().hex
-            for position, group_id in enumerate(ids, 1):
-                old_stage = int(group_id.split('-')[1])
-                connection.execute("UPDATE course_chapters SET stage=? WHERE course_id=? AND stage=?", (10000 + position, str(course), old_stage))
-                connection.execute("UPDATE topic_placements SET parent_group_id=? WHERE course_id=? AND parent_group_id=?", (f"{temporary}-{position}", str(course), group_id))
-                connection.execute("UPDATE curriculum_topics SET stage=? WHERE course=? AND stage=?", (10000 + position, str(course), old_stage))
-            for position in range(1, len(ids) + 1):
-                connection.execute("UPDATE course_chapters SET stage=? WHERE course_id=? AND stage=?", (position, str(course), 10000 + position))
-                connection.execute("UPDATE topic_placements SET parent_group_id=? WHERE course_id=? AND parent_group_id=?", (f"stage-{position}", str(course), f"{temporary}-{position}"))
-                connection.execute("UPDATE curriculum_topics SET stage=?,updated_at=? WHERE course=? AND stage=?", (position, self._now(), str(course), 10000 + position))
+            now = self._now()
+            for position, chapter_id in enumerate(ids, 1):
+                connection.execute("UPDATE course_chapters SET sort_order=? WHERE id=? AND course_id=?", (position, chapter_id, str(course)))
+                # These are display/progress snapshots, never chapter identity.
+                connection.execute("UPDATE curriculum_topics SET stage=?,updated_at=? WHERE course=? AND chapter_id=?", (position, now, str(course), chapter_id))
+            connection.execute("UPDATE courses SET updated_at=? WHERE id=?", (now, str(course)))
         return self.outline(course)

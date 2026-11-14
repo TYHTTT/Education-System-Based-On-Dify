@@ -4,23 +4,12 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 TopicId = Annotated[
     str, Field(pattern=r"^[a-z][a-z0-9_]*\.[a-z0-9_]+$", max_length=160)
 ]
+ChapterId = Annotated[str, Field(pattern=r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")]
 
 
-class StageWrite(BaseModel):
+class TopicWrite(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    stage: int = Field(ge=1, le=999)
-    stage_title: str = Field(min_length=1, max_length=100)
-    existing_stage: bool = False
-
-    @field_validator("stage_title")
-    @classmethod
-    def clean_stage_title(cls, value):
-        if not value.strip():
-            raise ValueError("章节名称不能为空")
-        return value.strip()
-
-
-class TopicWrite(StageWrite):
+    chapter_id: ChapterId
     title: str = Field(min_length=1, max_length=100)
     description: str = Field(default="", max_length=2000)
     learning_objectives: list[str] = Field(default_factory=list, max_length=30)
@@ -53,7 +42,7 @@ class TopicWrite(StageWrite):
 
 class TopicOrder(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    group_id: str = Field(min_length=1, max_length=160)
+    group_id: ChapterId
     topic_ids: list[TopicId] = Field(min_length=1, max_length=1000)
 
     @field_validator("topic_ids")
@@ -64,7 +53,7 @@ class TopicOrder(BaseModel):
         return value
 
 
-class StageRename(BaseModel):
+class ChapterWrite(BaseModel):
     model_config = ConfigDict(extra="forbid")
     title: str = Field(min_length=1, max_length=100)
 
@@ -76,11 +65,9 @@ class StageRename(BaseModel):
         return value.strip()
 
 
-class StageOrder(BaseModel):
+class ChapterOrder(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    group_ids: list[Annotated[str, Field(pattern=r"^stage-[1-9][0-9]*$")]] = Field(
-        min_length=1, max_length=999
-    )
+    group_ids: list[ChapterId] = Field(min_length=1, max_length=10000)
 
     @field_validator("group_ids")
     @classmethod
@@ -90,7 +77,7 @@ class StageOrder(BaseModel):
         return value
 
 
-class StageDelete(StageRename):
+class ChapterDelete(ChapterWrite):
     # Match the reviewed chapter before performing an irreversible bulk delete.
     topic_ids: list[TopicId] = Field(max_length=1000)
 

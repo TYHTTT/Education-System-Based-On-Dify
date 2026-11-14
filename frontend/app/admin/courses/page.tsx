@@ -43,7 +43,7 @@ export default function AdminCoursesPage() {
     {error && <div role="alert" className="mt-5 flex items-start justify-between gap-3 rounded-xl bg-rose-50 p-3 text-sm text-rose-700"><p>{error}</p><button type="button" onClick={refresh} className="shrink-0 underline">重试</button></div>}
     <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white">
       {loading ? <p role="status" className="p-8 text-center text-sm text-slate-500">正在加载课程…</p> : data && data.items.length ? <div className="overflow-x-auto"><table className="w-full text-left text-sm">
-        <thead className="bg-slate-50 text-slate-500"><tr>{["课程", "知识点", "状态", "排序"].map((title) => <th key={title} scope="col" className="whitespace-nowrap px-5 py-4 font-medium">{title}</th>)}</tr></thead>
+        <thead className="bg-slate-50 text-slate-500"><tr>{["课程", "知识点", "状态"].map((title) => <th key={title} scope="col" className="whitespace-nowrap px-5 py-4 font-medium">{title}</th>)}</tr></thead>
         <tbody className="divide-y divide-slate-100">{data.items.map((course) => {
           const href = `/admin/courses/${encodeURIComponent(course.id)}`;
           return <tr key={course.id} className="group cursor-pointer transition-colors hover:bg-indigo-50/60 focus-within:bg-indigo-50/60" onClick={(event) => {
@@ -54,7 +54,6 @@ export default function AdminCoursesPage() {
             <td className="min-w-48 p-0"><Link href={href} aria-label={`查看${course.title}详情`} className="block px-5 py-5 outline-offset-[-4px] focus-visible:outline-2 focus-visible:outline-indigo-500"><p className="font-semibold text-slate-900 group-hover:text-indigo-700">{course.title}</p><p className="mt-1 break-all text-xs text-slate-400">{course.id}</p></Link></td>
             <td className="px-5 py-5 tabular-nums text-slate-600">{course.topic_count}</td>
             <td className="whitespace-nowrap px-5 py-5"><span className={`rounded-full px-2.5 py-1 text-xs font-medium ${course.active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>{course.active ? "已启用" : "已停用"}</span></td>
-            <td className="px-5 py-5 tabular-nums text-slate-600">{course.sort_order}</td>
           </tr>;
         })}</tbody>
       </table></div> : <p className="p-10 text-center text-sm text-slate-500">{error ? "课程列表暂时无法加载。" : query || status !== "all" ? "没有匹配的课程。" : "暂无课程，点击“新增课程”开始创建。"}</p>}

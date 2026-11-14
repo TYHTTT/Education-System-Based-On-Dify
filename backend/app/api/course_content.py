@@ -21,7 +21,7 @@ def outline(
     student_id = student_id_from_authorization(authorization, repository)
     with repository._connect() as connection:
         chapters = connection.execute(
-            "SELECT stage,title FROM course_chapters WHERE course_id=? ORDER BY stage",
+            "SELECT id,title,sort_order FROM course_chapters WHERE course_id=? ORDER BY sort_order,id",
             (course.value,),
         ).fetchall()
         placements = [
@@ -29,7 +29,8 @@ def outline(
             for row in connection.execute(
                 """SELECT p.*
             FROM topic_placements p JOIN curriculum_topics t ON t.id=p.topic_id AND t.course=p.course_id
-            WHERE p.course_id=? AND t.active=1 ORDER BY CASE WHEN p.parent_group_id ~ '^stage-[0-9]+$' THEN split_part(p.parent_group_id,'-',2)::integer ELSE t.stage END,p.order_index,t.id""",
+            JOIN course_chapters ch ON ch.id=t.chapter_id AND ch.course_id=t.course
+            WHERE p.course_id=? AND t.active=1 ORDER BY ch.sort_order,p.order_index,t.id""",
                 (course.value,),
             )
         ]
@@ -50,11 +51,12 @@ def outline(
                 )
             }
     groups: dict[str, dict] = {
-        f"stage-{chapter['stage']}": {
-            "id": f"stage-{chapter['stage']}",
+        chapter["id"]: {
+            "id": chapter["id"],
             "title": chapter["title"],
             "parent_group_id": None,
             "order_index": index,
+            "sort_order": chapter["sort_order"],
             "topics": [],
         }
         for index, chapter in enumerate(chapters)

@@ -164,7 +164,25 @@ class LearningRepository:
             for topic in seed.topics
         ]
         with self._connect() as connection:
+            chapters = {}
+            used_chapters = []
+            for course in sorted({course for course, _ in topics}):
+                connection.execute("SELECT id FROM courses WHERE id=? FOR UPDATE", (course,)).fetchone()
             for course, topic in topics:
+                key = (course, topic.stage)
+                if key in chapters:
+                    continue
+                chapter = connection.execute("""SELECT id,sort_order,title FROM course_chapters
+                    WHERE course_id=? AND title=? AND NOT(id=ANY(?)) ORDER BY sort_order,id LIMIT 1""",
+                    (course, topic.stage_title, used_chapters)).fetchone()
+                if chapter is None:
+                    order = connection.execute("SELECT coalesce(max(sort_order),0)+1 AS position FROM course_chapters WHERE course_id=?", (course,)).fetchone()["position"]
+                    chapter = {"id": str(uuid.uuid4()), "sort_order": order, "title": topic.stage_title}
+                    connection.execute("INSERT INTO course_chapters(id,course_id,sort_order,title) VALUES (?,?,?,?)", (chapter["id"], course, order, chapter["title"]))
+                chapters[key] = dict(chapter)
+                used_chapters.append(chapter["id"])
+            for course, topic in topics:
+                chapter = chapters[(course, topic.stage)]
                 existing = connection.execute(
                     "SELECT course FROM curriculum_topics WHERE id = ?", (topic.id,)
                 ).fetchone()
@@ -175,14 +193,15 @@ class LearningRepository:
                 connection.execute(
                     """
                     INSERT INTO curriculum_topics (
-                        id, course, slug, title, stage, stage_title, order_index,
+                        id, course, chapter_id, slug, title, stage, stage_title, order_index,
                         description, learning_objectives_json, aliases_json,
                         retrieval_keywords_json, difficulty, required_dimensions_json,
                         active, created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(id) DO UPDATE SET
                         slug = excluded.slug,
                         title = excluded.title,
+                        chapter_id = excluded.chapter_id,
                         stage = excluded.stage,
                         stage_title = excluded.stage_title,
                         order_index = excluded.order_index,
@@ -198,10 +217,11 @@ class LearningRepository:
                     (
                         topic.id,
                         course,
+                        chapter["id"],
                         topic.slug,
                         topic.title,
-                        topic.stage,
-                        topic.stage_title,
+                        chapter["sort_order"],
+                        chapter["title"],
                         topic.order_index,
                         topic.description,
                         self._dump_json(topic.learning_objectives),
@@ -216,12 +236,11 @@ class LearningRepository:
                 )
 
             for course, topic in topics:
-                connection.execute("""INSERT INTO course_chapters(course_id,stage,title) VALUES (?,?,?)
-                    ON CONFLICT(course_id,stage) DO UPDATE SET title=excluded.title""", (course, topic.stage, topic.stage_title))
+                chapter = chapters[(course, topic.stage)]
                 connection.execute("""INSERT INTO topic_placements(course_id,topic_id,parent_group_id,group_title,order_index)
                     VALUES (?,?,?,?,?) ON CONFLICT(course_id,topic_id) DO UPDATE SET
                     parent_group_id=excluded.parent_group_id,group_title=excluded.group_title,order_index=excluded.order_index""",
-                    (course,topic.id,f"stage-{topic.stage}",topic.stage_title,topic.order_index))
+                    (course,topic.id,chapter["id"],chapter["title"],topic.order_index))
 
     @staticmethod
     def _dump_json(value: Any) -> str:

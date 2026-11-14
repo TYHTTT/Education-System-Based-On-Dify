@@ -38,7 +38,6 @@ export function CourseEditor({
         id: String(data.get("id")),
         title: String(data.get("title")).trim(),
         description: String(data.get("description")).trim(),
-        sort_order: Number(data.get("sort_order")),
         active: data.get("active") === "on",
       });
     } catch (cause) {
@@ -94,22 +93,6 @@ export function CourseEditor({
               defaultValue={course?.description}
               className={`${inputClass} resize-y`}
             />
-          </label>
-          <label className="text-sm font-medium text-slate-700">
-            排序
-            <input
-              required
-              type="number"
-              name="sort_order"
-              min={0}
-              max={99999}
-              step={1}
-              defaultValue={course?.sort_order ?? 0}
-              className={inputClass}
-            />
-            <span className="mt-1 block text-xs font-normal text-slate-500">
-              数值越小，展示越靠前。
-            </span>
           </label>
           <label className="flex items-center gap-2 self-center text-sm font-medium text-slate-700">
             <input

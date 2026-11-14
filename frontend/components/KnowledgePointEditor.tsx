@@ -37,9 +37,9 @@ export default function KnowledgePointEditor({
   onCancel: () => void;
   initialGroupId?: string;
 }) {
-  const chapters = groups.filter((g) => g.stage !== null);
+  const chapters = groups;
   const initial =
-    chapters.find((g) => g.id === (topic?.parent_group_id ?? initialGroupId)) ??
+    chapters.find((g) => g.id === (topic?.chapter_id ?? initialGroupId)) ??
     chapters[0];
   const [chapter, setChapter] = useState(initial?.id ?? "");
   const [saving, setSaving] = useState(false);
@@ -77,26 +77,22 @@ export default function KnowledgePointEditor({
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const target = chapters.find((g) => g.id === chapter);
-    if (!target || target.stage === null) {
+    if (!target) {
       setError("所在章节已不存在，请刷新目录后重试。");
       return;
     }
-    const stage = target.stage;
-    const stage_title = target.title;
     setSaving(true);
     setError("");
     try {
       await onSave({
         title: String(data.get("title")).trim(),
         description: String(data.get("description")).trim(),
-        stage,
-        stage_title,
+        chapter_id: target.id,
         learning_objectives: lines(data.get("learning_objectives")),
         aliases: lines(data.get("aliases")),
         retrieval_keywords: lines(data.get("retrieval_keywords")),
         difficulty: String(data.get("difficulty")) as TopicValues["difficulty"],
         related_topic_ids: relatedIds,
-        existing_stage: true,
       });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "保存失败");
