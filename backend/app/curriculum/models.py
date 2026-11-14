@@ -16,14 +16,12 @@ class TopicSeed(BaseModel):
     order_index: int = Field(ge=1)
     description: str = Field(min_length=1)
     learning_objectives: list[str] = Field(min_length=1)
-    required_dimensions: list[str] = Field(min_length=1)
     active: bool = True
 
     @model_validator(mode="after")
     def validate_unique_lists(self) -> "TopicSeed":
         for field_name in (
             "learning_objectives",
-            "required_dimensions",
         ):
             values = getattr(self, field_name)
             if len(values) != len(set(values)):
@@ -45,17 +43,6 @@ class CurriculumSeed(BaseModel):
             Course.LINEAR_ALGEBRA: "la.",
             Course.PROBABILITY_STATISTICS: "prob.",
         }.get(self.course, self.course.value + ".")
-        allowed_dimensions = (
-            {"concept", "mathematics", "mechanism", "engineering", "application"}
-            if self.course is Course.MACHINE_LEARNING
-            else {
-                "concept",
-                "theorem_condition",
-                "derivation",
-                "calculation",
-                "application",
-            }
-        )
         ids = [topic.id for topic in self.topics]
         if len(ids) != len(set(ids)):
             raise ValueError(f"{self.course.value} 存在重复知识点 ID")
@@ -70,11 +57,4 @@ class CurriculumSeed(BaseModel):
             raise ValueError(
                 f"{self.course.value} 知识点 ID 前缀无效: {', '.join(invalid)}"
             )
-        for topic in self.topics:
-            unknown = set(topic.required_dimensions) - allowed_dimensions
-            if unknown:
-                raise ValueError(
-                    f"{topic.id} 包含当前课程不支持的能力维度: "
-                    f"{', '.join(sorted(unknown))}"
-                )
         return self

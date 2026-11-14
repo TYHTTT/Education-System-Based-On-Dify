@@ -27,6 +27,8 @@ RETIRED_TABLES = (
     "content_review_events", "question_bank_topics", "question_bank_items",
     "assessment_blueprints", "content_exposures", "worked_examples", "lessons",
     "document_chunks", "documents",
+    "misconception_events", "practice_attempts", "practice_submissions",
+    "practice_questions", "practice_sets", "student_dimension_states",
 )
 RETIRED_COLUMNS = {
     "practice_sets": ("blueprint_id",),

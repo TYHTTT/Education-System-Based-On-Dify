@@ -284,42 +284,6 @@ export function getCurriculum(
 
 function normalizeTopic(payload: unknown): CurriculumTopic {
   const body = asRecord(payload);
-  const rawDimensions = body.dimensions;
-  const dimensions = Array.isArray(rawDimensions)
-    ? rawDimensions.map((item) => {
-        const dimension = asRecord(item);
-        return {
-          dimension: String(dimension.dimension ?? ""),
-          label:
-            typeof dimension.label === "string" ? dimension.label : undefined,
-          mastery:
-            typeof dimension.mastery === "number" ? dimension.mastery : null,
-          confidence:
-            typeof dimension.confidence === "number"
-              ? dimension.confidence
-              : null,
-          evidence_count:
-            typeof dimension.evidence_count === "number"
-              ? dimension.evidence_count
-              : 0,
-        };
-      })
-    : Object.entries(asRecord(rawDimensions)).map(([name, value]) => {
-        const dimension = asRecord(value);
-        return {
-          dimension: name,
-          mastery:
-            typeof dimension.mastery === "number" ? dimension.mastery : null,
-          confidence:
-            typeof dimension.confidence === "number"
-              ? dimension.confidence
-              : null,
-          evidence_count:
-            typeof dimension.evidence_count === "number"
-              ? dimension.evidence_count
-              : 0,
-        };
-      });
   return {
     id: String(body.id ?? ""),
     course: String(body.course ?? "machine_learning") as Course,
@@ -332,7 +296,6 @@ function normalizeTopic(payload: unknown): CurriculumTopic {
     description:
       typeof body.description === "string" ? body.description : undefined,
     learning_objectives: strings(body.learning_objectives),
-    required_dimensions: strings(body.required_dimensions),
     status: (typeof body.status === "string"
       ? body.status
       : "not_started") as CurriculumTopic["status"],
@@ -346,7 +309,6 @@ function normalizeTopic(payload: unknown): CurriculumTopic {
       typeof body.attempt_count === "number" ? body.attempt_count : undefined,
     latest_score:
       typeof body.latest_score === "number" ? body.latest_score : null,
-    dimensions,
     active: typeof body.active === "boolean" ? body.active : undefined,
     created_at:
       typeof body.created_at === "string" ? body.created_at : undefined,
@@ -375,11 +337,6 @@ export async function getLearningDashboard(
     { headers: studentHeaders(studentId) },
   );
   const body = asRecord(response);
-  const rawRecent = Array.isArray(body.recent_practice)
-    ? body.recent_practice
-    : Array.isArray(body.recent_attempts)
-      ? body.recent_attempts
-      : [];
   return {
     course,
     total_topics: Number(body.total_topics ?? 0),
@@ -399,32 +356,6 @@ export async function getLearningDashboard(
         ? body.next_action
         : "start_learning",
     reasons: strings(body.reasons),
-    recent_practice: rawRecent.map((item) => {
-      const attempt = asRecord(item);
-      return {
-        id: typeof attempt.id === "string" ? attempt.id : undefined,
-        attempt_id:
-          typeof attempt.attempt_id === "string"
-            ? attempt.attempt_id
-            : undefined,
-        topic_id: String(attempt.topic_id ?? ""),
-        topic_title: String(
-          attempt.topic_title ??
-            attempt.title ??
-            attempt.topic_id ??
-            "练习记录",
-        ),
-        mode: attempt.mode === "checkpoint" ? "checkpoint" : "practice",
-        score:
-          typeof attempt.score === "number"
-            ? attempt.score
-            : typeof attempt.total_score === "number"
-              ? attempt.total_score
-              : null,
-        status: typeof attempt.status === "string" ? attempt.status : undefined,
-        created_at: String(attempt.created_at ?? attempt.submitted_at ?? ""),
-      };
-    }),
     stages: Array.isArray(body.stages)
       ? (body.stages as LearningDashboard["stages"])
       : [],

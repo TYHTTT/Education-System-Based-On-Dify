@@ -60,7 +60,6 @@ def student_id_from_authorization(
 
 
 def learning_service_from_request(
-    settings: Settings = Depends(settings_from_request),
     repository: LearningRepository = Depends(learning_repository_from_request),
 ) -> LearningService:
-    return LearningService(settings=settings, repository=repository)
+    return LearningService(repository=repository)

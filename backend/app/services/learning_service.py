@@ -2,22 +2,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.core.config import Settings
 from app.core.types import Course
-from app.learning.gate import MasteryGateConfig, MasteryGateInput, evaluate_mastery_gate
-from app.learning.orchestrator import (
-    LearningOrchestratorInput,
-    TopicRecommendationCandidate,
-    decide_next_action,
-)
 from app.services.learning_repository import LearningRepository
 
 
 class LearningService:
-    """Study state and course overview, including historical progress recommendations."""
+    """Study state and course overview for Dify-based learning."""
 
-    def __init__(self, *, settings: Settings, repository: LearningRepository) -> None:
-        self.settings = settings
+    def __init__(self, *, repository: LearningRepository) -> None:
         self.repository = repository
 
     def start_topic(self, *, student_id: str, topic_id: str) -> dict[str, Any]:
@@ -42,19 +34,6 @@ class LearningService:
         topic = self.repository.require_topic(topic_id, student_id=student_id)
         state = self.repository.get_topic_state(student_id, topic_id)
         status = self._status(state)
-        dimensions = {
-            item["dimension"]: {
-                "mastery": float(item["mastery"]),
-                "confidence": float(item["confidence"]),
-                "evidence_count": int(item["evidence_count"]),
-            }
-            for item in self.repository.list_dimension_states(student_id, topic_id)
-        }
-        for dimension in topic.get("required_dimensions", []):
-            dimensions.setdefault(
-                dimension,
-                {"mastery": None, "confidence": 0.0, "evidence_count": 0},
-            )
         return {
             **{key: value for key, value in topic.items() if not key.startswith("state_")},
             "status": status,
@@ -69,7 +48,6 @@ class LearningService:
                 else "尚未评估"
             ),
             "confidence": float(state["confidence"]) if state else 0.0,
-            "dimensions": dimensions,
         }
 
     def dashboard(self, *, student_id: str, course: Course) -> dict[str, Any]:
@@ -109,34 +87,16 @@ class LearningService:
         elif current is None:
             decision = {
                 "next_action": "course_completed",
-                "reasons": ["当前课程的全部知识点均已通过 Mastery Gate"],
+                "reasons": ["当前课程的全部知识点均已学完"],
                 "recommended_topic_id": None,
             }
         else:
-            topic = next(item for item in topics if item["id"] == current["id"])
-            state = self.repository.get_topic_state(student_id, current["id"])
-            gate = self.evaluate_topic_gate(student_id, topic, state)
-            candidates = tuple(
-                TopicRecommendationCandidate(
-                    topic_id=item["id"],
-                    status=item["status"],
-                    stage=int(item["stage"]),
-                    order_index=int(item["order_index"]),
-                )
-                for item in views
-            )
-            decision = decide_next_action(
-                LearningOrchestratorInput(
-                    current_topic_id=current["id"],
-                    current_topic_status=current["status"],
-                    current_stage=int(current["stage"]),
-                    gate=gate,
-                    all_course_topics_mastered=all(
-                        item["status"] == "mastered" for item in views
-                    ),
-                    candidates=candidates,
-                )
-            ).model_dump()
+            starting = current["status"] == "not_started"
+            decision = {
+                "next_action": "start_learning" if starting else "continue_learning",
+                "reasons": ["按课程编排开始下一个知识点" if starting else "继续当前知识点的学习"],
+                "recommended_topic_id": current["id"],
+            }
         counts = {
             status: sum(item["status"] == status for item in views)
             for status in (
@@ -169,55 +129,11 @@ class LearningService:
             "recommended_topic_id": decision.get("recommended_topic_id"),
             "next_action": decision["next_action"],
             "reasons": decision["reasons"],
-            "recent_practice": self.repository.list_recent_submissions(
-                student_id,
-                course=course,
-                limit=5,
-            ),
             "stages": [
                 {"stage": stage, "title": title, "topics": stage_topics}
                 for (stage, title), stage_topics in stages.items()
             ],
         }
-
-    def evaluate_topic_gate(self, student_id: str, topic: dict[str, Any], state):
-        state = state or {
-            "mastery": 0.5,
-            "evidence_count": 0,
-            "checkpoint_count": 0,
-            "latest_checkpoint_score": None,
-        }
-        return evaluate_mastery_gate(
-            MasteryGateInput(
-                mastery=float(state["mastery"]),
-                valid_attempt_count=int(state["evidence_count"]),
-                checkpoint_count=int(state["checkpoint_count"]),
-                latest_checkpoint_score=(
-                    float(state["latest_checkpoint_score"])
-                    if state.get("latest_checkpoint_score") is not None
-                    else None
-                ),
-                required_dimensions=frozenset(topic.get("required_dimensions") or []),
-                checkpoint_dimensions=frozenset(
-                    self.repository.get_latest_checkpoint_dimensions(
-                        student_id,
-                        topic["id"],
-                    )
-                ),
-                unresolved_critical_misconception_count=(
-                    self.repository.count_unresolved_critical_misconceptions(
-                        student_id,
-                        topic["id"],
-                    )
-                ),
-            ),
-            MasteryGateConfig(
-                mastery_threshold=self.settings.mastery_gate_threshold,
-                minimum_valid_attempts=self.settings.mastery_min_valid_attempts,
-                checkpoint_score_threshold=self.settings.mastery_checkpoint_score,
-                minimum_dimension_coverage=self.settings.mastery_min_dimension_coverage,
-            ),
-        )
 
     @staticmethod
     def _status(state) -> str:

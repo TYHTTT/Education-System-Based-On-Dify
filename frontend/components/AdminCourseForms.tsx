@@ -166,7 +166,7 @@ export function DeleteDialog({
         删除课程
       </h2>
       <p className="mt-4 break-words text-sm leading-6 text-slate-600">
-        确定永久删除“{course.title}”？该课程的全部章节、知识点、图谱连线及学生学习记录（含历史练习和作答）将一并删除。
+        确定永久删除“{course.title}”？该课程的全部章节、知识点、图谱连线、学生学习状态及学习会话将一并删除。
       </p>
       <p className="mt-3 text-sm font-semibold text-rose-700">此操作无法恢复。</p>
       {error && (

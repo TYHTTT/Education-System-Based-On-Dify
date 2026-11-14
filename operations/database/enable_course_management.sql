@@ -13,7 +13,7 @@ WHERE id IN ('machine_learning','advanced_mathematics','linear_algebra','probabi
 DO $$
 DECLARE target_table TEXT;
 BEGIN
-    FOREACH target_table IN ARRAY ARRAY['curriculum_topics','practice_sets','learning_sessions'] LOOP
+    FOREACH target_table IN ARRAY ARRAY['curriculum_topics','learning_sessions'] LOOP
         EXECUTE format('ALTER TABLE %I DROP CONSTRAINT IF EXISTS %I', target_table, target_table || '_course_check');
         IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid=target_table::regclass AND conname=target_table || '_course_fkey') THEN
             EXECUTE format('ALTER TABLE %I ADD CONSTRAINT %I FOREIGN KEY (course) REFERENCES courses(id)', target_table, target_table || '_course_fkey');

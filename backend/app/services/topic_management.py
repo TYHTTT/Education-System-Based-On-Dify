@@ -91,8 +91,12 @@ class TopicManagement:
                 (topic_id, target, topic_id, target))
 
     def related_candidates(self, query="", course=None, exclude=None, page=1, page_size=30):
+        query = query.strip()
         with self.database.connect() as connection:
             courses = [dict(row) for row in connection.execute("SELECT id,title,active FROM courses ORDER BY title,id")]
+            if not query:
+                return {"items": [], "courses": [{**item, "active": bool(item["active"])} for item in courses],
+                        "total": 0, "page": page, "page_size": page_size}
             where = "t.active=1 AND (t.title ILIKE ? OR t.id ILIKE ? OR c.title ILIKE ?)"
             params = [f"%{query}%"] * 3
             if course is not None:
@@ -124,7 +128,7 @@ class TopicManagement:
         removed = []
         for raw in rows:
             item = dict(raw)
-            for key in ("learning_objectives", "required_dimensions"):
+            for key in ("learning_objectives",):
                 item[key] = json.loads(item.pop(key + "_json"))
             item["active"] = bool(item["active"])
             item["related_topics"] = related[item["id"]]
@@ -154,9 +158,9 @@ class TopicManagement:
             if not existing:
                 position = connection.execute("SELECT coalesce(max(order_index),0)+1 AS position FROM curriculum_topics WHERE course=?", (str(course),)).fetchone()["position"]
                 connection.execute("""INSERT INTO curriculum_topics(id,course,chapter_id,slug,title,stage,stage_title,order_index,description,
-                    learning_objectives_json,required_dimensions_json,created_at,updated_at)
-                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""", (topic_id, str(course), chapter["id"], topic_id.split('.',1)[1], values["title"], chapter["sort_order"],
-                    chapter["title"], position, values["description"], json.dumps(values["learning_objectives"]), '["concept"]', now, now))
+                    learning_objectives_json,created_at,updated_at)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""", (topic_id, str(course), chapter["id"], topic_id.split('.',1)[1], values["title"], chapter["sort_order"],
+                    chapter["title"], position, values["description"], json.dumps(values["learning_objectives"]), now, now))
             else:
                 connection.execute("""UPDATE curriculum_topics SET title=?,chapter_id=?,stage=?,stage_title=?,description=?,learning_objectives_json=?,
                     updated_at=? WHERE id=?""", (values["title"], chapter["id"], chapter["sort_order"], chapter["title"],

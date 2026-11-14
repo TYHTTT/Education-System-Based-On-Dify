@@ -10,7 +10,6 @@ from app.core.types import Course
 from app.schemas.curriculum import (
     CurriculumResponse,
     CurriculumStageResponse,
-    DimensionStateResponse,
     TopicDetailResponse,
     TopicSummaryResponse,
 )
@@ -95,28 +94,6 @@ def topic_detail(
     repository = learning_repository_from_request(request)
     student_id = student_id_from_authorization(authorization, repository)
     topic = repository.require_topic(topic_id, student_id=student_id)
-    state_by_dimension = {
-        state["dimension"]: state
-        for state in (
-            repository.list_dimension_states(student_id, topic_id)
-            if student_id is not None
-            else []
-        )
-    }
-    dimensions = []
-    for name in topic["required_dimensions"]:
-        state = state_by_dimension.get(name)
-        started = bool(state and state["evidence_count"] > 0)
-        mastery = state["mastery"] if started else None
-        dimensions.append(
-            DimensionStateResponse(
-                dimension=name,
-                mastery=mastery,
-                mastery_display=_mastery_display(mastery),
-                confidence=state["confidence"] if started else None,
-                evidence_count=state["evidence_count"] if state else 0,
-            )
-        )
     summary = _summary(repository, topic, student_id)
     return TopicDetailResponse(
         **summary.model_dump(),
@@ -124,8 +101,6 @@ def topic_detail(
         stage=topic["stage"],
         stage_title=topic["stage_title"],
         learning_objectives=topic["learning_objectives"],
-        required_dimensions=topic["required_dimensions"],
-        dimensions=dimensions,
         active=topic["active"],
         created_at=topic["created_at"],
         updated_at=topic["updated_at"],

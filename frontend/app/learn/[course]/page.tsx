@@ -8,16 +8,14 @@ import {
   ArrowLeftIcon,
   ArrowRightIcon,
   ChartIcon,
-  ClockIcon,
   LayersIcon,
   TargetIcon,
-  TrophyIcon,
 } from "@/components/Icons";
 import { LoadingBlock, MasteryBar, TopicStatusBadge } from "@/components/LearningWidgets";
 import { useCourseCatalog } from "@/components/CourseCatalogProvider";
 import { useStudent } from "@/components/StudentProvider";
 import { getCurriculum, getLearningDashboard } from "@/lib/api";
-import { hasValidTopicEvidence, nextActionLabel, scoreLabel } from "@/lib/learning";
+import { hasValidTopicEvidence, nextActionLabel } from "@/lib/learning";
 import {
   type Course,
   type CurriculumResponse,
@@ -212,14 +210,14 @@ export default function CourseDashboardPage() {
               </div>
             </section>
 
-            <section className="mt-7 grid gap-6 xl:grid-cols-[minmax(0,1fr)_310px]">
+            <section className="mt-7 space-y-6">
               <div className="space-y-5">
                 <div className="flex items-end justify-between gap-4">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600">Curriculum</p>
                     <h2 className="mt-1 text-xl font-bold text-slate-900">课程阶段与知识点</h2>
                   </div>
-                  <span className="text-xs text-slate-400">保留学习状态与历史评估</span>
+                  <span className="text-xs text-slate-400">学习状态</span>
                 </div>
                 {currentCurriculum.stages.map((stage) => (
                   <section key={stage.stage} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
@@ -240,37 +238,7 @@ export default function CourseDashboardPage() {
                 ))}
               </div>
 
-              <aside className="space-y-5">
-                <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <ClockIcon className="size-4 text-indigo-600" />
-                    <h2 className="text-sm font-bold text-slate-900">历史成绩</h2>
-                  </div>
-                  {currentDashboard.recent_practice.length === 0 ? (
-                    <div className="py-8 text-center">
-                      <span className="mx-auto grid size-10 place-items-center rounded-2xl bg-slate-100 text-slate-400"><ChartIcon className="size-4" /></span>
-                      <p className="mt-3 text-xs leading-5 text-slate-400">暂无历史成绩。当前练习反馈在知识点对话中查看。</p>
-                    </div>
-                  ) : (
-                    <div className="mt-4 space-y-3">
-                      {currentDashboard.recent_practice.slice(0, 6).map((attempt, index) => (
-                        <Link key={attempt.id ?? attempt.attempt_id ?? `${attempt.topic_id}-${index}`} href={`/learn/${course}/${encodeURIComponent(attempt.topic_id)}`} className="block rounded-2xl bg-slate-50 p-3 transition hover:bg-indigo-50">
-                          <div className="flex items-start justify-between gap-3">
-                            <p className="line-clamp-2 text-xs font-semibold leading-5 text-slate-700">{attempt.topic_title}</p>
-                            <span className="shrink-0 text-sm font-bold tabular-nums text-indigo-700">{scoreLabel(attempt.score)}</span>
-                          </div>
-                          <p className="mt-1 text-[10px] text-slate-400">{attempt.mode === "checkpoint" ? "综合验收" : "主动练习"}</p>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </section>
-                <section className="rounded-3xl border border-emerald-200 bg-emerald-50 p-5">
-                  <TrophyIcon className="size-5 text-emerald-700" />
-                  <h2 className="mt-3 text-sm font-bold text-emerald-900">在对话中学习与练习</h2>
-                  <p className="mt-2 text-xs leading-5 text-emerald-800/80">进入知识点后开始学习，可继续追问或做练习。Agent 的对话反馈不会自动转换为本地分数或掌握度。</p>
-                </section>
-              </aside>
+
             </section>
           </>
         ) : null}

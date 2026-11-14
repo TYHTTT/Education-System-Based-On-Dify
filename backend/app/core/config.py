@@ -41,11 +41,6 @@ class Settings(BaseSettings):
     max_history_messages: int = Field(default=12, ge=0, le=100)
     max_message_length: int = Field(default=8000, ge=1, le=100_000)
 
-    mastery_gate_threshold: float = Field(default=0.80, ge=0, le=1)
-    mastery_min_valid_attempts: int = Field(default=3, ge=1)
-    mastery_checkpoint_score: float = Field(default=80, ge=0, le=100)
-    mastery_min_dimension_coverage: int = Field(default=3, ge=1)
-
     @model_validator(mode="after")
     def validate_and_resolve(self) -> "Settings":
         origins = self.cors_origins

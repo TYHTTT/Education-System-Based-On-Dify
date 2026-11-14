@@ -41,21 +41,11 @@ class CurriculumResponse(BaseModel):
     stages: list[CurriculumStageResponse]
 
 
-class DimensionStateResponse(BaseModel):
-    dimension: str
-    mastery: float | None = None
-    mastery_display: str | None = None
-    confidence: float | None = None
-    evidence_count: int = 0
-
-
 class TopicDetailResponse(TopicSummaryResponse):
     course: Course
     stage: int
     stage_title: str
     learning_objectives: list[str]
-    required_dimensions: list[str]
-    dimensions: list[DimensionStateResponse]
     active: bool
     created_at: datetime
     updated_at: datetime

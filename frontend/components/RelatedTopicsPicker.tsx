@@ -26,24 +26,34 @@ export default function RelatedTopicsPicker({
   const { withAdmin } = useAdmin();
   const [query, setQuery] = useState("");
   const [course, setCourse] = useState("");
-  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState<{
+    query: string;
+    course: string;
+    page: number;
+  } | null>(null);
+  const page = search?.page ?? 1;
   const [data, setData] = useState<RelatedTopicCandidates | null>(null);
   const [known, setKnown] = useState<Record<string, RelatedTopic>>(() =>
     Object.fromEntries(initialTopics.map((topic) => [topic.id, topic])),
   );
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [version, setVersion] = useState(0);
   useEffect(() => {
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
-      setLoading(true);
+      setLoading(Boolean(search));
       setError("");
       try {
         const result = await withAdmin((token) =>
           getRelatedTopicCandidates(
             token,
-            { q: query.trim(), course, exclude: topicId, page },
+            {
+              q: search?.query ?? "",
+              course: search?.course ?? "",
+              exclude: topicId,
+              page: search?.page ?? 1,
+            },
             controller.signal,
           ),
         );
@@ -66,7 +76,21 @@ export default function RelatedTopicsPicker({
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [withAdmin, query, course, page, topicId, version]);
+  }, [withAdmin, search, topicId, version]);
+
+  function runSearch() {
+    const keyword = query.trim();
+    if (!keyword) return;
+    setData((current) => current ? { ...current, items: [], total: 0 } : null);
+    setError("");
+    setLoading(true);
+    setSearch({ query: keyword, course, page: 1 });
+  }
+
+  function changePage(nextPage: number) {
+    setLoading(true);
+    setSearch((current) => current ? { ...current, page: nextPage } : null);
+  }
 
   return (
     <div
@@ -114,7 +138,7 @@ export default function RelatedTopicsPicker({
           })}
         </ul>
       )}
-      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
         <input
           type="search"
           aria-label="搜索相关知识点"
@@ -123,10 +147,16 @@ export default function RelatedTopicsPicker({
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);
-            setPage(1);
+            if (!event.target.value.trim()) {
+              setSearch(null);
+              setError("");
+            }
           }}
           onKeyDown={(event) => {
-            if (event.key === "Enter") event.preventDefault();
+            if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+              event.preventDefault();
+              runSearch();
+            }
           }}
           className={inputClass}
         />
@@ -135,7 +165,6 @@ export default function RelatedTopicsPicker({
           value={course}
           onChange={(event) => {
             setCourse(event.target.value);
-            setPage(1);
           }}
           className={inputClass}
         >
@@ -148,7 +177,19 @@ export default function RelatedTopicsPicker({
             </option>
           ))}
         </select>
+        <button
+          type="button"
+          disabled={!query.trim() || loading}
+          onClick={runSearch}
+          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          搜索
+        </button>
       </div>
+      {!search && (
+        <p className="text-xs text-slate-400">输入关键词并点击搜索，查看可关联的知识点。</p>
+      )}
+      {search && (
       <div className="max-h-52 overflow-y-auto overscroll-contain rounded-xl border border-slate-200">
         {loading ? (
           <p role="status" className="p-4 text-sm text-slate-400">
@@ -200,7 +241,8 @@ export default function RelatedTopicsPicker({
           <p className="p-4 text-sm text-slate-400">没有匹配的知识点</p>
         )}
       </div>
-      {data && !loading && !error && data.total > data.page_size && (
+      )}
+      {search && data && !loading && !error && data.total > data.page_size && (
         <div className="flex items-center justify-between gap-2 text-xs text-slate-500">
           <span>
             共 {data.total} 个 · 第 {page} 页
@@ -209,7 +251,7 @@ export default function RelatedTopicsPicker({
             <button
               type="button"
               disabled={page <= 1}
-              onClick={() => setPage((value) => value - 1)}
+              onClick={() => changePage(page - 1)}
               className="text-indigo-700 disabled:text-slate-300"
             >
               上一页
@@ -217,7 +259,7 @@ export default function RelatedTopicsPicker({
             <button
               type="button"
               disabled={page * data.page_size >= data.total}
-              onClick={() => setPage((value) => value + 1)}
+              onClick={() => changePage(page + 1)}
               className="text-indigo-700 disabled:text-slate-300"
             >
               下一页

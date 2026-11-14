@@ -14,11 +14,6 @@
           "learning_objectives": [
             "能够区分标量、向量、矩阵并写出形状。"
           ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
-          ],
           "active": true
         },
         {
@@ -31,11 +26,6 @@
           "description": "能够逐项计算内积并用于线性预测。",
           "learning_objectives": [
             "能够逐项计算内积并用于线性预测。"
-          ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
           ],
           "active": true
         },
@@ -50,11 +40,6 @@
           "learning_objectives": [
             "能够计算L1、L2范数与欧氏距离。"
           ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
-          ],
           "active": true
         },
         {
@@ -67,11 +52,6 @@
           "description": "能够判断Xw是否可乘并写出结果形状。",
           "learning_objectives": [
             "能够判断Xw是否可乘并写出结果形状。"
-          ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
           ],
           "active": true
         },
@@ -86,11 +66,6 @@
           "learning_objectives": [
             "能够写出转置并核对行列变化。"
           ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
-          ],
           "active": true
         },
         {
@@ -103,11 +78,6 @@
           "description": "能够用消元解二元一次方程组。",
           "learning_objectives": [
             "能够用消元解二元一次方程组。"
-          ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
           ],
           "active": true
         },
@@ -122,11 +92,6 @@
           "learning_objectives": [
             "能够判断简单向量组的线性相关性。"
           ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
-          ],
           "active": true
         },
         {
@@ -139,11 +104,6 @@
           "description": "能够计算向量在单位方向的投影。",
           "learning_objectives": [
             "能够计算向量在单位方向的投影。"
-          ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
           ],
           "active": true
         },
@@ -158,11 +118,6 @@
           "learning_objectives": [
             "能够检查Av=λv并解释缩放方向。"
           ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
-          ],
           "active": true
         },
         {
@@ -175,11 +130,6 @@
           "description": "能够核对UΣVᵀ维度并说明低秩近似。",
           "learning_objectives": [
             "能够核对UΣVᵀ维度并说明低秩近似。"
-          ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
           ],
           "active": true
         }
@@ -199,11 +149,6 @@
           "learning_objectives": [
             "能够识别样本空间、事件并检查概率范围。"
           ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
-          ],
           "active": true
         },
         {
@@ -216,11 +161,6 @@
           "description": "能够由联合概率与条件事件概率计算条件概率。",
           "learning_objectives": [
             "能够由联合概率与条件事件概率计算条件概率。"
-          ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
           ],
           "active": true
         },
@@ -235,11 +175,6 @@
           "learning_objectives": [
             "能够由先验和似然计算后验。"
           ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
-          ],
           "active": true
         },
         {
@@ -252,11 +187,6 @@
           "description": "能够用联合概率检查事件独立性。",
           "learning_objectives": [
             "能够用联合概率检查事件独立性。"
-          ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
           ],
           "active": true
         },
@@ -271,11 +201,6 @@
           "learning_objectives": [
             "能够检查离散分布概率之和为1。"
           ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
-          ],
           "active": true
         },
         {
@@ -288,11 +213,6 @@
           "description": "能够计算离散变量的期望与方差。",
           "learning_objectives": [
             "能够计算离散变量的期望与方差。"
-          ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
           ],
           "active": true
         },
@@ -307,11 +227,6 @@
           "learning_objectives": [
             "能够计算联合样本的协方差并解释符号。"
           ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
-          ],
           "active": true
         },
         {
@@ -324,11 +239,6 @@
           "description": "能够写出二分类观测的伯努利概率。",
           "learning_objectives": [
             "能够写出二分类观测的伯努利概率。"
-          ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
           ],
           "active": true
         },
@@ -343,11 +253,6 @@
           "learning_objectives": [
             "能够解释均值、方差与标准化。"
           ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
-          ],
           "active": true
         },
         {
@@ -361,11 +266,6 @@
           "learning_objectives": [
             "能够区分参数和观测并写出伯努利样本似然。"
           ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
-          ],
           "active": true
         },
         {
@@ -378,11 +278,6 @@
           "description": "能够计算二分类节点的信息熵和基尼不纯度。",
           "learning_objectives": [
             "能够计算二分类节点的信息熵和基尼不纯度。"
-          ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
           ],
           "active": true
         }
@@ -402,11 +297,6 @@
           "learning_objectives": [
             "能够计算指数与自然对数并说明定义域。"
           ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
-          ],
           "active": true
         },
         {
@@ -420,11 +310,6 @@
           "learning_objectives": [
             "能够识别内外函数并逐层求导。"
           ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
-          ],
           "active": true
         },
         {
@@ -437,11 +322,6 @@
           "description": "能够将偏导组成梯度并解释最陡上升方向。",
           "learning_objectives": [
             "能够将偏导组成梯度并解释最陡上升方向。"
-          ],
-          "required_dimensions": [
-            "concept",
-            "calculation",
-            "application"
           ],
           "active": true
         }

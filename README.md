@@ -89,6 +89,8 @@ npm run build
 
 业务数据存储在 `DATABASE_URL` 指向的 PostgreSQL 数据库中，课程资料由 Dify 管理。
 
+练习出题、回答和反馈通过 Dify 对话完成，本地不再保存题目、提交、作答、错题及维度评估。旧数据库运行 `./backend/.venv/Scripts/python.exe operations/database/remove_legacy_practice_tables.py` 删除相关 6 张表及知识点评估维度字段；当前学习状态和学习会话保留，不备份、不运行测试。
+
 知识图谱的课程颜色在创建课程时从预设配色中随机分配，保存在 `courses.graph_color`；刷新、重命名或增删其他课程不会改变它，学生端与管理员端使用相同颜色。旧数据库运行 `./backend/.venv/Scripts/python.exe operations/database/enable_course_graph_colors.py` 添加字段并为已有课程补齐颜色。
 
 ## 当前代码结构
@@ -99,7 +101,6 @@ backend/app/
   core/            # 环境配置、异常、日志与课程枚举
   curriculum/      # 四门课程目录与幂等同步
   db/              # PostgreSQL 连接
-  learning/        # 概览仍使用的历史进度判定与推荐
   schemas/         # 当前请求响应及历史进度类型
   services/        # Dify、会话签名、账户与学习状态
 frontend/

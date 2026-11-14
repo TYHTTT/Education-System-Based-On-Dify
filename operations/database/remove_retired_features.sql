@@ -6,6 +6,13 @@ ALTER TABLE IF EXISTS public.practice_questions
     DROP COLUMN IF EXISTS item_version,
     DROP COLUMN IF EXISTS solution_steps_json;
 
+DROP TABLE IF EXISTS public.misconception_events;
+DROP TABLE IF EXISTS public.practice_attempts;
+DROP TABLE IF EXISTS public.practice_submissions;
+DROP TABLE IF EXISTS public.practice_questions;
+DROP TABLE IF EXISTS public.practice_sets;
+DROP TABLE IF EXISTS public.student_dimension_states;
+
 DROP TABLE IF EXISTS public.content_review_events;
 DROP TABLE IF EXISTS public.question_bank_topics;
 DROP TABLE IF EXISTS public.question_bank_items;

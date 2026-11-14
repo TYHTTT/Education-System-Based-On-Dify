@@ -169,14 +169,6 @@ export interface AuthenticatedAdmin extends Administrator {
   access_token: string;
 }
 
-export interface DimensionProgress {
-  dimension: string;
-  label?: string;
-  mastery: number | null;
-  confidence?: number | null;
-  evidence_count?: number;
-}
-
 export interface CurriculumTopicSummary {
   id: string;
   slug?: string;
@@ -197,8 +189,6 @@ export interface CurriculumTopic extends CurriculumTopicSummary {
   stage: number;
   stage_title: string;
   learning_objectives: string[];
-  required_dimensions: string[];
-  dimensions?: DimensionProgress[];
   active?: boolean;
   created_at?: string;
   updated_at?: string;
@@ -213,17 +203,6 @@ export interface CurriculumStage {
 export interface CurriculumResponse {
   course: Course;
   stages: CurriculumStage[];
-}
-
-export interface RecentLearningAttempt {
-  id?: string;
-  attempt_id?: string;
-  topic_id: string;
-  topic_title: string;
-  mode: "practice" | "checkpoint";
-  score: number | null;
-  status?: string;
-  created_at: string;
 }
 
 export interface DashboardTopic {
@@ -253,7 +232,6 @@ export interface LearningDashboard {
   recommended_topic_id: string | null;
   next_action: NextAction;
   reasons: string[];
-  recent_practice: RecentLearningAttempt[];
   stages: DashboardStage[];
 }
 

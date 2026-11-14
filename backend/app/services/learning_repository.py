@@ -23,7 +23,7 @@ from app.db.database import PostgresConnection, PostgresDatabase
 
 
 class LearningRepository:
-    """Persistence for accounts, curriculum, study state and read-only historical results."""
+    """Persistence for accounts, curriculum and Dify learning sessions."""
 
     TOPIC_STATE_UPDATE_FIELDS = frozenset(
         {
@@ -194,9 +194,9 @@ class LearningRepository:
                     """
                     INSERT INTO curriculum_topics (
                         id, course, chapter_id, slug, title, stage, stage_title, order_index,
-                        description, learning_objectives_json, required_dimensions_json,
+                        description, learning_objectives_json,
                         active, created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(id) DO UPDATE SET
                         slug = excluded.slug,
                         title = excluded.title,
@@ -206,7 +206,6 @@ class LearningRepository:
                         order_index = excluded.order_index,
                         description = excluded.description,
                         learning_objectives_json = excluded.learning_objectives_json,
-                        required_dimensions_json = excluded.required_dimensions_json,
                         active = excluded.active,
                         updated_at = excluded.updated_at
                     """,
@@ -221,7 +220,6 @@ class LearningRepository:
                         topic.order_index,
                         topic.description,
                         self._dump_json(topic.learning_objectives),
-                        self._dump_json(topic.required_dimensions),
                         int(topic.active),
                         now,
                         now,
@@ -247,7 +245,6 @@ class LearningRepository:
         record = dict(row)
         for column, output in (
             ("learning_objectives_json", "learning_objectives"),
-            ("required_dimensions_json", "required_dimensions"),
         ):
             record[output] = self._load_json(record.pop(column), [])
         record["active"] = bool(record["active"])
@@ -403,78 +400,6 @@ class LearningRepository:
         assert state is not None
         return state
 
-    def list_dimension_states(
-        self, student_id: str, topic_id: str
-    ) -> list[dict[str, Any]]:
-        with self._connect() as connection:
-            rows = connection.execute(
-                """
-                SELECT * FROM student_dimension_states
-                WHERE student_id = ? AND topic_id = ?
-                ORDER BY dimension
-                """,
-                (student_id, topic_id),
-            ).fetchall()
-        return [dict(row) for row in rows]
-
-    def count_unresolved_critical_misconceptions(
-        self,
-        student_id: str,
-        topic_id: str,
-    ) -> int:
-        with self._connect() as connection:
-            row = connection.execute(
-                """
-                SELECT COUNT(*) AS count
-                FROM misconception_events me
-                JOIN practice_attempts pa ON pa.id = me.attempt_id
-                WHERE me.student_id = ? AND me.topic_id = ?
-                  AND me.critical = 1 AND me.resolved_at IS NULL
-                  AND pa.evaluation_reliable = 1
-                """,
-                (student_id, topic_id),
-            ).fetchone()
-        return int(row["count"])
-
-
-    def get_latest_checkpoint_dimensions(
-        self,
-        student_id: str,
-        topic_id: str,
-    ) -> list[str]:
-        with self._connect() as connection:
-            latest = connection.execute(
-                """
-                SELECT s.id
-                FROM practice_submissions s
-                JOIN practice_sets ps ON ps.id = s.practice_set_id
-                WHERE s.student_id = ? AND ps.topic_id = ?
-                  AND ps.mode = 'checkpoint'
-                  AND s.evaluation_status = 'evaluated'
-                  AND (ps.purpose='legacy' OR NOT EXISTS (SELECT 1 FROM practice_questions pq WHERE pq.practice_set_id=ps.id AND (pq.evidence_eligible=0 OR pq.used_hint=1 OR pq.solution_revealed=1 OR pq.attempt_count>1)))
-                ORDER BY s.created_at DESC, s.id DESC
-                LIMIT 1
-                """,
-                (student_id, topic_id),
-            ).fetchone()
-            if latest is None:
-                return []
-            rows = connection.execute(
-                """
-                SELECT dimension_scores_json
-                FROM practice_attempts
-                WHERE submission_id = ? AND evaluation_reliable = 1
-                """,
-                (latest["id"],),
-            ).fetchall()
-        return sorted(
-            {
-                dimension
-                for row in rows
-                for dimension in self._load_json(row["dimension_scores_json"], {})
-            }
-        )
-
     def create_learning_session(
         self,
         *,
@@ -514,61 +439,3 @@ class LearningRepository:
                 ),
             )
         return session_id
-
-    @staticmethod
-    def _submission_history_record(row: dict[str, Any]) -> dict[str, Any]:
-        score = float(row["total_score"])
-        return {
-            "event_type": "submission",
-            "id": row["id"],
-            "submission_id": row["id"],
-            "practice_set_id": row["practice_set_id"],
-            "topic_id": row["topic_id"],
-            "topic_title": row["topic_title"],
-            "mode": row["mode"],
-            "score": score,
-            "total_score": score,
-            "status": row["evaluation_status"],
-            "evaluation_status": row["evaluation_status"],
-            "mastery_before": (
-                float(row["mastery_before"])
-                if row["mastery_before"] is not None
-                else None
-            ),
-            "mastery_after": (
-                float(row["mastery_after"])
-                if row["mastery_after"] is not None
-                else None
-            ),
-            "created_at": row["created_at"],
-        }
-
-    def list_recent_submissions(
-        self,
-        student_id: str,
-        *,
-        course: Course | str | None = None,
-        limit: int = 5,
-    ) -> list[dict[str, Any]]:
-        normalized_limit = max(0, int(limit))
-        if normalized_limit == 0:
-            return []
-        query = """
-            SELECT s.id, s.practice_set_id, s.total_score,
-                   s.evaluation_status, s.mastery_before, s.mastery_after,
-                   s.created_at, ps.topic_id, ps.mode, t.title AS topic_title
-            FROM practice_submissions s
-            JOIN practice_sets ps ON ps.id = s.practice_set_id
-            JOIN curriculum_topics t ON t.id = ps.topic_id
-            WHERE s.student_id = ? AND s.evaluation_status <> 'processing'
-        """
-        params: list[Any] = [student_id]
-        if course is not None:
-            course_value = course.value if isinstance(course, Course) else Course(course).value
-            query += " AND ps.course = ?"
-            params.append(course_value)
-        query += " ORDER BY s.created_at DESC, s.id DESC LIMIT ?"
-        params.append(normalized_limit)
-        with self._connect() as connection:
-            rows = connection.execute(query, tuple(params)).fetchall()
-        return [self._submission_history_record(row) for row in rows]

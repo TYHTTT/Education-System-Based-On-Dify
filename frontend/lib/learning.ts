@@ -1,6 +1,5 @@
 import type {
   CurriculumTopicSummary,
-  DimensionProgress,
   NextAction,
   TopicStatus,
 } from "@/lib/types";
@@ -49,6 +48,7 @@ export const TOPIC_STATUS_META: Record<
 
 export const NEXT_ACTION_LABELS: Record<string, string> = {
   start_learning: "开始知识点学习",
+  continue_learning: "继续当前知识点学习",
   teach: "查看针对性讲解",
   practice: "继续主动练习",
   remediate: "进行薄弱点补救",
@@ -75,29 +75,16 @@ export function percent(value?: number | null): string {
   return `${Math.round(Math.min(1, Math.max(0, value)) * 100)}%`;
 }
 
-export function scoreLabel(value?: number | null): string {
-  if (value === null || value === undefined || !Number.isFinite(value))
-    return "—";
-  return `${Math.round(value)} 分`;
-}
-
 /** Keep the uninformative Beta(1,1) prior out of student-facing progress. */
 export function hasValidTopicEvidence(
   topic: Pick<
     CurriculumTopicSummary,
     "status" | "mastery" | "mastery_display" | "confidence" | "evidence_count"
-  > & { dimensions?: DimensionProgress[] },
+  >,
 ): boolean {
   if (topic.status === "not_started") return false;
   if (typeof topic.evidence_count === "number") return topic.evidence_count > 0;
   if (topic.mastery_display?.trim() === "尚未评估") return false;
-
-  const dimensionEvidence = topic.dimensions?.some(
-    (dimension) =>
-      typeof dimension.evidence_count === "number" &&
-      dimension.evidence_count > 0,
-  );
-  if (dimensionEvidence) return true;
 
   if (
     (topic.confidence === null ||

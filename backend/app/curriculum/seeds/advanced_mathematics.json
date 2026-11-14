@@ -13,11 +13,6 @@
         "确定常见函数的定义域和值域",
         "分析函数的单调性、奇偶性、周期性和有界性"
       ],
-      "required_dimensions": [
-        "concept",
-        "calculation",
-        "application"
-      ],
       "active": true
     },
     {
@@ -31,11 +26,6 @@
       "learning_objectives": [
         "用 ε-N 语言表述数列极限",
         "使用极限运算法则和夹逼准则计算极限"
-      ],
-      "required_dimensions": [
-        "concept",
-        "derivation",
-        "calculation"
       ],
       "active": true
     },
@@ -51,12 +41,6 @@
         "区分单侧极限与双侧极限",
         "运用等价无穷小和两个重要极限"
       ],
-      "required_dimensions": [
-        "concept",
-        "derivation",
-        "calculation",
-        "application"
-      ],
       "active": true
     },
     {
@@ -70,12 +54,6 @@
       "learning_objectives": [
         "用极限判断函数在一点连续",
         "分类间断点并应用介值定理"
-      ],
-      "required_dimensions": [
-        "concept",
-        "theorem_condition",
-        "calculation",
-        "application"
       ],
       "active": true
     },
@@ -91,12 +69,6 @@
         "使用定义计算简单函数导数",
         "判断可导、连续及左右导数的关系"
       ],
-      "required_dimensions": [
-        "concept",
-        "derivation",
-        "calculation",
-        "application"
-      ],
       "active": true
     },
     {
@@ -110,11 +82,6 @@
       "learning_objectives": [
         "正确使用乘积、商和链式法则",
         "完成隐函数及高阶导数计算"
-      ],
-      "required_dimensions": [
-        "concept",
-        "derivation",
-        "calculation"
       ],
       "active": true
     },
@@ -130,12 +97,6 @@
         "核对并陈述各中值定理的适用条件",
         "构造辅助函数证明等式或不等式"
       ],
-      "required_dimensions": [
-        "concept",
-        "theorem_condition",
-        "derivation",
-        "application"
-      ],
       "active": true
     },
     {
@@ -149,13 +110,6 @@
       "learning_objectives": [
         "写出常见函数的泰勒展开",
         "利用余项估计近似误差或计算极限"
-      ],
-      "required_dimensions": [
-        "concept",
-        "theorem_condition",
-        "derivation",
-        "calculation",
-        "application"
       ],
       "active": true
     },
@@ -171,11 +125,6 @@
         "通过导数绘制函数性态",
         "建立并求解一元最优化模型"
       ],
-      "required_dimensions": [
-        "concept",
-        "calculation",
-        "application"
-      ],
       "active": true
     },
     {
@@ -189,11 +138,6 @@
       "learning_objectives": [
         "判断原函数族并写出积分常数",
         "使用基本积分表计算不定积分"
-      ],
-      "required_dimensions": [
-        "concept",
-        "derivation",
-        "calculation"
       ],
       "active": true
     },
@@ -209,12 +153,6 @@
         "用分割求和描述定积分",
         "运用定积分的线性、区间可加性和估值性质"
       ],
-      "required_dimensions": [
-        "concept",
-        "theorem_condition",
-        "derivation",
-        "calculation"
-      ],
       "active": true
     },
     {
@@ -228,13 +166,6 @@
       "learning_objectives": [
         "陈述定理条件并计算变上限积分导数",
         "用原函数计算定积分"
-      ],
-      "required_dimensions": [
-        "concept",
-        "theorem_condition",
-        "derivation",
-        "calculation",
-        "application"
       ],
       "active": true
     },
@@ -250,11 +181,6 @@
         "根据被积函数结构选择积分方法",
         "正确处理换元边界和分部积分"
       ],
-      "required_dimensions": [
-        "derivation",
-        "calculation",
-        "application"
-      ],
       "active": true
     },
     {
@@ -268,12 +194,6 @@
       "learning_objectives": [
         "建立几何量的积分表达式",
         "根据问题选择直角坐标或参数表示"
-      ],
-      "required_dimensions": [
-        "concept",
-        "derivation",
-        "calculation",
-        "application"
       ],
       "active": true
     },
@@ -289,12 +209,6 @@
         "计算一阶和二阶偏导数",
         "解释偏导数作为坐标方向变化率"
       ],
-      "required_dimensions": [
-        "concept",
-        "derivation",
-        "calculation",
-        "application"
-      ],
       "active": true
     },
     {
@@ -308,13 +222,6 @@
       "learning_objectives": [
         "判断偏导存在与可微之间的关系",
         "使用全微分进行误差估计和近似计算"
-      ],
-      "required_dimensions": [
-        "concept",
-        "theorem_condition",
-        "derivation",
-        "calculation",
-        "application"
       ],
       "active": true
     },
@@ -330,13 +237,6 @@
         "用驻点和 Hessian 判别二元函数极值",
         "建立并求解条件极值问题"
       ],
-      "required_dimensions": [
-        "concept",
-        "theorem_condition",
-        "derivation",
-        "calculation",
-        "application"
-      ],
       "active": true
     },
     {
@@ -350,12 +250,6 @@
       "learning_objectives": [
         "根据积分区域建立累次积分",
         "正确进行极坐标变换并包含雅可比因子"
-      ],
-      "required_dimensions": [
-        "concept",
-        "derivation",
-        "calculation",
-        "application"
       ],
       "active": true
     },
@@ -371,12 +265,6 @@
         "描述空间区域并确定积分次序",
         "在柱面或球面坐标下建立积分"
       ],
-      "required_dimensions": [
-        "concept",
-        "derivation",
-        "calculation",
-        "application"
-      ],
       "active": true
     },
     {
@@ -390,12 +278,6 @@
       "learning_objectives": [
         "识别并求解可分离变量方程",
         "使用常数变易或积分因子求解一阶线性方程"
-      ],
-      "required_dimensions": [
-        "concept",
-        "derivation",
-        "calculation",
-        "application"
       ],
       "active": true
     }

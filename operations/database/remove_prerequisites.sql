@@ -3,8 +3,8 @@ DROP TABLE IF EXISTS public.prerequisite_verifications;
 DROP TABLE IF EXISTS public.topic_prerequisites;
 DROP FUNCTION IF EXISTS public.prevent_required_prerequisite_cycle();
 
-ALTER TABLE public.practice_sets DROP COLUMN IF EXISTS prerequisite_for;
-ALTER TABLE public.practice_sets DROP COLUMN IF EXISTS rule_version;
+ALTER TABLE IF EXISTS public.practice_sets DROP COLUMN IF EXISTS prerequisite_for;
+ALTER TABLE IF EXISTS public.practice_sets DROP COLUMN IF EXISTS rule_version;
 
 UPDATE public.student_topic_states SET status='not_started' WHERE status='locked';
 DO $$
