@@ -150,10 +150,6 @@ function CourseDetails({ courseId }: { courseId: string }) {
                 {course.description || "暂无课程简介"}
               </p>
               <dl className="mt-5 flex flex-wrap gap-x-8 gap-y-3 text-xs text-slate-500">
-                <div className="flex min-w-0 gap-2">
-                  <dt className="shrink-0">课程 ID</dt>
-                  <dd className="select-all break-all font-mono">{course.id}</dd>
-                </div>
                 <div className="flex gap-2">
                   <dt>最近修改</dt>
                   <dd>{new Date(course.updated_at).toLocaleString("zh-CN")}</dd>

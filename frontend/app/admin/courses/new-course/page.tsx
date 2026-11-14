@@ -11,8 +11,8 @@ export default function NewCoursePage() {
   const { withAdmin } = useAdmin();
   const router = useRouter();
   async function save(values: CourseInput) {
-    const course = await withAdmin((token) => createCourse(token, values));
-    router.replace(`/admin/courses/${encodeURIComponent(course.id)}`);
+    await withAdmin((token) => createCourse(token, values));
+    router.replace("/admin/courses");
   }
   return <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
     <Link href="/admin/courses" className="text-sm text-slate-500 hover:text-indigo-700">← 返回课程管理</Link>

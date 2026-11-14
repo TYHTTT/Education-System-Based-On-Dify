@@ -89,10 +89,6 @@ npm run build
 
 业务数据存储在 `DATABASE_URL` 指向的 PostgreSQL 数据库中，课程资料由 Dify 管理。
 
-删除课程为永久删除：课程、全部章节与知识点、相关图谱连线、学生学习与维度状态、历史练习、作答及学习会话在同一事务中清理，失败时整体回滚。其他课程的知识点和账户保留。旧数据库运行 `./backend/.venv/Scripts/python.exe operations/database/enable_course_hard_delete.py`，清理以前标记删除的课程及其关联数据，并移除 `courses.deleted_at` 字段。此迁移不创建备份、不运行测试；Dify 远端资料和浏览器本地聊天不属于数据库记录。
-
-新增课程的 ID 与章节一样由系统自动生成固定 UUID，创建接口不再接受 `id` 字段，编辑时只读显示。旧数据库运行 `./backend/.venv/Scripts/python.exe operations/database/enable_course_uuid.py` 设置 UUID 默认值；已有课程 ID 及其关联记录保留，原有链接和浏览器聊天记录继续可用。
-
 ## 当前代码结构
 
 ```text

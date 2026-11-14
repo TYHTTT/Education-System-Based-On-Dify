@@ -33,7 +33,7 @@ export default function CourseTopicsManager({
   const [notice, setNotice] = useState("");
   const [version, setVersion] = useState(0);
   const [busy, setBusy] = useState(false);
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
     () => new Set(),
   );
   const chapterIdPrefix = useId();
@@ -91,7 +91,7 @@ export default function CourseTopicsManager({
         );
         if (!controller.signal.aborted) {
           setOutline(data);
-          setCollapsedGroups(
+          setExpandedGroups(
             (current) =>
               new Set(
                 data.groups
@@ -121,7 +121,7 @@ export default function CourseTopicsManager({
       const data = await withAdmin((token) =>
         manageTopics(token, courseId, method, suffix, body),
       );
-      setCollapsedGroups(
+      setExpandedGroups(
         (current) =>
           new Set(
             data.groups
@@ -163,7 +163,7 @@ export default function CourseTopicsManager({
     void act(() => mutate("POST", "/groups/order", { group_ids: ids }));
   }
   function toggleGroup(id: string) {
-    setCollapsedGroups((current) => {
+    setExpandedGroups((current) => {
       const next = new Set(current);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -192,10 +192,12 @@ export default function CourseTopicsManager({
             type="button"
             disabled={
               interactionBusy ||
-              !outline?.groups.some((group) => collapsedGroups.has(group.id))
+              !outline?.groups.some((group) => !expandedGroups.has(group.id))
             }
             className={actionClass}
-            onClick={() => setCollapsedGroups(new Set())}
+            onClick={() =>
+              setExpandedGroups(new Set(outline?.groups.map((group) => group.id)))
+            }
           >
             展开全部
           </button>
@@ -203,14 +205,10 @@ export default function CourseTopicsManager({
             type="button"
             disabled={
               interactionBusy ||
-              !outline?.groups.some((group) => !collapsedGroups.has(group.id))
+              !outline?.groups.some((group) => expandedGroups.has(group.id))
             }
             className={actionClass}
-            onClick={() =>
-              setCollapsedGroups(
-                new Set(outline?.groups.map((group) => group.id)),
-              )
-            }
+            onClick={() => setExpandedGroups(new Set())}
           >
             收起全部
           </button>
@@ -391,14 +389,14 @@ export default function CourseTopicsManager({
                 <button
                   type="button"
                   disabled={interactionBusy}
-                  aria-label={`${collapsedGroups.has(group.id) ? "展开" : "收起"}章节${group.title}`}
-                  aria-expanded={!collapsedGroups.has(group.id)}
+                  aria-label={`${expandedGroups.has(group.id) ? "收起" : "展开"}章节${group.title}`}
+                  aria-expanded={expandedGroups.has(group.id)}
                   aria-controls={`${chapterIdPrefix}-${group.id}`}
                   onClick={() => toggleGroup(group.id)}
                   className="-my-2 flex w-full items-center gap-2 rounded-lg py-2 text-left hover:text-indigo-700 disabled:opacity-50"
                 >
                   <ArrowRightIcon
-                    className={`size-4 shrink-0 text-slate-400 transition-transform ${collapsedGroups.has(group.id) ? "" : "rotate-90"}`}
+                    className={`size-4 shrink-0 text-slate-400 transition-transform ${expandedGroups.has(group.id) ? "rotate-90" : ""}`}
                   />
                   <span className="break-words" title={`章节 ID：${group.id}`}>{group.title}</span>
                   <span className="shrink-0 text-xs font-normal text-slate-400">
@@ -432,11 +430,6 @@ export default function CourseTopicsManager({
                     aria-label={`在${group.title}中新增知识点`}
                     className={primaryClass}
                     onClick={(event) => {
-                      setCollapsedGroups((current) => {
-                        const next = new Set(current);
-                        next.delete(group.id);
-                        return next;
-                      });
                       setEditor({
                         topic: null,
                         initialGroupId: group.id,
@@ -477,7 +470,7 @@ export default function CourseTopicsManager({
             </div>
             <div
               id={`${chapterIdPrefix}-${group.id}`}
-              hidden={collapsedGroups.has(group.id)}
+              hidden={!expandedGroups.has(group.id)}
             >
               <ol className="divide-y divide-slate-100">
                 {group.topics.map((topic, index) => (
