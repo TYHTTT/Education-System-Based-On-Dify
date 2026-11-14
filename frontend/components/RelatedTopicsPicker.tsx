@@ -31,6 +31,7 @@ export default function RelatedTopicsPicker({
     course: string;
     page: number;
   } | null>(null);
+  const [completedSearch, setCompletedSearch] = useState<typeof search>(null);
   const page = search?.page ?? 1;
   const [data, setData] = useState<RelatedTopicCandidates | null>(null);
   const [known, setKnown] = useState<Record<string, RelatedTopic>>(() =>
@@ -63,6 +64,7 @@ export default function RelatedTopicsPicker({
           ...Object.fromEntries(result.items.map((topic) => [topic.id, topic])),
         }));
         setData(result);
+        setCompletedSearch(search);
       } catch (cause) {
         if (!controller.signal.aborted)
           setError(
@@ -83,6 +85,7 @@ export default function RelatedTopicsPicker({
     if (!keyword) return;
     setData((current) => current ? { ...current, items: [], total: 0 } : null);
     setError("");
+    setCompletedSearch(null);
     setLoading(true);
     setSearch({ query: keyword, course, page: 1 });
   }
@@ -90,6 +93,13 @@ export default function RelatedTopicsPicker({
   function changePage(nextPage: number) {
     setLoading(true);
     setSearch((current) => current ? { ...current, page: nextPage } : null);
+  }
+
+  function clearSearch() {
+    setSearch(null);
+    setCompletedSearch(null);
+    setLoading(false);
+    setError("");
   }
 
   return (
@@ -147,10 +157,7 @@ export default function RelatedTopicsPicker({
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);
-            if (!event.target.value.trim()) {
-              setSearch(null);
-              setError("");
-            }
+            clearSearch();
           }}
           onKeyDown={(event) => {
             if (event.key === "Enter" && !event.nativeEvent.isComposing) {
@@ -165,6 +172,7 @@ export default function RelatedTopicsPicker({
           value={course}
           onChange={(event) => {
             setCourse(event.target.value);
+            clearSearch();
           }}
           className={inputClass}
         >
@@ -186,10 +194,7 @@ export default function RelatedTopicsPicker({
           搜索
         </button>
       </div>
-      {!search && (
-        <p className="text-xs text-slate-400">输入关键词并点击搜索，查看可关联的知识点。</p>
-      )}
-      {search && (
+      {search && (loading || error || completedSearch === search) && (
       <div className="max-h-52 overflow-y-auto overscroll-contain rounded-xl border border-slate-200">
         {loading ? (
           <p role="status" className="p-4 text-sm text-slate-400">
@@ -237,12 +242,12 @@ export default function RelatedTopicsPicker({
               </li>
             ))}
           </ul>
-        ) : (
+        ) : completedSearch === search ? (
           <p className="p-4 text-sm text-slate-400">没有匹配的知识点</p>
-        )}
+        ) : null}
       </div>
       )}
-      {search && data && !loading && !error && data.total > data.page_size && (
+      {search && completedSearch === search && data && !loading && !error && data.total > data.page_size && (
         <div className="flex items-center justify-between gap-2 text-xs text-slate-500">
           <span>
             共 {data.total} 个 · 第 {page} 页

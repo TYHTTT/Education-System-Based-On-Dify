@@ -8,6 +8,27 @@ TopicId = Annotated[
 ChapterId = Annotated[str, Field(pattern=rf"^{UUID_ID_PATTERN}$")]
 
 
+class BatchTitles(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    titles: list[str] = Field(min_length=1, max_length=200)
+
+    @field_validator("titles")
+    @classmethod
+    def clean_titles(cls, values):
+        titles = [value.strip() for value in values if value.strip()]
+        if not titles:
+            raise ValueError("请至少输入一个名称")
+        if any(len(title) > 100 or "\n" in title or "\r" in title for title in titles):
+            raise ValueError("每项名称需为 1 到 100 个字符，且不能包含换行")
+        if len(titles) != len(set(titles)):
+            raise ValueError("名称有重复，请删除重复行")
+        return titles
+
+
+class TopicBatchCreate(BatchTitles):
+    chapter_id: ChapterId
+
+
 class TopicWrite(BaseModel):
     model_config = ConfigDict(extra="forbid")
     chapter_id: ChapterId

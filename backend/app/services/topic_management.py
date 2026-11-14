@@ -138,11 +138,38 @@ class TopicManagement:
         return {"course": {"id": record["id"], "title": record["title"], "active": bool(record["active"])}, "groups": list(groups.values()), "removed_topics": removed}
 
     def create_chapter(self, course, title):
+        return self.create_chapters(course, [title])
+
+    def create_chapters(self, course, titles):
         with self.database.connect() as connection:
             self._course(connection, course, lock=True)
             order = connection.execute("SELECT coalesce(max(sort_order),0)+1 AS position FROM course_chapters WHERE course_id=?", (str(course),)).fetchone()["position"]
-            connection.execute("INSERT INTO course_chapters(id,course_id,sort_order,title) VALUES (?,?,?,?)", (str(uuid4()), str(course), order, title))
+            connection.executemany("INSERT INTO course_chapters(id,course_id,sort_order,title) VALUES (?,?,?,?)",
+                                   [(str(uuid4()), str(course), order + index, title) for index, title in enumerate(titles)])
             connection.execute("UPDATE courses SET updated_at=? WHERE id=?", (self._now(), str(course)))
+        return self.outline(course)
+
+    def create_topics(self, course, chapter_id, titles):
+        with self.database.connect() as connection:
+            self._course(connection, course, lock=True)
+            chapter = self._chapter(connection, course, chapter_id)
+            position = connection.execute("""SELECT coalesce(max(order_index),0)+1 AS position
+                FROM topic_placements WHERE course_id=? AND parent_group_id=?""", (str(course), chapter_id)).fetchone()["position"]
+            now = self._now()
+            topics, placements = [], []
+            for index, title in enumerate(titles):
+                slug = f"t_{uuid4().hex[:12]}"
+                topic_id = f"{course}.{slug}"
+                order = position + index
+                topics.append((topic_id, str(course), chapter_id, slug, title, chapter["sort_order"],
+                               chapter["title"], order, "", "[]", now, now))
+                placements.append((str(course), topic_id, chapter_id, chapter["title"], order))
+            connection.executemany("""INSERT INTO curriculum_topics(id,course,chapter_id,slug,title,stage,stage_title,
+                order_index,description,learning_objectives_json,created_at,updated_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""", topics)
+            connection.executemany("""INSERT INTO topic_placements(course_id,topic_id,parent_group_id,group_title,order_index)
+                VALUES (?,?,?,?,?)""", placements)
+            connection.execute("UPDATE courses SET updated_at=? WHERE id=?", (now, str(course)))
         return self.outline(course)
 
     def save(self, course, values, topic_id=None):

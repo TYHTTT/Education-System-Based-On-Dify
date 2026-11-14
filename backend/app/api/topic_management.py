@@ -4,6 +4,8 @@ from app.core.types import Course
 from app.schemas.topic_management import (
     TopicId,
     TopicWrite,
+    BatchTitles,
+    TopicBatchCreate,
     TopicOrder,
     ChapterId,
     ChapterWrite,
@@ -40,6 +42,16 @@ def outline(course_id: Course, manager=Depends(service)):
 @router.post(PREFIX, status_code=201)
 def create(course_id: Course, payload: TopicWrite, manager=Depends(service)):
     return manager.save(course_id, payload.model_dump())
+
+
+@router.post(PREFIX + "/batch", status_code=201)
+def create_batch(course_id: Course, payload: TopicBatchCreate, manager=Depends(service)):
+    return manager.create_topics(course_id, payload.chapter_id, payload.titles)
+
+
+@router.post(PREFIX + "/groups/batch", status_code=201)
+def create_groups_batch(course_id: Course, payload: BatchTitles, manager=Depends(service)):
+    return manager.create_chapters(course_id, payload.titles)
 
 
 @router.put(PREFIX + "/order")

@@ -16,6 +16,7 @@ import {
   type ManagedTopic,
   type TopicGroup,
   type TopicValues,
+  type TopicBatchValues,
 } from "@/lib/topic-management";
 
 const message = (error: unknown) =>
@@ -149,6 +150,12 @@ export default function CourseTopicsManager({
     await mutate(editor.topic ? "PUT" : "POST", suffix, values);
     setEditor(null);
   }
+  async function saveBatch(values: TopicBatchValues) {
+    if (!editor || editor.topic) return;
+    await mutate("POST", "/batch", values);
+    setEditor(null);
+    setNotice(`已新增 ${values.titles.length} 个知识点。`);
+  }
   function moveTopic(group: TopicGroup, index: number, offset: number) {
     const ids = group.topics.map((t) => t.id);
     [ids[index], ids[index + offset]] = [ids[index + offset], ids[index]];
@@ -250,12 +257,13 @@ export default function CourseTopicsManager({
         <CreateChapterDialog
           {...creatingGroup}
           onCancel={() => setCreatingGroup(null)}
-          onSave={async (title) => {
-            const data = await mutate("POST", "/groups", { title });
+          onSave={async (titles) => {
+            const data = await mutate("POST", "/groups/batch", { titles });
             const added = data.groups.find(
               (group) => !outline?.groups.some((old) => old.id === group.id),
             );
             setCreatingGroup(null);
+            setNotice(`已新增 ${titles.length} 个章节。`);
             if (added)
               requestAnimationFrame(() =>
                 document
@@ -273,6 +281,7 @@ export default function CourseTopicsManager({
           courseId={courseId}
           groups={outline.groups}
           onSave={save}
+          onBatchSave={saveBatch}
           onCancel={() => setEditor(null)}
         />
       )}

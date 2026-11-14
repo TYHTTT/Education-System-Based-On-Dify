@@ -7,6 +7,10 @@ export interface TopicValues {
   learning_objectives: string[];
   related_topic_ids?: string[];
 }
+export interface TopicBatchValues {
+  chapter_id: string;
+  titles: string[];
+}
 export interface RelatedTopic {
   id: string;
   title: string;

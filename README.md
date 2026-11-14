@@ -89,6 +89,8 @@ npm run build
 
 业务数据存储在 `DATABASE_URL` 指向的 PostgreSQL 数据库中，课程资料由 Dify 管理。
 
+新增章节或知识点时可切换“批量新增”，每行输入一个名称，空行自动忽略；每次最多 200 项，每项最多 100 个字符，重复行会提示修改。章节按输入顺序追加，知识点添加到当前章节。每项分别生成 ID，整批在同一事务中保存，失败时整体回滚；新增后保留章节原有的折叠状态。
+
 练习出题、回答和反馈通过 Dify 对话完成，本地不再保存题目、提交、作答、错题及维度评估。旧数据库运行 `./backend/.venv/Scripts/python.exe operations/database/remove_legacy_practice_tables.py` 删除相关 6 张表及知识点评估维度字段；当前学习状态和学习会话保留，不备份、不运行测试。
 
 知识图谱的课程颜色在创建课程时从预设配色中随机分配，保存在 `courses.graph_color`；刷新、重命名或增删其他课程不会改变它，学生端与管理员端使用相同颜色。旧数据库运行 `./backend/.venv/Scripts/python.exe operations/database/enable_course_graph_colors.py` 添加字段并为已有课程补齐颜色。

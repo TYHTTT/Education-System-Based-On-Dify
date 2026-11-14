@@ -5,8 +5,11 @@ import type {
   ManagedTopic,
   TopicGroup,
   TopicValues,
+  TopicBatchValues,
 } from "@/lib/topic-management";
 import RelatedTopicsPicker from "@/components/RelatedTopicsPicker";
+import CreationModeSwitch from "@/components/CreationModeSwitch";
+import { parseBatchNames, splitNames } from "@/lib/batch-names";
 
 export const fieldClass =
   "mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900";
@@ -27,6 +30,7 @@ export default function KnowledgePointEditor({
   initialGroupId,
   returnFocus,
   onSave,
+  onBatchSave,
   onCancel,
 }: {
   topic: ManagedTopic | null;
@@ -34,6 +38,7 @@ export default function KnowledgePointEditor({
   courseId: string;
   returnFocus: HTMLElement;
   onSave: (values: TopicValues) => Promise<void>;
+  onBatchSave: (values: TopicBatchValues) => Promise<void>;
   onCancel: () => void;
   initialGroupId?: string;
 }) {
@@ -44,6 +49,9 @@ export default function KnowledgePointEditor({
   const [chapter] = useState(initial?.id ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [bulk, setBulk] = useState(false);
+  const [title, setTitle] = useState(topic?.title ?? "");
+  const [batchText, setBatchText] = useState("");
   const [relatedIds, setRelatedIds] = useState(topic?.related_topic_ids ?? []);
   const ref = useRef<HTMLDialogElement>(null);
   const headingId = useId();
@@ -73,6 +81,9 @@ export default function KnowledgePointEditor({
       });
     };
   }, [returnFocus]);
+  useEffect(() => {
+    ref.current?.querySelector<HTMLElement>('[name="title"], [name="batch_titles"]')?.focus({ preventScroll: true });
+  }, [bulk]);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
@@ -84,13 +95,20 @@ export default function KnowledgePointEditor({
     setSaving(true);
     setError("");
     try {
-      await onSave({
-        title: String(data.get("title")).trim(),
-        description: String(data.get("description")).trim(),
-        chapter_id: target.id,
-        learning_objectives: lines(data.get("learning_objectives")),
-        related_topic_ids: relatedIds,
-      });
+      if (bulk && !topic) {
+        await onBatchSave({
+          chapter_id: target.id,
+          titles: parseBatchNames(batchText, "知识点"),
+        });
+      } else {
+        await onSave({
+          title: String(data.get("title")).trim(),
+          description: String(data.get("description") ?? topic?.description ?? "").trim(),
+          chapter_id: target.id,
+          learning_objectives: lines(data.get("learning_objectives")),
+          related_topic_ids: relatedIds,
+        });
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "保存失败");
     } finally {
@@ -162,13 +180,41 @@ export default function KnowledgePointEditor({
         </header>
         <div className="min-h-0 overflow-y-auto overscroll-contain p-5 sm:p-6">
           <fieldset disabled={saving} className="grid gap-4 sm:grid-cols-2">
+            {!topic && (
+              <div className="sm:col-span-2">
+                <CreationModeSwitch bulk={bulk} disabled={saving} onChange={(value) => { setBulk(value); setError(""); }} />
+              </div>
+            )}
+            {bulk && !topic && (
+              <label className="text-sm text-slate-700 sm:col-span-2">
+                知识点名称（每行一个）
+                <textarea
+                  name="batch_titles"
+                  required
+                  rows={8}
+                  maxLength={20200}
+                  value={batchText}
+                  onChange={(event) => setBatchText(event.target.value)}
+                  placeholder={"线性回归\n逻辑回归\n决策树"}
+                  className={`${fieldClass} resize-y`}
+                />
+                <span className="mt-2 block text-xs text-slate-500">
+                  添加到“{initial?.title}”，共 {splitNames(batchText).length} 个知识点，空行自动忽略，每次最多 200 个。
+                </span>
+              </label>
+            )}
+            <fieldset
+              disabled={saving || (bulk && !topic)}
+              className={bulk && !topic ? "hidden" : "contents"}
+            >
             <label className="text-sm text-slate-700 sm:col-span-2">
               知识点名称
               <input
                 name="title"
                 required
                 maxLength={100}
-                defaultValue={topic?.title}
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
                 className={fieldClass}
               />
             </label>
@@ -188,6 +234,7 @@ export default function KnowledgePointEditor({
                 className={fieldClass}
               />
             </label>
+            </fieldset>
           </fieldset>
         </div>
         <footer className="shrink-0 border-t border-slate-100 px-5 py-4 sm:px-6">
@@ -209,7 +256,7 @@ export default function KnowledgePointEditor({
               取消
             </button>
             <button type="submit" disabled={saving} className={primaryClass}>
-              {saving ? "正在保存…" : "保存编排"}
+              {saving ? "正在保存…" : bulk && !topic ? "批量创建知识点" : "保存编排"}
             </button>
           </div>
         </footer>
