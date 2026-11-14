@@ -195,7 +195,7 @@ export default function KnowledgePointEditor({
                   maxLength={20200}
                   value={batchText}
                   onChange={(event) => setBatchText(event.target.value)}
-                  placeholder={"线性回归\n逻辑回归\n决策树"}
+                  placeholder={"例如：\n线性回归\n逻辑回归\n决策树"}
                   className={`${fieldClass} resize-y`}
                 />
                 <span className="mt-2 block text-xs text-slate-500">
