@@ -197,9 +197,6 @@ export interface CurriculumTopic extends CurriculumTopicSummary {
   stage: number;
   stage_title: string;
   learning_objectives: string[];
-  aliases: string[];
-  retrieval_keywords?: string[];
-  difficulty: string;
   required_dimensions: string[];
   dimensions?: DimensionProgress[];
   active?: boolean;

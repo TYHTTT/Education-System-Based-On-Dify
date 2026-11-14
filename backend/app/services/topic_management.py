@@ -57,15 +57,17 @@ class TopicManagement:
         if not topic_ids:
             return result
         rows = connection.execute("""SELECT e.topic_a_id,e.topic_b_id,t.id,t.title,t.course,c.title AS course_title,
-            t.active,c.active AS course_active
+            t.active,c.active AS course_active,t.chapter_id,ch.title AS chapter_title
             FROM topic_relations e
             CROSS JOIN LATERAL (VALUES (e.topic_a_id,e.topic_b_id),(e.topic_b_id,e.topic_a_id)) AS pair(topic_id,related_id)
             JOIN curriculum_topics t ON t.id=pair.related_id JOIN courses c ON c.id=t.course
+            JOIN course_chapters ch ON ch.id=t.chapter_id AND ch.course_id=t.course
             WHERE e.relation_type='related' AND pair.topic_id=ANY(?) ORDER BY t.title,t.id""", (topic_ids,)).fetchall()
         for row in rows:
             source = row["topic_b_id"] if row["id"] == row["topic_a_id"] else row["topic_a_id"]
             result[source].append({"id": row["id"], "title": row["title"], "course": row["course"],
                                    "course_title": row["course_title"], "course_active": bool(row["course_active"]),
+                                   "chapter_id": row["chapter_id"], "chapter_title": row["chapter_title"],
                                    "available": bool(row["active"])})
         return result
 
@@ -98,8 +100,10 @@ class TopicManagement:
             if exclude is not None:
                 where += " AND t.id<>?"; params.append(exclude)
             total = connection.execute("SELECT count(*) AS n FROM curriculum_topics t JOIN courses c ON c.id=t.course WHERE " + where, params).fetchone()["n"]
-            rows = connection.execute("""SELECT t.id,t.title,t.course,c.title AS course_title,c.active AS course_active
-                FROM curriculum_topics t JOIN courses c ON c.id=t.course WHERE """ + where +
+            rows = connection.execute("""SELECT t.id,t.title,t.course,c.title AS course_title,c.active AS course_active,
+                t.chapter_id,ch.title AS chapter_title
+                FROM curriculum_topics t JOIN courses c ON c.id=t.course
+                JOIN course_chapters ch ON ch.id=t.chapter_id AND ch.course_id=t.course WHERE """ + where +
                 " ORDER BY c.title,c.id,t.stage,t.order_index,t.id LIMIT ? OFFSET ?", (*params, page_size, (page - 1) * page_size)).fetchall()
         return {"items": [{**dict(row), "course_active": bool(row["course_active"]), "available": True} for row in rows],
                 "courses": [{**course, "active": bool(course["active"])} for course in courses],
@@ -120,7 +124,7 @@ class TopicManagement:
         removed = []
         for raw in rows:
             item = dict(raw)
-            for key in ("learning_objectives", "aliases", "retrieval_keywords", "required_dimensions"):
+            for key in ("learning_objectives", "required_dimensions"):
                 item[key] = json.loads(item.pop(key + "_json"))
             item["active"] = bool(item["active"])
             item["related_topics"] = related[item["id"]]
@@ -150,15 +154,13 @@ class TopicManagement:
             if not existing:
                 position = connection.execute("SELECT coalesce(max(order_index),0)+1 AS position FROM curriculum_topics WHERE course=?", (str(course),)).fetchone()["position"]
                 connection.execute("""INSERT INTO curriculum_topics(id,course,chapter_id,slug,title,stage,stage_title,order_index,description,
-                    learning_objectives_json,aliases_json,retrieval_keywords_json,difficulty,required_dimensions_json,created_at,updated_at)
-                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", (topic_id, str(course), chapter["id"], topic_id.split('.',1)[1], values["title"], chapter["sort_order"],
-                    chapter["title"], position, values["description"], json.dumps(values["learning_objectives"]), json.dumps(values["aliases"]),
-                    json.dumps(values["retrieval_keywords"] or [values["title"]]), values["difficulty"], '["concept"]', now, now))
+                    learning_objectives_json,required_dimensions_json,created_at,updated_at)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""", (topic_id, str(course), chapter["id"], topic_id.split('.',1)[1], values["title"], chapter["sort_order"],
+                    chapter["title"], position, values["description"], json.dumps(values["learning_objectives"]), '["concept"]', now, now))
             else:
                 connection.execute("""UPDATE curriculum_topics SET title=?,chapter_id=?,stage=?,stage_title=?,description=?,learning_objectives_json=?,
-                    aliases_json=?,retrieval_keywords_json=?,difficulty=?,updated_at=? WHERE id=?""", (values["title"], chapter["id"], chapter["sort_order"], chapter["title"],
-                    values["description"], json.dumps(values["learning_objectives"]), json.dumps(values["aliases"]),
-                    json.dumps(values["retrieval_keywords"] or [values["title"]]), values["difficulty"], now, topic_id))
+                    updated_at=? WHERE id=?""", (values["title"], chapter["id"], chapter["sort_order"], chapter["title"],
+                    values["description"], json.dumps(values["learning_objectives"]), now, topic_id))
             position = self._place(connection, course, topic_id, chapter)
             connection.execute("UPDATE curriculum_topics SET order_index=? WHERE id=?", (position, topic_id))
             if values.get("related_topic_ids") is not None:

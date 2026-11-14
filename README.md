@@ -89,6 +89,8 @@ npm run build
 
 业务数据存储在 `DATABASE_URL` 指向的 PostgreSQL 数据库中，课程资料由 Dify 管理。
 
+知识图谱的课程颜色在创建课程时从预设配色中随机分配，保存在 `courses.graph_color`；刷新、重命名或增删其他课程不会改变它，学生端与管理员端使用相同颜色。旧数据库运行 `./backend/.venv/Scripts/python.exe operations/database/enable_course_graph_colors.py` 添加字段并为已有课程补齐颜色。
+
 ## 当前代码结构
 
 ```text

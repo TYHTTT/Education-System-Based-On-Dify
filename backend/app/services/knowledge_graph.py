@@ -11,7 +11,7 @@ class KnowledgeGraph:
         with self.database.connect() as connection:
             connection.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY")
             courses = [dict(row) for row in connection.execute(
-                f"SELECT c.id,c.title,c.active FROM courses c WHERE {visible_course} ORDER BY c.title,c.id"
+                f"SELECT c.id,c.title,c.active,c.graph_color AS color FROM courses c WHERE {visible_course} ORDER BY c.title,c.id"
             ).fetchall()]
             for course in courses:
                 course["active"] = bool(course["active"])

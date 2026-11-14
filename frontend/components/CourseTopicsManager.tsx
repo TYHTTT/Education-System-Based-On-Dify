@@ -485,11 +485,6 @@ export default function CourseTopicsManager({
                       <p className="break-words font-medium text-slate-800">
                         {topic.title}
                       </p>
-                      {topic.description && (
-                        <p className="mt-1 line-clamp-2 text-sm text-slate-500">
-                          {topic.description}
-                        </p>
-                      )}
                       {!!topic.related_topic_ids?.length && (
                         <p className="mt-1 text-xs text-indigo-600">
                           {topic.related_topic_ids.length} 个相关知识点

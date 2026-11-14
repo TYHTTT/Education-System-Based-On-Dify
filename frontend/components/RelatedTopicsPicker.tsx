@@ -97,6 +97,7 @@ export default function RelatedTopicsPicker({
               >
                 <span className="min-w-0 break-words">
                   {topic?.course_title ? `${topic.course_title} / ` : ""}
+                  {topic?.chapter_title ? `${topic.chapter_title} / ` : ""}
                   {topic?.title ?? id}
                   {topic?.available === false ? "（已不可用）" : ""}
                 </span>
@@ -118,7 +119,7 @@ export default function RelatedTopicsPicker({
           type="search"
           aria-label="搜索相关知识点"
           maxLength={100}
-          placeholder="搜索名称、ID 或课程"
+          placeholder="搜索知识点名称或课程名称"
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);
@@ -171,7 +172,7 @@ export default function RelatedTopicsPicker({
                 <label className="flex cursor-pointer items-start gap-3 px-3 py-2.5 hover:bg-slate-50">
                   <input
                     type="checkbox"
-                    aria-label={`关联${topic.title}（${topic.course_title}）`}
+                    aria-label={`关联${topic.title}（${topic.course_title} / ${topic.chapter_title}）`}
                     checked={selected.includes(topic.id)}
                     onChange={(event) =>
                       onChange(
@@ -185,13 +186,10 @@ export default function RelatedTopicsPicker({
                   <span className="min-w-0">
                     <span className="block break-words text-sm text-slate-700">
                       {topic.title}
-                      <span className="ml-2 text-xs text-slate-400">
-                        {topic.course_title}
-                        {topic.course_active ? "" : " · 课程停用"}
-                      </span>
                     </span>
-                    <span className="mt-0.5 block break-all font-mono text-[11px] text-slate-400">
-                      {topic.id}
+                    <span className="mt-0.5 block break-words text-xs text-slate-400">
+                      {topic.course_title} / {topic.chapter_title}
+                      {topic.course_active ? "" : " · 课程停用"}
                     </span>
                   </span>
                 </label>

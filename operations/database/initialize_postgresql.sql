@@ -42,6 +42,10 @@ CREATE TABLE IF NOT EXISTS courses (
     title TEXT NOT NULL,
     active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1)),
     description TEXT NOT NULL DEFAULT '',
+    graph_color TEXT NOT NULL DEFAULT (
+        (ARRAY['#a998e8','#75b9ae','#d4ad74','#7fa9d0','#ce91af','#aab874','#a0a8d7','#79b8c8'])
+        [1 + floor(random() * 8)::integer]
+    ) CONSTRAINT courses_graph_color_check CHECK (graph_color ~ '^#[0-9a-f]{6}$'),
     created_at TEXT NOT NULL DEFAULT to_char(CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"+00:00"'),
     updated_at TEXT NOT NULL DEFAULT to_char(CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"+00:00"')
 );
@@ -73,9 +77,6 @@ CREATE TABLE IF NOT EXISTS curriculum_topics (
     order_index INTEGER NOT NULL CHECK (order_index > 0),
     description TEXT NOT NULL,
     learning_objectives_json TEXT NOT NULL,
-    aliases_json TEXT NOT NULL,
-    retrieval_keywords_json TEXT NOT NULL,
-    difficulty TEXT NOT NULL CHECK (difficulty IN ('easy', 'medium', 'hard')),
     required_dimensions_json TEXT NOT NULL,
     active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1)),
     created_at TEXT NOT NULL,
@@ -126,7 +127,6 @@ CREATE TABLE IF NOT EXISTS practice_sets (
     course TEXT NOT NULL REFERENCES courses(id),
     mode TEXT NOT NULL CHECK (mode IN ('practice', 'checkpoint')),
     status TEXT NOT NULL CHECK (status IN ('generated', 'submitted', 'evaluation_uncertain')),
-    requested_difficulty TEXT NOT NULL CHECK (requested_difficulty IN ('adaptive', 'easy', 'medium', 'hard')),
     source_snapshot_json TEXT NOT NULL, target_misconception_tags_json TEXT NOT NULL DEFAULT '[]', created_at TEXT NOT NULL, submitted_at TEXT,
     purpose TEXT NOT NULL DEFAULT 'legacy',
     required_dimensions_snapshot_json TEXT
@@ -135,7 +135,7 @@ CREATE TABLE IF NOT EXISTS practice_sets (
 CREATE TABLE IF NOT EXISTS practice_questions (
     id TEXT PRIMARY KEY, practice_set_id TEXT NOT NULL REFERENCES practice_sets(id) ON DELETE CASCADE,
     position INTEGER NOT NULL CHECK (position > 0), question_type TEXT NOT NULL,
-    difficulty TEXT NOT NULL CHECK (difficulty IN ('easy', 'medium', 'hard')), question TEXT NOT NULL, options_json TEXT,
+    question TEXT NOT NULL, options_json TEXT,
     dimensions_json TEXT NOT NULL, answer_key_json TEXT NOT NULL, rubric_json TEXT NOT NULL, source_ids_json TEXT NOT NULL,
     question_hash TEXT NOT NULL, created_at TEXT NOT NULL, UNIQUE (practice_set_id, position),
     family_id TEXT,

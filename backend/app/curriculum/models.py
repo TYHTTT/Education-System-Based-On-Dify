@@ -16,9 +16,6 @@ class TopicSeed(BaseModel):
     order_index: int = Field(ge=1)
     description: str = Field(min_length=1)
     learning_objectives: list[str] = Field(min_length=1)
-    aliases: list[str] = Field(default_factory=list)
-    retrieval_keywords: list[str] = Field(min_length=1)
-    difficulty: str = Field(pattern=r"^(easy|medium|hard)$")
     required_dimensions: list[str] = Field(min_length=1)
     active: bool = True
 
@@ -26,8 +23,6 @@ class TopicSeed(BaseModel):
     def validate_unique_lists(self) -> "TopicSeed":
         for field_name in (
             "learning_objectives",
-            "aliases",
-            "retrieval_keywords",
             "required_dimensions",
         ):
             values = getattr(self, field_name)

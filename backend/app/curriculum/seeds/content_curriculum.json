@@ -14,12 +14,6 @@
           "learning_objectives": [
             "能够区分标量、向量、矩阵并写出形状。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "标量、向量与矩阵",
-            "vectors"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -38,12 +32,6 @@
           "learning_objectives": [
             "能够逐项计算内积并用于线性预测。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "向量内积",
-            "dot_product"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -62,12 +50,6 @@
           "learning_objectives": [
             "能够计算L1、L2范数与欧氏距离。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "向量范数与欧氏距离",
-            "norm_distance"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -86,12 +68,6 @@
           "learning_objectives": [
             "能够判断Xw是否可乘并写出结果形状。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "矩阵乘法与维度",
-            "matrix_multiplication"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -110,12 +86,6 @@
           "learning_objectives": [
             "能够写出转置并核对行列变化。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "转置",
-            "transpose"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -134,12 +104,6 @@
           "learning_objectives": [
             "能够用消元解二元一次方程组。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "线性方程组",
-            "linear_systems"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -158,12 +122,6 @@
           "learning_objectives": [
             "能够判断简单向量组的线性相关性。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "线性组合、相关与秩",
-            "rank"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -182,12 +140,6 @@
           "learning_objectives": [
             "能够计算向量在单位方向的投影。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "正交与投影",
-            "projection"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -206,12 +158,6 @@
           "learning_objectives": [
             "能够检查Av=λv并解释缩放方向。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "特征值与特征向量",
-            "eigenvectors"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -230,12 +176,6 @@
           "learning_objectives": [
             "能够核对UΣVᵀ维度并说明低秩近似。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "奇异值分解",
-            "svd"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -259,12 +199,6 @@
           "learning_objectives": [
             "能够识别样本空间、事件并检查概率范围。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "概率基本概念",
-            "basics"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -283,12 +217,6 @@
           "learning_objectives": [
             "能够由联合概率与条件事件概率计算条件概率。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "条件概率",
-            "conditional_probability"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -307,12 +235,6 @@
           "learning_objectives": [
             "能够由先验和似然计算后验。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "贝叶斯公式",
-            "bayes"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -331,12 +253,6 @@
           "learning_objectives": [
             "能够用联合概率检查事件独立性。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "独立性",
-            "independence"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -355,12 +271,6 @@
           "learning_objectives": [
             "能够检查离散分布概率之和为1。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "随机变量与概率分布",
-            "distributions"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -379,12 +289,6 @@
           "learning_objectives": [
             "能够计算离散变量的期望与方差。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "期望与方差",
-            "expectation_variance"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -403,12 +307,6 @@
           "learning_objectives": [
             "能够计算联合样本的协方差并解释符号。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "协方差",
-            "covariance"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -427,12 +325,6 @@
           "learning_objectives": [
             "能够写出二分类观测的伯努利概率。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "伯努利分布",
-            "bernoulli"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -451,12 +343,6 @@
           "learning_objectives": [
             "能够解释均值、方差与标准化。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "正态分布",
-            "normal"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -475,12 +361,6 @@
           "learning_objectives": [
             "能够区分参数和观测并写出伯努利样本似然。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "似然与极大似然估计",
-            "likelihood"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -499,12 +379,6 @@
           "learning_objectives": [
             "能够计算二分类节点的信息熵和基尼不纯度。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "信息熵与基尼不纯度",
-            "entropy_gini"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -528,12 +402,6 @@
           "learning_objectives": [
             "能够计算指数与自然对数并说明定义域。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "指数函数与对数函数",
-            "exponential_logarithmic"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -552,12 +420,6 @@
           "learning_objectives": [
             "能够识别内外函数并逐层求导。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "链式法则",
-            "chain_rule"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",
@@ -576,12 +438,6 @@
           "learning_objectives": [
             "能够将偏导组成梯度并解释最陡上升方向。"
           ],
-          "aliases": [],
-          "retrieval_keywords": [
-            "梯度与方向导数",
-            "gradient"
-          ],
-          "difficulty": "easy",
           "required_dimensions": [
             "concept",
             "calculation",

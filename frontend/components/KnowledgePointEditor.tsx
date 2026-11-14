@@ -41,7 +41,7 @@ export default function KnowledgePointEditor({
   const initial =
     chapters.find((g) => g.id === (topic?.chapter_id ?? initialGroupId)) ??
     chapters[0];
-  const [chapter, setChapter] = useState(initial?.id ?? "");
+  const [chapter] = useState(initial?.id ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [relatedIds, setRelatedIds] = useState(topic?.related_topic_ids ?? []);
@@ -89,9 +89,6 @@ export default function KnowledgePointEditor({
         description: String(data.get("description")).trim(),
         chapter_id: target.id,
         learning_objectives: lines(data.get("learning_objectives")),
-        aliases: lines(data.get("aliases")),
-        retrieval_keywords: lines(data.get("retrieval_keywords")),
-        difficulty: String(data.get("difficulty")) as TopicValues["difficulty"],
         related_topic_ids: relatedIds,
       });
     } catch (cause) {
@@ -118,7 +115,7 @@ export default function KnowledgePointEditor({
           return;
         const controls = Array.from(
           event.currentTarget.querySelectorAll<HTMLElement>(
-            "button, input, textarea, select, summary, [tabindex]",
+            "button, input, textarea, select, [tabindex]",
           ),
         ).filter(
           (element) =>
@@ -175,41 +172,6 @@ export default function KnowledgePointEditor({
                 className={fieldClass}
               />
             </label>
-            <label className="text-sm text-slate-700 sm:col-span-2">
-              知识点 ID
-              <input
-                name="id"
-                readOnly
-                value={topic?.id ?? ""}
-                placeholder="保存后自动生成"
-                aria-describedby={`${headingId}-id-help`}
-                className={`${fieldClass} font-mono read-only:bg-slate-50 read-only:text-slate-600`}
-              />
-              <span
-                id={`${headingId}-id-help`}
-                className="mt-1.5 block text-xs text-slate-500"
-              >
-                {topic
-                  ? "用于关联学习记录和对话，创建后不可修改，可选中复制。"
-                  : "保存知识点时由系统自动生成。"}
-              </span>
-            </label>
-            <label className="text-sm text-slate-700">
-              所在章节
-              <select
-                aria-label="所在章节"
-                disabled={!topic}
-                value={chapter}
-                onChange={(e) => setChapter(e.target.value)}
-                className={fieldClass}
-              >
-                {chapters.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.title}
-                  </option>
-                ))}
-              </select>
-            </label>
             <RelatedTopicsPicker
               topicId={topic?.id}
               courseId={courseId}
@@ -217,16 +179,6 @@ export default function KnowledgePointEditor({
               initialTopics={topic?.related_topics ?? []}
               onChange={setRelatedIds}
             />
-            <label className="text-sm text-slate-700 sm:col-span-2">
-              知识点简介
-              <textarea
-                name="description"
-                rows={3}
-                maxLength={2000}
-                defaultValue={topic?.description}
-                className={fieldClass}
-              />
-            </label>
             <label className="text-sm text-slate-700 sm:col-span-2">
               学习目标（每行一项）
               <textarea
@@ -236,43 +188,6 @@ export default function KnowledgePointEditor({
                 className={fieldClass}
               />
             </label>
-            <details className="sm:col-span-2">
-              <summary className="cursor-pointer text-sm font-medium text-slate-600">
-                更多设置
-              </summary>
-              <div className="mt-3 grid gap-4 sm:grid-cols-2">
-                <label className="text-sm text-slate-700">
-                  别名（每行一项）
-                  <textarea
-                    name="aliases"
-                    rows={3}
-                    defaultValue={topic?.aliases.join("\n")}
-                    className={fieldClass}
-                  />
-                </label>
-                <label className="text-sm text-slate-700">
-                  检索关键词（每行一项）
-                  <textarea
-                    name="retrieval_keywords"
-                    rows={3}
-                    defaultValue={topic?.retrieval_keywords.join("\n")}
-                    className={fieldClass}
-                  />
-                </label>
-                <label className="text-sm text-slate-700">
-                  难度
-                  <select
-                    name="difficulty"
-                    defaultValue={topic?.difficulty ?? "medium"}
-                    className={fieldClass}
-                  >
-                    <option value="easy">基础</option>
-                    <option value="medium">进阶</option>
-                    <option value="hard">较难</option>
-                  </select>
-                </label>
-              </div>
-            </details>
           </fieldset>
         </div>
         <footer className="shrink-0 border-t border-slate-100 px-5 py-4 sm:px-6">

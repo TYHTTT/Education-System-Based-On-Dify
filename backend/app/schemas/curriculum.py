@@ -54,9 +54,6 @@ class TopicDetailResponse(TopicSummaryResponse):
     stage: int
     stage_title: str
     learning_objectives: list[str]
-    aliases: list[str]
-    retrieval_keywords: list[str]
-    difficulty: Literal["easy", "medium", "hard"]
     required_dimensions: list[str]
     dimensions: list[DimensionStateResponse]
     active: bool

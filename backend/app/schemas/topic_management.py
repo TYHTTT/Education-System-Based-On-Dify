@@ -1,4 +1,4 @@
-from typing import Annotated, Literal
+from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from app.core.types import TOPIC_ID_PATTERN, UUID_ID_PATTERN
 
@@ -14,9 +14,6 @@ class TopicWrite(BaseModel):
     title: str = Field(min_length=1, max_length=100)
     description: str = Field(default="", max_length=2000)
     learning_objectives: list[str] = Field(default_factory=list, max_length=30)
-    aliases: list[str] = Field(default_factory=list, max_length=30)
-    retrieval_keywords: list[str] = Field(default_factory=list, max_length=30)
-    difficulty: Literal["easy", "medium", "hard"] = "medium"
     related_topic_ids: list[TopicId] | None = Field(default=None, max_length=1000)
 
     @field_validator("related_topic_ids")
@@ -33,7 +30,7 @@ class TopicWrite(BaseModel):
             raise ValueError("知识点名称不能为空")
         return value.strip()
 
-    @field_validator("learning_objectives", "aliases", "retrieval_keywords")
+    @field_validator("learning_objectives")
     @classmethod
     def clean_lines(cls, values):
         if any(not value.strip() or len(value) > 500 for value in values):

@@ -2,6 +2,7 @@ export interface GraphCourse {
   id: string;
   title: string;
   active: boolean;
+  color: string;
 }
 export interface GraphNode {
   id: string;
@@ -29,7 +30,6 @@ export interface Point {
 export interface PositionedNode extends GraphNode, Point {}
 export interface CourseCluster extends GraphCourse, Point {
   radius: number;
-  color: string;
   count: number;
 }
 export interface ForceNode extends PositionedNode {
@@ -46,17 +46,6 @@ export interface GraphSimulation {
   nodes: ForceNode[];
   links: { source: number; target: number }[];
 }
-
-const COLORS = [
-  "#a998e8",
-  "#75b9ae",
-  "#d4ad74",
-  "#7fa9d0",
-  "#ce91af",
-  "#aab874",
-  "#a0a8d7",
-  "#79b8c8",
-];
 
 function seed(id: string) {
   let hash = 2166136261;
@@ -149,7 +138,6 @@ export function layoutGraph(data: KnowledgeGraphData) {
       ...course,
       ...center,
       radius,
-      color: COLORS[index % COLORS.length],
       count: items.length,
     });
     for (const item of items) {

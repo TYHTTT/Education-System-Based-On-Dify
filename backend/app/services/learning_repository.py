@@ -194,10 +194,9 @@ class LearningRepository:
                     """
                     INSERT INTO curriculum_topics (
                         id, course, chapter_id, slug, title, stage, stage_title, order_index,
-                        description, learning_objectives_json, aliases_json,
-                        retrieval_keywords_json, difficulty, required_dimensions_json,
+                        description, learning_objectives_json, required_dimensions_json,
                         active, created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(id) DO UPDATE SET
                         slug = excluded.slug,
                         title = excluded.title,
@@ -207,9 +206,6 @@ class LearningRepository:
                         order_index = excluded.order_index,
                         description = excluded.description,
                         learning_objectives_json = excluded.learning_objectives_json,
-                        aliases_json = excluded.aliases_json,
-                        retrieval_keywords_json = excluded.retrieval_keywords_json,
-                        difficulty = excluded.difficulty,
                         required_dimensions_json = excluded.required_dimensions_json,
                         active = excluded.active,
                         updated_at = excluded.updated_at
@@ -225,9 +221,6 @@ class LearningRepository:
                         topic.order_index,
                         topic.description,
                         self._dump_json(topic.learning_objectives),
-                        self._dump_json(topic.aliases),
-                        self._dump_json(topic.retrieval_keywords),
-                        topic.difficulty,
                         self._dump_json(topic.required_dimensions),
                         int(topic.active),
                         now,
@@ -254,8 +247,6 @@ class LearningRepository:
         record = dict(row)
         for column, output in (
             ("learning_objectives_json", "learning_objectives"),
-            ("aliases_json", "aliases"),
-            ("retrieval_keywords_json", "retrieval_keywords"),
             ("required_dimensions_json", "required_dimensions"),
         ):
             record[output] = self._load_json(record.pop(column), [])

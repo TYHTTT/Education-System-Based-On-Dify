@@ -5,9 +5,6 @@ export interface TopicValues {
   description: string;
   chapter_id: string;
   learning_objectives: string[];
-  aliases: string[];
-  retrieval_keywords: string[];
-  difficulty: "easy" | "medium" | "hard";
   related_topic_ids?: string[];
 }
 export interface RelatedTopic {
@@ -16,6 +13,8 @@ export interface RelatedTopic {
   course: string;
   course_title: string;
   course_active: boolean;
+  chapter_id: string;
+  chapter_title: string;
   available: boolean;
 }
 export interface RelatedTopicCandidates {

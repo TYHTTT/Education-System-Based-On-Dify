@@ -332,9 +332,6 @@ function normalizeTopic(payload: unknown): CurriculumTopic {
     description:
       typeof body.description === "string" ? body.description : undefined,
     learning_objectives: strings(body.learning_objectives),
-    aliases: strings(body.aliases),
-    retrieval_keywords: strings(body.retrieval_keywords),
-    difficulty: String(body.difficulty ?? "medium"),
     required_dimensions: strings(body.required_dimensions),
     status: (typeof body.status === "string"
       ? body.status
