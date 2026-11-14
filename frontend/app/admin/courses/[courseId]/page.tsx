@@ -53,7 +53,9 @@ function CourseDetails({ courseId }: { courseId: string }) {
     };
   }, [courseId, withAdmin, version]);
   async function save(values: CourseInput) {
-    const result = await withAdmin((token) => updateCourse(token, courseId, values));
+    const result = await withAdmin((token) =>
+      updateCourse(token, courseId, values),
+    );
     setCourse((previous) => (previous ? { ...previous, ...result } : null));
     setEditing(false);
     setNotice("课程信息已保存。");
