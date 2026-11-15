@@ -1,8 +1,67 @@
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Literal
+from uuid import UUID
 
-from pydantic import BaseModel, field_serializer
+from pydantic import (
+    AwareDatetime,
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_serializer,
+    field_validator,
+    model_validator,
+)
+
+DifyBusinessType = Literal[
+    "free_qa",
+    "topic_teaching",
+    "topic_clarification",
+    "topic_practice",
+    "topic_answer",
+    "diagnosis",
+]
+DifyCallStatus = Literal["in_progress", "succeeded", "failed", "timeout", "cancelled"]
+
+
+class DifyCallLogQuery(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    page: int = Field(default=1, ge=1)
+    page_size: int = Field(default=20, ge=1, le=50)
+    credential_id: UUID | Literal["unassigned"] | None = None
+    student: str | None = Field(default=None, max_length=100)
+    course: str | None = Field(default=None, max_length=100)
+    topic: str | None = Field(default=None, max_length=100)
+    student_type: Literal["registered", "anonymous"] | None = None
+    business_type: DifyBusinessType | None = None
+    status: DifyCallStatus | None = None
+    started_from: AwareDatetime | None = None
+    started_before: AwareDatetime | None = None
+
+    @field_validator("student", "course", "topic")
+    @classmethod
+    def clean_search(cls, value: str | None) -> str | None:
+        return value.strip() or None if value is not None else None
+
+    @model_validator(mode="after")
+    def check_range(self):
+        if (
+            self.started_from
+            and self.started_before
+            and self.started_from >= self.started_before
+        ):
+            raise ValueError("截止时间必须晚于开始时间")
+        return self
+
+
+class DifyCallCredentialOption(BaseModel):
+    id: str
+    course_titles: list[str]
+    free_qa: bool
+
+
+class DifyCallLogFilterOptions(BaseModel):
+    credentials: list[DifyCallCredentialOption]
 
 
 class CnyConversion(BaseModel):
@@ -25,18 +84,11 @@ class DifyCallLogSummary(BaseModel):
     course_title: str | None
     topic_id: str | None
     topic_title: str | None
-    business_type: Literal[
-        "free_qa",
-        "topic_teaching",
-        "topic_clarification",
-        "topic_practice",
-        "topic_answer",
-        "diagnosis",
-    ]
+    business_type: DifyBusinessType
     is_anonymous: bool
     started_at: datetime
     duration_ms: int | None
-    status: Literal["in_progress", "succeeded", "failed", "timeout", "cancelled"]
+    status: DifyCallStatus
     prompt_tokens: int | None
     completion_tokens: int | None
     total_tokens: int | None

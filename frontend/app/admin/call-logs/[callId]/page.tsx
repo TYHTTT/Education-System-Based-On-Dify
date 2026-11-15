@@ -14,6 +14,8 @@ import {
   formatCallTime,
   formatCallTokens,
   formatCallDuration,
+  callLogQuery,
+  readCallLogFilters,
 } from "@/lib/dify-call-logs";
 import type { DifyCallLogDetail } from "@/lib/types";
 
@@ -54,7 +56,11 @@ export default function AdminCallLogDetailPage() {
 
 function CallLogDetailContent() {
   const { callId } = useParams<{ callId: string }>();
-  const returnPage = callLogPage(useSearchParams().get("page"));
+  const searchParams = useSearchParams();
+  const returnQuery = callLogQuery(
+    readCallLogFilters(searchParams),
+    callLogPage(searchParams.get("page")),
+  );
   const { withAdmin, status } = useAdmin();
   const [data, setData] = useState<DifyCallLogDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -110,10 +116,7 @@ function CallLogDetailContent() {
 
   return (
     <section className="page-container">
-      <Link
-        href={`/admin/call-logs?page=${returnPage}`}
-        className="link text-sm"
-      >
+      <Link href={`/admin/call-logs?${returnQuery}`} className="link text-sm">
         ← 返回调用日志
       </Link>
       <div className="mt-6 flex flex-wrap items-end justify-between gap-5 border-b border-hairline pb-8">

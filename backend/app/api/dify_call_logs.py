@@ -1,9 +1,15 @@
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request, Response
 
 from app.api.admins import require_admin
-from app.schemas.dify_call_logs import DifyCallLogDetail, DifyCallLogList
+from app.schemas.dify_call_logs import (
+    DifyCallLogDetail,
+    DifyCallLogFilterOptions,
+    DifyCallLogList,
+    DifyCallLogQuery,
+)
 
 router = APIRouter(
     prefix="/api/v1/admin/dify/call-logs",
@@ -16,17 +22,24 @@ router = APIRouter(
 def list_call_logs(
     request: Request,
     response: Response,
-    page: int = Query(default=1, ge=1),
-    page_size: int = Query(default=20, ge=1, le=50),
+    query: Annotated[DifyCallLogQuery, Query()],
 ):
     response.headers["Cache-Control"] = "no-store"
     result = request.app.state.dify_call_log_repository.list(
-        page=page, page_size=page_size
+        page=query.page,
+        page_size=query.page_size,
+        filters=query.model_dump(exclude={"page", "page_size"}, exclude_none=True),
     )
     result["items"] = [
         request.app.state.cny_converter.enrich(item) for item in result["items"]
     ]
     return result
+
+
+@router.get("/filter-options", response_model=DifyCallLogFilterOptions)
+def call_log_filter_options(request: Request, response: Response):
+    response.headers["Cache-Control"] = "no-store"
+    return request.app.state.dify_call_log_repository.filter_options()
 
 
 @router.get("/{call_id}", response_model=DifyCallLogDetail)

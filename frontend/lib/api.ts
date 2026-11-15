@@ -7,6 +7,8 @@ import type {
   FreeQaDifySettings,
   DifyCallLogList,
   DifyCallLogDetail,
+  DifyCallLogFilters,
+  DifyCallLogFilterOptions,
   CourseInput,
   CourseDetail,
   CourseList,
@@ -18,6 +20,7 @@ import type {
   LearningDashboard,
   CurriculumTopic,
 } from "@/lib/types";
+import { callLogQuery } from "@/lib/dify-call-logs";
 
 const configuredBaseUrl =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
@@ -279,12 +282,20 @@ export function getAdminDifyCallLogs(
   token: string,
   page: number,
   signal?: AbortSignal,
+  filters: DifyCallLogFilters = {},
 ): Promise<DifyCallLogList> {
-  const params = new URLSearchParams({ page: String(page), page_size: "20" });
+  const params = new URLSearchParams(callLogQuery(filters, page));
+  params.set("page_size", "20");
   return request<DifyCallLogList>(`/api/v1/admin/dify/call-logs?${params}`, {
     headers: studentHeaders(token),
     cache: "no-store",
     signal,
+  });
+}
+
+export function getAdminDifyCallLogFilterOptions(token: string, signal?: AbortSignal): Promise<DifyCallLogFilterOptions> {
+  return request<DifyCallLogFilterOptions>("/api/v1/admin/dify/call-logs/filter-options", {
+    headers: studentHeaders(token), cache: "no-store", signal,
   });
 }
 

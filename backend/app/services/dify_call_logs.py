@@ -19,6 +19,51 @@ ERROR_SUMMARIES = {
     "cancelled": "本次调用已取消，已发生的用量仍需核对。",
 }
 
+CALL_LOG_JOINS = """FROM dify_call_logs l
+    LEFT JOIN students s ON s.id=l.student_id
+    LEFT JOIN courses c ON c.id=l.course_id
+    LEFT JOIN curriculum_topics t ON t.id=l.topic_id"""
+
+
+def _filter_sql(filters: dict) -> tuple[str, list]:
+    clauses, values = [], []
+    for name, columns in {
+        "student": ("l.student_id", "s.display_name", "s.username"),
+        "course": ("l.course_id", "c.title"),
+        "topic": ("l.topic_id", "t.title"),
+    }.items():
+        if value := filters.get(name):
+            # Search literal substrings; '%' and '_' are not user wildcards.
+            pattern = (
+                "%"
+                + value.replace("!", "!!").replace("%", "!%").replace("_", "!_")
+                + "%"
+            )
+            clauses.append(
+                "("
+                + " OR ".join(f"{column} ILIKE ? ESCAPE '!'" for column in columns)
+                + ")"
+            )
+            values.extend([pattern] * len(columns))
+    if credential := filters.get("credential_id"):
+        if credential == "unassigned":
+            clauses.append("l.credential_id IS NULL")
+        else:
+            clauses.append("l.credential_id=?")
+            values.append(str(credential))
+    for name in ("status", "business_type"):
+        if filters.get(name):
+            clauses.append(f"l.{name}=?")
+            values.append(filters[name])
+    if filters.get("student_type"):
+        clauses.append("l.is_anonymous=?")
+        values.append(filters["student_type"] == "anonymous")
+    for name, comparison in (("started_from", ">="), ("started_before", "<")):
+        if filters.get(name):
+            clauses.append(f"l.started_at{comparison}?")
+            values.append(filters[name])
+    return (" WHERE " + " AND ".join(clauses) if clauses else ""), values
+
 
 @dataclass(frozen=True)
 class DifyCallContext:
@@ -42,14 +87,18 @@ class DifyCallLogRepository:
     def __init__(self, database_url: str) -> None:
         self.database = PostgresDatabase(database_url)
 
-    def list(self, *, page: int = 1, page_size: int = 20) -> dict:
+    def list(
+        self, *, page: int = 1, page_size: int = 20, filters: dict | None = None
+    ) -> dict:
+        where, parameters = _filter_sql(filters or {})
         with self.database.connect() as connection:
             # Count and page use one snapshot even while new calls arrive.
             connection.execute(
                 "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
             )
             total = connection.execute(
-                "SELECT count(*) AS count FROM dify_call_logs"
+                "SELECT count(*) AS count " + CALL_LOG_JOINS + where,
+                parameters,
             ).fetchone()["count"]
             items = connection.execute(
                 """SELECT l.id,l.credential_id,l.student_id,
@@ -57,14 +106,23 @@ class DifyCallLogRepository:
                 l.course_id,c.title AS course_title,l.topic_id,t.title AS topic_title,
                 l.business_type,l.is_anonymous,l.started_at,l.duration_ms,l.status,
                 l.prompt_tokens,l.completion_tokens,l.total_tokens,l.total_price,l.currency
-                FROM dify_call_logs l
-                LEFT JOIN students s ON s.id=l.student_id
-                LEFT JOIN courses c ON c.id=l.course_id
-                LEFT JOIN curriculum_topics t ON t.id=l.topic_id
-                ORDER BY l.started_at DESC,l.id DESC LIMIT ? OFFSET ?""",
-                (page_size, (page - 1) * page_size),
+                """
+                + CALL_LOG_JOINS
+                + where
+                + " ORDER BY l.started_at DESC,l.id DESC LIMIT ? OFFSET ?",
+                (*parameters, page_size, (page - 1) * page_size),
             ).fetchall()
         return {"items": items, "total": total, "page": page, "page_size": page_size}
+
+    def filter_options(self) -> dict:
+        with self.database.connect() as connection:
+            credentials = connection.execute("""SELECT d.id,
+                ARRAY(SELECT c.title FROM courses c WHERE c.dify_credential_id=d.id ORDER BY c.title,c.id) AS course_titles,
+                EXISTS(SELECT 1 FROM dify_free_qa_settings f WHERE f.dify_credential_id=d.id) AS free_qa
+                FROM dify_credentials d
+                WHERE EXISTS(SELECT 1 FROM dify_call_logs l WHERE l.credential_id=d.id)
+                ORDER BY d.created_at DESC,d.id DESC""").fetchall()
+        return {"credentials": credentials}
 
     def get(self, call_id: str) -> dict:
         with self.database.connect() as connection:

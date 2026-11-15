@@ -1,4 +1,4 @@
-import type { DifyCallLogSummary } from "@/lib/types";
+import type { DifyCallLogFilters, DifyCallLogSummary } from "@/lib/types";
 
 export const BUSINESS_LABELS: Record<
   DifyCallLogSummary["business_type"],
@@ -53,4 +53,48 @@ export function formatCallDuration(value: number | null): string {
 export function callLogPage(value: string | null): number {
   const page = Number(value);
   return Number.isSafeInteger(page) && page > 0 ? page : 1;
+}
+
+export const CALL_LOG_FILTER_KEYS = [
+  "credential_id",
+  "student",
+  "course",
+  "topic",
+  "student_type",
+  "business_type",
+  "status",
+  "started_from",
+  "started_before",
+] as const;
+
+export function readCallLogFilters(
+  params: Pick<URLSearchParams, "get">,
+): DifyCallLogFilters {
+  return Object.fromEntries(
+    CALL_LOG_FILTER_KEYS.map((key) => [
+      key,
+      params.get(key)?.trim() ?? "",
+    ]).filter(([, value]) => value),
+  );
+}
+
+export function callLogQuery(filters: DifyCallLogFilters, page = 1): string {
+  const params = new URLSearchParams({ page: String(page) });
+  for (const key of CALL_LOG_FILTER_KEYS) {
+    const value = filters[key]?.trim();
+    if (value) params.set(key, value);
+  }
+  return params.toString();
+}
+
+export function beijingTimeInput(value?: string): string {
+  if (!value) return "";
+  const timestamp = new Date(value).getTime();
+  return Number.isNaN(timestamp)
+    ? ""
+    : new Date(timestamp + 8 * 60 * 60 * 1000).toISOString().slice(0, 19);
+}
+
+export function beijingTimeQuery(value: string): string {
+  return value ? `${value.length === 16 ? value + ":00" : value}+08:00` : "";
 }

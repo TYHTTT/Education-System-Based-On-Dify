@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useAdmin } from "@/components/AdminProvider";
 import DifyCallCost from "@/components/DifyCallCost";
+import CallLogFilters from "@/components/DifyCallLogFilters";
 import { message } from "@/components/AdminCourseForms";
 import { getAdminDifyCallLogs } from "@/lib/api";
 import {
@@ -14,8 +15,10 @@ import {
   formatCallTime,
   formatCallTokens,
   formatCallDuration,
+  callLogQuery,
+  readCallLogFilters,
 } from "@/lib/dify-call-logs";
-import type { DifyCallLogList } from "@/lib/types";
+import type { DifyCallLogList, DifyCallLogFilters } from "@/lib/types";
 
 export default function AdminCallLogsPage() {
   return (
@@ -34,11 +37,16 @@ export default function AdminCallLogsPage() {
 function CallLogsContent() {
   const { withAdmin, status } = useAdmin();
   const router = useRouter();
-  const page = callLogPage(useSearchParams().get("page"));
+  const searchParams = useSearchParams();
+  const page = callLogPage(searchParams.get("page"));
+  const filters = readCallLogFilters(searchParams);
+  const filterQuery = callLogQuery(filters);
+  const query = callLogQuery(filters, page);
   const [data, setData] = useState<DifyCallLogList | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [version, setVersion] = useState(0);
+  const [loadedQuery, setLoadedQuery] = useState("");
 
   useEffect(() => {
     if (status !== "ready") return;
@@ -48,7 +56,12 @@ function CallLogsContent() {
       setError("");
       try {
         const result = await withAdmin((token) =>
-          getAdminDifyCallLogs(token, page, controller.signal),
+          getAdminDifyCallLogs(
+            token,
+            page,
+            controller.signal,
+            readCallLogFilters(new URLSearchParams(filterQuery)),
+          ),
         );
         if (controller.signal.aborted) return;
         const lastPage = Math.max(
@@ -56,12 +69,16 @@ function CallLogsContent() {
           Math.ceil(result.total / result.page_size),
         );
         if (page > lastPage) {
-          router.replace(`/admin/call-logs?page=${lastPage}`, {
-            scroll: false,
-          });
+          router.replace(
+            `/admin/call-logs?${callLogQuery(readCallLogFilters(new URLSearchParams(filterQuery)), lastPage)}`,
+            {
+              scroll: false,
+            },
+          );
           return;
         }
         setData(result);
+        setLoadedQuery(query);
       } catch (cause) {
         if (!controller.signal.aborted) setError(message(cause));
       } finally {
@@ -72,7 +89,7 @@ function CallLogsContent() {
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [withAdmin, status, page, version, router]);
+  }, [withAdmin, status, page, version, router, filterQuery, query]);
 
   function refresh() {
     setLoading(true);
@@ -83,10 +100,19 @@ function CallLogsContent() {
   function changePage(next: number) {
     setLoading(true);
     setError("");
-    router.push(`/admin/call-logs?page=${next}`, { scroll: false });
+    router.push(`/admin/call-logs?${callLogQuery(filters, next)}`, {
+      scroll: false,
+    });
   }
 
-  const busy = loading || (!error && data !== null && data.page !== page);
+  function applyFilters(next: DifyCallLogFilters) {
+    setLoading(true);
+    setError("");
+    setVersion((value) => value + 1);
+    router.push(`/admin/call-logs?${callLogQuery(next)}`, { scroll: false });
+  }
+
+  const busy = loading || (!error && data !== null && loadedQuery !== query);
 
   return (
     <section className="page-container">
@@ -109,6 +135,11 @@ function CallLogsContent() {
           刷新
         </button>
       </div>
+      <CallLogFilters
+        key={filterQuery}
+        initial={filters}
+        onApply={applyFilters}
+      />
       {error && (
         <div
           role="alert"
@@ -177,7 +208,7 @@ function CallLogsContent() {
                     <tr key={log.id} className="align-top hover:bg-surface/50">
                       <td className="whitespace-nowrap px-4 py-5 tabular-nums">
                         <Link
-                          href={`/admin/call-logs/${encodeURIComponent(log.id)}?page=${data.page}`}
+                          href={`/admin/call-logs/${encodeURIComponent(log.id)}?${query}`}
                           aria-label={`查看调用 ${log.id} 的详情`}
                           className="group block outline-offset-4"
                         >
@@ -263,8 +294,16 @@ function CallLogsContent() {
           </div>
         ) : (
           <div className="p-10 text-center text-sm text-steel">
-            <p className="font-medium text-ink">暂无调用记录</p>
-            <p className="mt-2">学生发起问答或课程学习后，记录会显示在这里。</p>
+            <p className="font-medium text-ink">
+              {Object.keys(filters).length
+                ? "没有匹配的调用记录"
+                : "暂无调用记录"}
+            </p>
+            <p className="mt-2">
+              {Object.keys(filters).length
+                ? "请调整筛选条件，或清除筛选查看全部记录。"
+                : "学生发起问答或课程学习后，记录会显示在这里。"}
+            </p>
           </div>
         )}
         {!busy && !error && data && (

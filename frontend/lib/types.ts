@@ -57,6 +57,22 @@ export interface DifyCallLogList {
   page_size: number;
 }
 
+export interface DifyCallLogFilters {
+  credential_id?: string;
+  student?: string;
+  course?: string;
+  topic?: string;
+  student_type?: string;
+  business_type?: string;
+  status?: string;
+  started_from?: string;
+  started_before?: string;
+}
+
+export interface DifyCallLogFilterOptions {
+  credentials: { id: string; course_titles: string[]; free_qa: boolean }[];
+}
+
 export interface DifyCallLogDetail extends DifyCallLogSummary {
   request_id: string;
   finished_at: string | null;
