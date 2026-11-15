@@ -90,11 +90,71 @@ async def test_agent_stream_history_inputs_credentials_and_remote_citations():
 
 
 @pytest.mark.asyncio
-async def test_message_replace_replaces_partial_answer_and_ignores_thoughts():
+@pytest.mark.parametrize("final_first", [False, True])
+async def test_final_message_is_not_appended_to_duplicate_agent_stream(final_first):
+    answer = "机器学习可以按学习范式分类。\n\n监督学习使用标签，无监督学习发现结构。"
+    fragments = [
+        {"event": "agent_message", "answer": answer[:18]},
+        {"event": "agent_message", "answer": answer[18:]},
+    ]
+    final = [{"event": "message", "answer": answer}]
+    agent = client(
+        lambda request: sse(
+            (final + fragments if final_first else fragments + final)
+            + [{"event": "message_end", "conversation_id": "conversation-one"}]
+        )
+    )
+    try:
+        result = await agent.run("开始学习")
+        assert result["answer"] == answer
+        assert result["conversation_id"] == "conversation-one"
+    finally:
+        await agent.close()
+
+
+@pytest.mark.asyncio
+async def test_final_message_deltas_take_precedence_over_agent_draft():
     agent = client(
         lambda request: sse(
             [
-                {"event": "message", "answer": "未完成"},
+                {"event": "agent_message", "answer": "准备检索课程资料。"},
+                {"event": "message", "answer": "监督学习"},
+                {"event": "message", "answer": "使用带标签数据。"},
+                {"event": "message_end"},
+            ]
+        )
+    )
+    try:
+        assert (await agent.run("问题"))["answer"] == "监督学习使用带标签数据。"
+    finally:
+        await agent.close()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("kind", ["message", "agent_message"])
+async def test_repeated_deltas_in_the_same_stream_are_preserved(kind):
+    agent = client(
+        lambda request: sse(
+            [
+                {"event": kind, "answer": "哈"},
+                {"event": kind, "answer": "哈"},
+                {"event": "message_end"},
+            ]
+        )
+    )
+    try:
+        assert (await agent.run("问题"))["answer"] == "哈哈"
+    finally:
+        await agent.close()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("kind", ["message", "agent_message"])
+async def test_message_replace_replaces_partial_answer_and_ignores_thoughts(kind):
+    agent = client(
+        lambda request: sse(
+            [
+                {"event": kind, "answer": "未完成"},
                 {"event": "message_replace", "answer": "替换后的回答"},
                 {"event": "message_end", "metadata": {}},
             ]

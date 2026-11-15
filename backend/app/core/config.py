@@ -28,17 +28,22 @@ class Settings(BaseSettings):
 
     frontend_origin: str = "http://localhost:3000"
 
+    # Legacy environment credentials are imported by enable_admin_ai_settings.py.
+    # Runtime requests override these values with administrator-managed records.
     dify_api_base_url: str = "https://api.dify.ai/v1"
     dify_api_key: SecretStr = SecretStr("")
     dify_timeout_seconds: float = Field(default=120, gt=0, le=600)
     dify_inputs: dict[str, Any] = Field(default_factory=dict)
 
     admin_authcode: SecretStr = SecretStr("")
+    settings_encryption_key: SecretStr = SecretStr("")
+    settings_key_file: Path = BACKEND_ROOT / ".runtime" / "settings.key"
 
     database_url: str = "postgresql://postgres:postgres@localhost:5432/ml_coach"
 
     max_history_messages: int = Field(default=12, ge=0, le=100)
     max_message_length: int = Field(default=8000, ge=1, le=100_000)
+    learning_completion_threshold: float = Field(default=80, ge=0, le=100)
 
     @model_validator(mode="after")
     def validate_and_resolve(self) -> Settings:

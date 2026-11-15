@@ -3,6 +3,8 @@ import type {
   Administrator,
   AuthenticatedAdmin,
   CourseRecord,
+  AdminCourseRecord,
+  FreeQaDifySettings,
   CourseInput,
   CourseDetail,
   CourseList,
@@ -242,8 +244,8 @@ export function getAdminCourse(
 export function createCourse(
   token: string,
   payload: CourseInput,
-): Promise<CourseRecord> {
-  return request<CourseRecord>("/api/v1/admin/courses", {
+): Promise<AdminCourseRecord> {
+  return request<AdminCourseRecord>("/api/v1/admin/courses", {
     method: "POST",
     headers: { "Content-Type": "application/json", ...studentHeaders(token) },
     body: JSON.stringify(payload),
@@ -254,8 +256,8 @@ export function updateCourse(
   token: string,
   id: string,
   payload: CourseInput,
-): Promise<CourseRecord> {
-  return request<CourseRecord>(
+): Promise<AdminCourseRecord> {
+  return request<AdminCourseRecord>(
     `/api/v1/admin/courses/${encodeURIComponent(id)}`,
     {
       method: "PATCH",
@@ -263,6 +265,22 @@ export function updateCourse(
       body: JSON.stringify(payload),
     },
   );
+}
+
+export function getAdminDifySettings(token: string, signal?: AbortSignal): Promise<FreeQaDifySettings> {
+  return request<FreeQaDifySettings>("/api/v1/admin/settings/free-qa", {
+    headers: studentHeaders(token), signal,
+  });
+}
+
+export function saveAdminDifySettings(
+  token: string, values: { api_base_url: string; api_key?: string },
+): Promise<FreeQaDifySettings> {
+  return request<FreeQaDifySettings>("/api/v1/admin/settings/free-qa", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...studentHeaders(token) },
+    body: JSON.stringify(values),
+  });
 }
 
 export function deleteCourse(token: string, id: string): Promise<void> {

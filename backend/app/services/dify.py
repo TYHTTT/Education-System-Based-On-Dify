@@ -13,14 +13,16 @@ from app.core.types import Course
 
 
 class DifyClient:
-    def __init__(self, settings: Settings, *, transport=None) -> None:
+    def __init__(self, settings: Settings, *, transport=None, http_client=None) -> None:
         self.settings = settings
-        self.http = httpx.AsyncClient(
+        self._owns_http = http_client is None
+        self.http = http_client if http_client is not None else httpx.AsyncClient(
             timeout=settings.dify_timeout_seconds, transport=transport
         )
 
     async def close(self) -> None:
-        await self.http.aclose()
+        if self._owns_http:
+            await self.http.aclose()
 
     async def run(
         self,
@@ -33,7 +35,7 @@ class DifyClient:
     ) -> dict:
         key = self.settings.dify_api_key.get_secret_value().strip()
         if not key or not self.settings.dify_api_base_url.strip():
-            raise ConfigurationError("请在后端配置 DIFY_API_BASE_URL 和 DIFY_API_KEY")
+            raise ConfigurationError("请在管理员后台配置当前课程或自由问答的 Dify 地址和密钥")
         payload = {
             "inputs": {
                 **{
@@ -52,6 +54,7 @@ class DifyClient:
         if conversation_id:
             payload["conversation_id"] = conversation_id
         answer = ""
+        agent_answer = ""
         remote_conversation_id = conversation_id
         metadata = {}
         ended = False
@@ -87,10 +90,16 @@ class DifyClient:
                             raise LLMServiceError(
                                 "Dify Agent 处理失败，请检查应用配置后重试"
                             )
-                        if kind in {"message", "agent_message"}:
+                        # Agents can stream their draft and then emit the same
+                        # full answer as a message. Keep the channels separate:
+                        # message is authoritative; agent_message is a fallback.
+                        if kind == "message":
                             answer += event.get("answer", "")
+                        elif kind == "agent_message":
+                            agent_answer += event.get("answer", "")
                         elif kind == "message_replace":
                             answer = event.get("answer", "")
+                            agent_answer = ""
                         elif kind == "message_end":
                             metadata = event.get("metadata") or {}
                             ended = True
@@ -100,6 +109,8 @@ class DifyClient:
                 "Dify 服务请求失败，请检查服务地址、密钥或稍后重试",
                 internal_message=f"Dify transport: {type(exc).__name__}",
             ) from None
+        if answer == "":
+            answer = agent_answer
         if not ended or not isinstance(answer, str) or not answer.strip():
             raise LLMServiceError("Dify 返回了空回答或未完整结束的响应，请重试")
         resources = (

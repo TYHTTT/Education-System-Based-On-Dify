@@ -42,6 +42,9 @@ CREATE TABLE IF NOT EXISTS courses (
     title TEXT NOT NULL,
     active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1)),
     description TEXT NOT NULL DEFAULT '',
+    completion_threshold DOUBLE PRECISION NOT NULL DEFAULT 80 CHECK (completion_threshold >= 0 AND completion_threshold <= 100),
+    dify_api_base_url TEXT NOT NULL DEFAULT 'https://api.dify.ai/v1',
+    dify_api_key_encrypted TEXT,
     graph_color TEXT NOT NULL DEFAULT (
         (ARRAY['#2563eb','#c2410c','#047857','#9333ea','#be185d','#0e7490','#a16207','#475569'])
         [1 + floor(random() * 8)::integer]
@@ -56,6 +59,14 @@ INSERT INTO courses(id, title, description) VALUES
     ('linear_algebra', '线性代数', '向量、矩阵与几何'),
     ('probability_statistics', '概率论与统计基础', '概率、分布与统计')
 ON CONFLICT (id) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS dify_free_qa_settings (
+    id INTEGER PRIMARY KEY CHECK (id=1),
+    api_base_url TEXT NOT NULL DEFAULT 'https://api.dify.ai/v1',
+    api_key_encrypted TEXT,
+    updated_at TEXT NOT NULL DEFAULT to_char(CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"+00:00"')
+);
+INSERT INTO dify_free_qa_settings(id) VALUES (1) ON CONFLICT (id) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS course_chapters (
     id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,

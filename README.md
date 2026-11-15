@@ -3,13 +3,13 @@
 - 前端：Next.js、React、TypeScript、Tailwind CSS。
 - 后端：FastAPI、Pydantic、Uvicorn、Python。
 - AI 能力：Dify Agent。问答、课程辅导、动态出题、评价和补救均通过后端调用 Dify。
-- 数据库：PostgreSQL，保存账户、课程目录、学习状态和历史成绩。课程资料与检索由 Dify 管理，不需要 `pgvector`。
+- 数据库：PostgreSQL，保存账户、课程目录、学习状态、作答分数与后台配置。课程资料与检索由 Dify 管理，不需要 `pgvector`。
 
 # 启动方式
 
 ## 环境变量
 
-首次配置时，复制 `backend/.env.example` 为 `backend/.env.local`，填写 Dify 密钥、数据库和前端来源。已有配置请先备份再核对，旧版练习生成、去重和评价参数已不再使用。保留的掌握度参数仅用于解释历史评估与课程推荐：
+首次配置时，复制 `backend/.env.example` 为 `backend/.env.local`，填写数据库、管理员创建授权码和前端来源。已有配置不要覆盖。Dify 地址、API Key 与每门课程的完成门限在管理员后台填写：
 
 ```env
 # PostgreSQL 连接串示例
@@ -18,9 +18,9 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/ml_coach
 # 前端地址，默认即可用于本地开发
 FRONTEND_ORIGIN=http://localhost:3000
 
-# 已发布 Dify 应用的 Service API 地址和应用密钥
-DIFY_API_BASE_URL=https://api.dify.ai/v1
-DIFY_API_KEY=app-替换为你的应用密钥
+# 创建管理员时使用的独立授权码
+ADMIN_AUTHCODE=替换为你的管理员创建授权码
+# Dify 请求超时；地址与密钥通过管理员后台管理
 DIFY_TIMEOUT_SECONDS=120
 ```
 
@@ -32,7 +32,7 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 
 如果前后端不在同一台机器或端口，需要同步修改后端的 `FRONTEND_ORIGIN` 和前端的 `NEXT_PUBLIC_API_BASE_URL` 。
 
-模型、提示词、知识资料和检索策略在 Dify 应用中配置。前端不再填写模型或 Embedding 密钥；应用密钥仅保存在后端。自建 Dify 时请使用实例的 Service API 地址（包含 `/v1`），不要填写 WebApp 分享地址或知识库 API Key。
+模型、提示词、知识资料和检索策略在 Dify 应用中配置。在后台“课程管理 → 编辑课程”分别填写各课程的 Dify 地址、API Key 与学习完成门限；后台“Dify 配置”单独设置自由问答服务。自建 Dify 时请使用实例的 Service API 地址（包含 `/v1`），不要填写 WebApp 分享地址或知识库 API Key。保存后的密钥加密存储，不回显明文；输入框留空会保留原密钥，填写新密钥才会替换。
 
 ## 安装依赖
 
@@ -88,6 +88,12 @@ npm run build
 ## 运行数据说明
 
 业务数据存储在 `DATABASE_URL` 指向的 PostgreSQL 数据库中，课程资料由 Dify 管理。
+
+学生提交答案后，后端读取 AI 的本次总分（满分 100），保存最新分数、最高分及作答次数，并按该课程的完成门限更新知识点状态。新课程默认门限 `80`，严格高于门限标记“已完成”，等于或低于门限标记“学习中”，后续低分会改回学习中。管理员修改门限时，已保存的最新评分也会重新判定状态。仅作答评价会记录分数；讲解、追问和自由问答不会改变成绩。后端在作答请求中追加一条简短的评分格式要求，隐藏回复末尾的评分标记；未返回有效分数时提示未评分并保留原状态。
+
+旧数据库运行 `./backend/.venv/Scripts/python.exe operations/database/enable_admin_ai_settings.py`，将原环境变量里的 Dify 地址、密钥及门限迁入每门现有课程，并为自由问答创建独立配置。迁移只导入一次，不覆盖之后的后台设置，不创建备份、不运行测试。新部署由初始化脚本直接创建这些字段与配置表。
+
+配置加密密钥与数据库分开存放：默认自动生成 `backend/.runtime/settings.key`，已排除 Git 跟踪；部署时需保持该文件持久化、不可随意更换。多实例部署可通过同一个 `SETTINGS_ENCRYPTION_KEY` 提供固定 Fernet 主密钥。Dify 密钥修改后新的请求立即生效，更换应用时已有对话可能需要重新开始。
 
 ## 当前代码结构
 

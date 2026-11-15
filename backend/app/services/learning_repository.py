@@ -321,7 +321,7 @@ class LearningRepository:
         )
         self.require_course(course_value)
         params: list[Any] = []
-        state_columns = "NULL AS state_status, NULL AS state_mastery, NULL AS state_confidence, NULL AS state_evidence_count"
+        state_columns = "NULL AS state_status, NULL AS state_mastery, NULL AS state_confidence, NULL AS state_evidence_count, NULL AS state_latest_score"
         join = ""
         if student_id is not None:
             params.append(student_id)
@@ -331,7 +331,7 @@ class LearningRepository:
             )
             state_columns = (
                 "sts.status AS state_status, sts.mastery AS state_mastery, "
-                "sts.confidence AS state_confidence, sts.evidence_count AS state_evidence_count"
+                "sts.confidence AS state_confidence, sts.evidence_count AS state_evidence_count, sts.latest_score AS state_latest_score"
             )
         params.append(course_value)
         active_clause = "AND t.active = 1" if active_only else ""
@@ -354,7 +354,7 @@ class LearningRepository:
         params: list[Any] = []
         join = ""
         state_columns = (
-            "NULL AS state_status, NULL AS state_mastery, NULL AS state_confidence"
+            "NULL AS state_status, NULL AS state_mastery, NULL AS state_confidence, NULL AS state_evidence_count, NULL AS state_latest_score"
         )
         if student_id is not None:
             params.append(student_id)
@@ -364,7 +364,7 @@ class LearningRepository:
             )
             state_columns = (
                 "sts.status AS state_status, sts.mastery AS state_mastery, "
-                "sts.confidence AS state_confidence"
+                "sts.confidence AS state_confidence, sts.evidence_count AS state_evidence_count, sts.latest_score AS state_latest_score"
             )
         params.append(topic_id)
         with self._connect() as connection:
@@ -467,6 +467,45 @@ class LearningRepository:
         state = self.get_topic_state(student_id, topic_id)
         assert state is not None
         return state
+
+    def record_topic_score(
+        self, *, student_id: str, topic_id: str, course: Course | str,
+        score: float,
+    ) -> dict[str, Any]:
+        if not 0 <= score <= 100:
+            raise ValueError("评分必须在 0 到 100 之间")
+        self.require_student(student_id, touch=False)
+        now = self._now()
+        with self._connect() as connection:
+            # Match course/topic deletion lock order while persisting the result.
+            owner = connection.execute("SELECT id,completion_threshold FROM courses WHERE id=? AND active=1 FOR SHARE", (str(course),)).fetchone()
+            if owner is None:
+                raise CourseNotFoundError()
+            threshold = owner["completion_threshold"]
+            status = "mastered" if score > threshold else "learning"
+            topic = connection.execute("""SELECT id FROM curriculum_topics
+                WHERE id=? AND course=? AND active=1 FOR KEY SHARE""", (topic_id, str(course))).fetchone()
+            if topic is None:
+                raise TopicNotFoundError()
+            row = connection.execute("""INSERT INTO student_topic_states(
+                    student_id,topic_id,latest_score,best_score,mastery,evidence_count,attempt_count,
+                    status,started_at,last_practiced_at,mastered_at,updated_at)
+                VALUES (?,?,?,?,?,1,1,?,?,?,?,?)
+                ON CONFLICT(student_id,topic_id) DO UPDATE SET
+                    latest_score=excluded.latest_score,
+                    best_score=GREATEST(coalesce(student_topic_states.best_score,excluded.best_score),excluded.best_score),
+                    mastery=excluded.mastery,
+                    evidence_count=student_topic_states.evidence_count+1,
+                    attempt_count=student_topic_states.attempt_count+1,
+                    status=excluded.status,
+                    started_at=coalesce(student_topic_states.started_at,excluded.started_at),
+                    last_practiced_at=excluded.last_practiced_at,
+                    mastered_at=CASE WHEN excluded.status='mastered'
+                        THEN coalesce(student_topic_states.mastered_at,excluded.mastered_at) ELSE NULL END,
+                    updated_at=excluded.updated_at
+                RETURNING *""", (student_id, topic_id, score, score, score / 100,
+                                  status, now, now, now if status == "mastered" else None, now)).fetchone()
+        return {**dict(row), "completion_threshold": threshold}
 
     def create_learning_session(
         self,

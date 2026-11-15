@@ -147,6 +147,14 @@ function CourseDetails({ courseId }: { courseId: string }) {
               </p>
               <dl className="mt-5 flex flex-wrap gap-x-8 gap-y-3 text-xs text-slate-500">
                 <div className="flex gap-2">
+                  <dt>学习完成门限</dt>
+                  <dd>高于 {course.completion_threshold} 分</dd>
+                </div>
+                <div className="flex gap-2">
+                  <dt>Dify 密钥</dt>
+                  <dd>{course.dify_api_key_configured ? "已配置" : "未配置"}</dd>
+                </div>
+                <div className="flex gap-2">
                   <dt>最近修改</dt>
                   <dd>{new Date(course.updated_at).toLocaleString("zh-CN")}</dd>
                 </div>

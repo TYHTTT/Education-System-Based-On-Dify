@@ -7,11 +7,7 @@ router = APIRouter(tags=["health"])
 
 @router.get("/health", response_model=HealthResponse)
 def health(request: Request) -> HealthResponse:
-    settings = request.app.state.settings
     return HealthResponse(
         status="ok",
-        dify_configured=bool(
-            settings.dify_api_key.get_secret_value().strip()
-            and settings.dify_api_base_url.strip()
-        ),
+        dify_configured=request.app.state.dify_settings_repository.any_configured(),
     )

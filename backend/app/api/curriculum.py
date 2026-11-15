@@ -33,18 +33,22 @@ def _student_view(
             "mastery": None,
             "mastery_display": None,
             "confidence": None,
+            "latest_score": None,
+            "evidence_count": 0,
         }
 
     stored_status = topic.get("state_status")
     status = stored_status or "not_started"
-    started = stored_status not in (None, "not_started")
-    mastery = topic.get("state_mastery") if started else None
-    confidence = topic.get("state_confidence") if started else None
+    evidence_count = int(topic.get("state_evidence_count") or 0)
+    mastery = topic.get("state_mastery") if evidence_count > 0 else None
+    confidence = topic.get("state_confidence") if evidence_count > 0 else None
     return {
         "status": status,
         "mastery": mastery,
         "mastery_display": _mastery_display(mastery),
         "confidence": confidence,
+        "latest_score": topic.get("state_latest_score"),
+        "evidence_count": evidence_count,
     }
 
 

@@ -6,10 +6,19 @@ from app.core.config import Settings
 from app.core.exceptions import ConfigurationError
 from app.services.learning_repository import LearningRepository
 from app.services.learning_service import LearningService
+from app.services.dify import DifyClient
 
 
 def settings_from_request(request: Request) -> Settings:
     return request.app.state.settings
+
+
+def runtime_dify_settings(request: Request, course=None) -> Settings:
+    snapshot = getattr(request.state, "runtime_dify_settings", None)
+    if snapshot is None:
+        snapshot = request.app.state.dify_settings_repository.runtime_settings(course)
+        request.state.runtime_dify_settings = snapshot
+    return snapshot
 
 
 def agent_from_request(request: Request):
@@ -17,8 +26,11 @@ def agent_from_request(request: Request):
     if request_llm_client is not None:
         return request_llm_client
     if request.app.state.llm_client is not None:
-        return request.app.state.llm_client
-    raise ConfigurationError("请在后端配置 Dify Agent 服务")
+        client = request.app.state.llm_client
+        if isinstance(client, DifyClient):
+            return DifyClient(runtime_dify_settings(request), http_client=client.http)
+        return client
+    raise ConfigurationError("请在管理员后台配置 Dify Agent 服务")
 
 
 def learning_repository_from_request(request: Request) -> LearningRepository:

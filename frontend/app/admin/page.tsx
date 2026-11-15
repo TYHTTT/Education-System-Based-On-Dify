@@ -19,6 +19,12 @@ const QUICK_LINKS = [
     tint: "bg-tint-mint",
   },
   {
+    href: "/admin/settings",
+    title: "Dify 配置",
+    description: "配置自由问答的 Dify 服务，课程 Dify 与完成门限在课程详情中设置。",
+    tint: "bg-tint-sky",
+  },
+  {
     href: "/learn",
     title: "学生端预览",
     description: "以学生视角浏览课程目录与学习路径。",

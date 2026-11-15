@@ -8,6 +8,7 @@ from app.schemas.course import (
     CourseDetailResponse,
     CourseListResponse,
     CourseResponse,
+    AdminCourseResponse,
     CreateCourseRequest,
     UpdateCourseRequest,
 )
@@ -41,7 +42,7 @@ def list_courses(
     return service.list(query=q, status=status, page=page, page_size=page_size)
 
 
-@admin_router.post("", response_model=CourseResponse, status_code=201)
+@admin_router.post("", response_model=AdminCourseResponse, status_code=201)
 def create_course(
     payload: CreateCourseRequest, service: CourseRepository = Depends(repository)
 ):
@@ -53,7 +54,7 @@ def get_course(course_id: Course, service: CourseRepository = Depends(repository
     return service.get(course_id, detail=True)
 
 
-@admin_router.patch("/{course_id}", response_model=CourseResponse)
+@admin_router.patch("/{course_id}", response_model=AdminCourseResponse)
 def update_course(
     course_id: Course,
     payload: UpdateCourseRequest,

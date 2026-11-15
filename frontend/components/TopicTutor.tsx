@@ -8,7 +8,7 @@ import { useStudent } from "@/components/StudentProvider";
 import { useTopicConversation } from "@/components/TopicSessionsProvider";
 import { ApiError, sendChat } from "@/lib/api";
 import { splitPracticeContent } from "@/lib/practice-content";
-import { type ChatHistoryItem, type Course } from "@/lib/types";
+import { type ChatHistoryItem, type Course, type TopicEvaluation } from "@/lib/types";
 import { useCourseCatalog } from "@/components/CourseCatalogProvider";
 import type {
   TopicAction as Action,
@@ -33,11 +33,13 @@ export default function TopicTutor({
   topicId,
   topicTitle,
   onLearningStarted,
+  onEvaluationRecorded,
 }: {
   course: Course;
   topicId: string;
   topicTitle: string;
   onLearningStarted?: () => void;
+  onEvaluationRecorded?: (evaluation: TopicEvaluation) => void;
 }) {
   const { withStudent } = useStudent();
   const { courses } = useCourseCatalog();
@@ -155,6 +157,9 @@ export default function TopicTutor({
               : null,
       }));
       if (starting) onLearningStarted?.();
+      if (action === "topic_answer" && response.evaluation?.recorded) {
+        onEvaluationRecorded?.(response.evaluation);
+      }
     } catch (cause) {
       if (!controller.signal.aborted)
         update((current) => ({
@@ -236,6 +241,35 @@ export default function TopicTutor({
                   <MarkdownRenderer
                     content={practice?.question ?? turn.response.answer}
                   />
+                  {turn.action === "topic_answer" && turn.response.evaluation && (
+                    <div
+                      role="status"
+                      className={`mt-5 rounded-xl px-4 py-3 text-sm ${turn.response.evaluation.status === "mastered" ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-800"}`}
+                    >
+                      {turn.response.evaluation.recorded && turn.response.evaluation.score !== null ? (
+                        <>
+                          本次得分：{turn.response.evaluation.score} / 100
+                          <span className="mx-2">·</span>
+                          {turn.response.evaluation.status === "mastered" ? "已完成学习" : "仍在学习中"}
+                          <span className="ml-2 text-xs">（高于 {turn.response.evaluation.threshold} 分完成）</span>
+                        </>
+                      ) : (
+                        <>
+                          AI 本次未返回有效分数，学习状态未更新。
+                          {index === turns.length - 1 && (
+                            <button
+                              type="button"
+                              disabled={Boolean(pending)}
+                              onClick={() => void requestAnswer("topic_answer", turn.message)}
+                              className="ml-2 font-semibold underline disabled:opacity-40"
+                            >
+                              重新评价
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
                   {practice?.reference && submitted && (
                     <details
                       aria-label="练习参考答案"

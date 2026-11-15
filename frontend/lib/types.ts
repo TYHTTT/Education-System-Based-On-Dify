@@ -5,9 +5,21 @@ export interface CourseRecord {
   title: string;
   description: string;
   active: boolean;
+  completion_threshold: number;
   topic_count: number;
   stage_count: number;
   created_at: string;
+  updated_at: string;
+}
+
+export interface AdminCourseRecord extends CourseRecord {
+  dify_api_base_url: string;
+  dify_api_key_configured: boolean;
+}
+
+export interface FreeQaDifySettings {
+  api_base_url: string;
+  api_key_configured: boolean;
   updated_at: string;
 }
 
@@ -15,16 +27,19 @@ export interface CourseInput {
   title: string;
   description: string;
   active: boolean;
+  completion_threshold: number;
+  dify_api_base_url: string;
+  dify_api_key?: string;
 }
 
 export interface CourseList {
-  items: CourseRecord[];
+  items: AdminCourseRecord[];
   total: number;
   page: number;
   page_size: number;
 }
 
-export interface CourseDetail extends CourseRecord {
+export interface CourseDetail extends AdminCourseRecord {
   topics: {
     id: string;
     title: string;
@@ -105,12 +120,20 @@ export interface ChatRequest {
     | "topic_answer";
 }
 
+export interface TopicEvaluation {
+  score: number | null;
+  threshold: number;
+  status: "learning" | "mastered" | null;
+  recorded: boolean;
+}
+
 export interface ChatResponse {
   answer: string;
   course: Course | null;
   sources: Source[];
   retrieval_count: number;
   conversation_token?: string | null;
+  evaluation?: TopicEvaluation | null;
 }
 
 export interface Conversation {

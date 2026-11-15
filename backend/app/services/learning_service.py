@@ -41,6 +41,8 @@ class LearningService:
                 if not key.startswith("state_")
             },
             "status": status,
+            "latest_score": state.get("latest_score") if state else None,
+            "evidence_count": int(state["evidence_count"]) if state else 0,
             "mastery": (
                 float(state["mastery"])
                 if state is not None and int(state["evidence_count"]) > 0

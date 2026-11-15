@@ -9,7 +9,7 @@ import TopicTutor from "@/components/TopicTutor";
 import { ArrowLeftIcon, ArrowRightIcon, TrashIcon } from "@/components/Icons";
 import { useStudent } from "@/components/StudentProvider";
 import { getTopic, startTopic } from "@/lib/api";
-import type { Course, CurriculumTopic } from "@/lib/types";
+import type { Course, CurriculumTopic, TopicEvaluation } from "@/lib/types";
 import { useCourseCatalog } from "@/components/CourseCatalogProvider";
 import { useTopicConversation } from "@/components/TopicSessionsProvider";
 
@@ -78,6 +78,20 @@ function TopicContent({
     } catch {
       setError("学习状态暂时未能保存，可以继续对话，稍后重试。");
     }
+  }
+  function recordEvaluation(evaluation: TopicEvaluation) {
+    const { score, status: evaluatedStatus } = evaluation;
+    if (!evaluation.recorded || score === null || !evaluatedStatus) return;
+    setTopic((current) => current ? {
+      ...current,
+      status: evaluatedStatus,
+      latest_score: score,
+      mastery: score / 100,
+      mastery_display: `${score}%`,
+      evidence_count: (current.evidence_count ?? 0) + 1,
+    } : current);
+    void refresh();
+    void load();
   }
   if (catalog.loading)
     return (
@@ -216,6 +230,7 @@ function TopicContent({
         topicId={topic.id}
         topicTitle={topic.title}
         onLearningStarted={() => void recordLearning()}
+        onEvaluationRecorded={recordEvaluation}
       />
     </div>
   );

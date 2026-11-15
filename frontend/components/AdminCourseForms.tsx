@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import type { CourseInput, CourseRecord } from "@/lib/types";
+import type { AdminCourseRecord, CourseInput, CourseRecord } from "@/lib/types";
+import DifyConnectionFields from "@/components/DifyConnectionFields";
 
 export const inputClass = "form-field mt-1.5";
 export const buttonClass = "btn-secondary";
@@ -15,7 +16,7 @@ export function CourseEditor({
   onSave,
   onCancel,
 }: {
-  course: CourseRecord | null;
+  course: AdminCourseRecord | null;
   onSave: (values: CourseInput) => Promise<void>;
   onCancel: () => void;
 }) {
@@ -28,6 +29,7 @@ export function CourseEditor({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
+    const apiKey = String(data.get("dify_api_key") ?? "").trim();
     setSaving(true);
     setError("");
     try {
@@ -35,6 +37,9 @@ export function CourseEditor({
         title: String(data.get("title")).trim(),
         description: String(data.get("description")).trim(),
         active: data.get("active") === "on",
+        completion_threshold: Number(data.get("completion_threshold")),
+        dify_api_base_url: String(data.get("dify_api_base_url") ?? "").trim(),
+        ...(apiKey ? { dify_api_key: apiKey } : {}),
       });
     } catch (cause) {
       setError(message(cause));
@@ -73,6 +78,26 @@ export function CourseEditor({
               className={`${inputClass} resize-y`}
             />
           </label>
+          <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+            学习完成门限
+            <input
+              name="completion_threshold"
+              type="number"
+              required
+              min={0}
+              max={100}
+              step="0.01"
+              defaultValue={course?.completion_threshold ?? 80}
+              className={inputClass}
+            />
+            <span className="mt-1.5 block text-xs font-normal text-slate-500">
+              满分 100 分，最新作答分数严格高于此门限才标记为已完成。修改后，已有评分也会按新门限重新判定。
+            </span>
+          </label>
+          <DifyConnectionFields
+            apiBaseUrl={course?.dify_api_base_url ?? "https://api.dify.ai/v1"}
+            apiKeyConfigured={Boolean(course?.dify_api_key_configured)}
+          />
           <label className="flex items-center gap-2 self-center text-sm font-medium text-slate-700">
             <input
               name="active"

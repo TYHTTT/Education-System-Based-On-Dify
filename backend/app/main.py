@@ -17,6 +17,7 @@ from app.api.course_content import router as course_content_router
 from app.api.courses import admin_router as admin_courses_router
 from app.api.courses import router as courses_router
 from app.api.curriculum import router as curriculum_router
+from app.api.dify_settings import router as dify_settings_router
 from app.api.health import router as health_router
 from app.api.knowledge_graph import router as knowledge_graph_router
 from app.api.learning import router as learning_router
@@ -28,6 +29,7 @@ from app.core.logging import configure_logging
 from app.services.admin_repository import AdminRepository
 from app.services.course_repository import CourseRepository
 from app.services.dify import DifyClient
+from app.services.dify_settings_repository import DifySettingsRepository
 from app.services.learning_repository import LearningRepository
 
 logger = logging.getLogger(__name__)
@@ -47,6 +49,7 @@ def create_app(
         (
             app_settings.dify_api_key.get_secret_value(),
             app_settings.admin_authcode.get_secret_value(),
+            app_settings.settings_encryption_key.get_secret_value(),
         ),
     )
     app_learning_repository = learning_repository or LearningRepository(
@@ -83,8 +86,9 @@ def create_app(
     app.state.admin_repository = admin_repository or AdminRepository(
         app_settings.database_url
     )
+    app.state.dify_settings_repository = DifySettingsRepository(app_settings)
     app.state.course_repository = course_repository or CourseRepository(
-        app_settings.database_url
+        app_settings.database_url, cipher=app.state.dify_settings_repository.cipher
     )
     app.state.llm_client = (
         llm_client if llm_client is not None else DifyClient(app_settings)
@@ -143,6 +147,7 @@ def create_app(
     app.include_router(admins_router)
     app.include_router(courses_router)
     app.include_router(admin_courses_router)
+    app.include_router(dify_settings_router)
     app.include_router(topic_management_router)
     app.include_router(curriculum_router)
     app.include_router(learning_router)

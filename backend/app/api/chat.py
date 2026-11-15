@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Header, HTTPException, Request
 
-from app.api.dependencies import agent_from_request, student_id_from_authorization
+from app.api.dependencies import agent_from_request, student_id_from_authorization, runtime_dify_settings
 from app.core.exceptions import CourseTopicMismatchError
-from app.schemas.chat import ChatRequest, ChatResponse
+from app.schemas.chat import ChatRequest, ChatResponse, TopicEvaluation
+from app.services.learning_scores import evaluation_question, parse_evaluation
 from app.services.conversation_tokens import (
     issue_conversation_token,
     read_conversation_token,
@@ -39,8 +40,11 @@ async def chat(
     )
     repository = request.app.state.learning_repository
     student_id = student_id_from_authorization(authorization, repository)
+    if payload.learning_mode == "topic_answer" and student_id is None:
+        raise HTTPException(status_code=401, detail="请先登录再提交答案，以保存学习分数。")
     if payload.course is not None:
         repository.require_course(payload.course)
+    settings = runtime_dify_settings(request, payload.course)
     conversation_id = None
     scope = {
         "secret": settings.dify_api_key.get_secret_value(),
@@ -85,6 +89,8 @@ async def chat(
                 topic_id=payload.topic_id,
                 state=payload.learning_mode,
             )
+    if payload.learning_mode == "topic_answer":
+        question = evaluation_question(question)
     agent = agent_from_request(request)
     result = await agent.answer(
         course=payload.course,
@@ -102,4 +108,17 @@ async def chat(
         and 1 <= len(remote_id) <= 128
     ):
         result["conversation_token"] = issue_conversation_token(remote_id, **scope)
-    return ChatResponse.model_validate(result)
+    response = ChatResponse.model_validate(result)
+    if payload.learning_mode == "topic_answer":
+        response.answer, score = parse_evaluation(response.answer)
+        threshold = settings.learning_completion_threshold
+        response.evaluation = TopicEvaluation(score=score, threshold=threshold)
+        if score is not None:
+            state = repository.record_topic_score(
+                student_id=student_id, topic_id=payload.topic_id, course=payload.course,
+                score=score,
+            )
+            response.evaluation.threshold = state["completion_threshold"]
+            response.evaluation.status = state["status"]
+            response.evaluation.recorded = True
+    return response

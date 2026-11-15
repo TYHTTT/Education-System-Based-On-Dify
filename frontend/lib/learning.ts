@@ -39,7 +39,7 @@ export const TOPIC_STATUS_META: Record<
     border: "border-cyan-200",
   },
   mastered: {
-    label: "已通过",
+    label: "已完成",
     symbol: "✓",
     badge: "border-emerald-200 bg-emerald-50 text-emerald-700",
     border: "border-emerald-200",

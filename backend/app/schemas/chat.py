@@ -74,9 +74,17 @@ class SourceResponse(BaseModel):
     distance: float | None = None
 
 
+class TopicEvaluation(BaseModel):
+    score: float | None = Field(default=None, ge=0, le=100, allow_inf_nan=False)
+    threshold: float = Field(ge=0, le=100, allow_inf_nan=False)
+    status: Literal["learning", "mastered"] | None = None
+    recorded: bool = False
+
+
 class ChatResponse(BaseModel):
     answer: str
     course: Course | None = None
     sources: list[SourceResponse]
     retrieval_count: int
     conversation_token: str | None = None
+    evaluation: TopicEvaluation | None = None

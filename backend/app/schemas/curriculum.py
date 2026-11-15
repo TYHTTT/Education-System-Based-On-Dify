@@ -27,6 +27,8 @@ class TopicSummaryResponse(BaseModel):
     mastery: float | None = None
     mastery_display: str | None = None
     confidence: float | None = None
+    latest_score: float | None = None
+    evidence_count: int = 0
 
 
 class CurriculumStageResponse(BaseModel):

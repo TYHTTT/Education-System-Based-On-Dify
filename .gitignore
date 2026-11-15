@@ -1,5 +1,6 @@
 # Environment variables and local secrets
 **/.env.local
+backend/.runtime/
 
 # Python
 __pycache__/
