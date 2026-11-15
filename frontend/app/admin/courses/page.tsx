@@ -53,8 +53,12 @@ export default function AdminCoursesPage() {
       <div className="flex flex-wrap items-end justify-between gap-5 border-b border-hairline pb-8">
         <div>
           <p className="eyebrow">Course management</p>
-          <h1 className="mt-2 text-heading-3 text-ink sm:text-heading-2">课程管理</h1>
-          <p className="mt-3 text-sm leading-6 text-steel">维护课程内容与知识结构，安排学生的学习路径。</p>
+          <h1 className="mt-2 text-heading-3 text-ink sm:text-heading-2">
+            课程管理
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-steel">
+            维护课程内容与知识结构，安排学生的学习路径。
+          </p>
         </div>
         <Link href="/admin/courses/new-course" className={primaryClass}>
           <PlusIcon className="size-4" />
@@ -166,7 +170,11 @@ export default function AdminCoursesPage() {
                           <p className="font-semibold text-ink group-hover:text-link">
                             {course.title}
                           </p>
-                          {course.description && <p className="mt-1 max-w-xl truncate text-[13px] leading-6 text-steel">{course.description}</p>}
+                          {course.description && (
+                            <p className="mt-1 max-w-xl truncate text-[13px] leading-6 text-steel">
+                              {course.description}
+                            </p>
+                          )}
                         </Link>
                       </td>
                       <td className="px-5 py-5 tabular-nums text-slate-600">

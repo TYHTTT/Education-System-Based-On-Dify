@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pytest
-
 from app.learning.gate import MasteryGateInput, evaluate_mastery_gate
 
 
@@ -14,9 +13,7 @@ def passing_state(**overrides: object) -> MasteryGateInput:
         "required_dimensions": frozenset(
             {"concept", "mathematics", "mechanism", "engineering"}
         ),
-        "checkpoint_dimensions": frozenset(
-            {"concept", "mathematics", "mechanism"}
-        ),
+        "checkpoint_dimensions": frozenset({"concept", "mathematics", "mechanism"}),
         "unresolved_critical_misconception_count": 0,
     }
     values.update(overrides)

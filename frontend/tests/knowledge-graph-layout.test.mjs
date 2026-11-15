@@ -104,14 +104,28 @@ test("dragged node stays at the pointer while adjacent nodes relax with no inval
   assert.equal(layout.links.length, 1);
 });
 test("dense related courses retain separate clusters and breathing room between nodes", () => {
-  const courses = ["calculus", "linear-algebra", "probability", "machine-learning"].map((id) => course(id));
+  const courses = [
+    "calculus",
+    "linear-algebra",
+    "probability",
+    "machine-learning",
+  ].map((id) => course(id));
   const nodes = courses.flatMap(({ id }) =>
     Array.from({ length: 32 }, (_, i) => node(`${id}.${i}`, id, i)),
   );
   const edges = courses.flatMap(({ id }, index) => [
-    ...Array.from({ length: 31 }, (_, i) => ({ source: `${id}.${i}`, target: `${id}.${i + 1}` })),
-    ...Array.from({ length: 28 }, (_, i) => ({ source: `${id}.${i}`, target: `${id}.${i + 4}` })),
-    ...Array.from({ length: 16 }, (_, i) => ({ source: `${id}.${i}`, target: `${courses[(index + 1) % courses.length].id}.${i}` })),
+    ...Array.from({ length: 31 }, (_, i) => ({
+      source: `${id}.${i}`,
+      target: `${id}.${i + 1}`,
+    })),
+    ...Array.from({ length: 28 }, (_, i) => ({
+      source: `${id}.${i}`,
+      target: `${id}.${i + 4}`,
+    })),
+    ...Array.from({ length: 16 }, (_, i) => ({
+      source: `${id}.${i}`,
+      target: `${courses[(index + 1) % courses.length].id}.${i}`,
+    })),
   ]);
   const layout = layoutGraph({ courses, nodes, edges });
   const nearest = [];
@@ -123,7 +137,10 @@ test("dense related courses retain separate clusters and breathing room between 
       const distance = Math.hypot(a.x - b.x, a.y - b.y);
       if (a.course === b.course) {
         withinCourse = Math.min(withinCourse, distance);
-        assert.ok(distance > a.radius + b.radius + 10, "neighboring nodes need a visible gap");
+        assert.ok(
+          distance > a.radius + b.radius + 10,
+          "neighboring nodes need a visible gap",
+        );
       } else {
         courseGap = Math.min(courseGap, distance);
       }
@@ -131,7 +148,10 @@ test("dense related courses retain separate clusters and breathing room between 
     nearest.push(withinCourse);
   }
   nearest.sort((a, b) => a - b);
-  assert.ok(courseGap > nearest[Math.floor(nearest.length / 2)], "cross-course links must not merge course clusters");
+  assert.ok(
+    courseGap > nearest[Math.floor(nearest.length / 2)],
+    "cross-course links must not merge course clusters",
+  );
   assert.equal(layout.nodes.length, nodes.length);
   assert.equal(layout.links.length, edges.length);
 });

@@ -35,7 +35,10 @@ await context.addInitScript(() => {
   if (!localStorage.getItem("course-coach:topic-sessions:v1:browser-student")) {
     localStorage.setItem(
       "course-coach:topic-sessions:v1:browser-student",
-      JSON.stringify({ chats: {}, lastPath: "/learn/deleted_course/deleted_course.old_topic" }),
+      JSON.stringify({
+        chats: {},
+        lastPath: "/learn/deleted_course/deleted_course.old_topic",
+      }),
     );
   }
   if (!localStorage.getItem("course-coach:chat-state:v1")) {
@@ -223,19 +226,27 @@ const start = page.getByRole("button", { name: "开始学习", exact: true });
 async function openCourseList() {
   if (page.viewportSize().width < 1024)
     await page.getByRole("button", { name: "展开导航", exact: true }).click();
-  const link = page.getByRole("navigation", { name: "主导航" })
+  const link = page
+    .getByRole("navigation", { name: "主导航" })
     .getByRole("link", { name: "课程学习", exact: true });
   assert.equal(await link.getAttribute("href"), "/learn");
   await link.click();
   await page.getByRole("heading", { name: "全部课程", exact: true }).waitFor();
   assert.equal(new URL(page.url()).pathname, "/learn");
-  assert.equal(await page.getByRole("heading", { name: "课程地址无效", exact: true }).count(), 0);
+  assert.equal(
+    await page
+      .getByRole("heading", { name: "课程地址无效", exact: true })
+      .count(),
+    0,
+  );
 }
 async function openListedTopic(topic) {
   await openCourseList();
   await page.getByRole("link", { name: /查看学习路径/ }).click();
-  await page.getByRole("complementary", { name: "课程知识点目录", exact: true })
-    .getByRole("link", { name: new RegExp(`^${topic.title}`) }).click();
+  await page
+    .getByRole("complementary", { name: "课程知识点目录", exact: true })
+    .getByRole("link", { name: new RegExp(`^${topic.title}`) })
+    .click();
 }
 try {
   for (const width of [1440, 390]) {
@@ -517,13 +528,25 @@ try {
   await page.screenshot({
     path: path.join(artifacts, "topic-learning-mobile.png"),
   });
-  const clearTopic = page.getByRole("button", { name: "清空当前知识点聊天", exact: true });
+  const clearTopic = page.getByRole("button", {
+    name: "清空当前知识点聊天",
+    exact: true,
+  });
   await page.getByRole("button", { name: "没看懂", exact: true }).click();
   await questionForm.getByRole("textbox").fill("清空时也应删除的草稿");
   const preserved = await page.evaluate(() => {
-    const sessions = JSON.parse(localStorage.getItem("course-coach:topic-sessions:v1:browser-student"));
-    const otherStudent = JSON.stringify({ chats: {}, lastPath: null, marker: "保留其他学生数据" });
-    localStorage.setItem("course-coach:topic-sessions:v1:other-student", otherStudent);
+    const sessions = JSON.parse(
+      localStorage.getItem("course-coach:topic-sessions:v1:browser-student"),
+    );
+    const otherStudent = JSON.stringify({
+      chats: {},
+      lastPath: null,
+      marker: "保留其他学生数据",
+    });
+    localStorage.setItem(
+      "course-coach:topic-sessions:v1:other-student",
+      otherStudent,
+    );
     return {
       topic: sessions.chats["machine_learning:ml.machine_learning_basics"],
       freeChat: localStorage.getItem("course-coach:chat-state:v1"),
@@ -536,19 +559,31 @@ try {
     await dialog.dismiss();
   });
   await clearTopic.click();
-  assert.equal(await questionForm.getByRole("textbox").inputValue(), "清空时也应删除的草稿");
-  assert.equal(await page.getByRole("article", { name: "知识点讲解", exact: true }).count(), 1);
+  assert.equal(
+    await questionForm.getByRole("textbox").inputValue(),
+    "清空时也应删除的草稿",
+  );
+  assert.equal(
+    await page
+      .getByRole("article", { name: "知识点讲解", exact: true })
+      .count(),
+    1,
+  );
   page.once("dialog", (dialog) => dialog.accept());
   await clearTopic.click();
   await start.waitFor();
   assert.equal(await clearTopic.isDisabled(), true);
   const cleared = await page.evaluate(() => {
-    const sessions = JSON.parse(localStorage.getItem("course-coach:topic-sessions:v1:browser-student"));
+    const sessions = JSON.parse(
+      localStorage.getItem("course-coach:topic-sessions:v1:browser-student"),
+    );
     return {
       removed: sessions.chats["machine_learning:ml.supervised_learning"],
       topic: sessions.chats["machine_learning:ml.machine_learning_basics"],
       freeChat: localStorage.getItem("course-coach:chat-state:v1"),
-      otherStudent: localStorage.getItem("course-coach:topic-sessions:v1:other-student"),
+      otherStudent: localStorage.getItem(
+        "course-coach:topic-sessions:v1:other-student",
+      ),
     };
   });
   assert.equal(cleared.removed, undefined);
@@ -557,11 +592,20 @@ try {
   assert.equal(cleared.otherStudent, preserved.otherStudent);
   await page.reload();
   await start.waitFor();
-  assert.equal(await page.getByRole("article", { name: "知识点讲解", exact: true }).count(), 0);
+  assert.equal(
+    await page
+      .getByRole("article", { name: "知识点讲解", exact: true })
+      .count(),
+    0,
+  );
   assert.equal(await clearTopic.isDisabled(), true);
   await start.click();
-  await page.getByRole("article", { name: "知识点讲解", exact: true }).waitFor();
-  const restarted = requests.filter((item) => item.endpoint.endsWith("/chat")).at(-1).body;
+  await page
+    .getByRole("article", { name: "知识点讲解", exact: true })
+    .waitFor();
+  const restarted = requests
+    .filter((item) => item.endpoint.endsWith("/chat"))
+    .at(-1).body;
   assert.equal(restarted.topic_id, topics[1].id);
   assert.equal(restarted.conversation_token, undefined);
   assert.deepEqual(restarted.history, []);
@@ -570,11 +614,15 @@ try {
   await questionForm.getByRole("button", { name: "收起", exact: true }).click();
 
   // Clear while an answer is in flight; aborting must not recreate the removed chat.
-  practiceGate = new Promise((resolve) => { releasePractice = resolve; });
+  practiceGate = new Promise((resolve) => {
+    releasePractice = resolve;
+  });
   await page.getByRole("button", { name: "做练习", exact: true }).click();
   await pendingStatus.waitFor();
   const abortedPractice = page.waitForEvent("requestfailed", {
-    predicate: (request) => request.url().includes("/api/v1/chat") && request.postDataJSON()?.learning_mode === "topic_practice",
+    predicate: (request) =>
+      request.url().includes("/api/v1/chat") &&
+      request.postDataJSON()?.learning_mode === "topic_practice",
   });
   page.once("dialog", (dialog) => dialog.accept());
   await clearTopic.click();
@@ -584,11 +632,20 @@ try {
   practiceGate = null;
   await page.reload();
   await start.waitFor();
-  assert.equal(await page.getByRole("article", { name: "练习题", exact: true }).count(), 0);
+  assert.equal(
+    await page.getByRole("article", { name: "练习题", exact: true }).count(),
+    0,
+  );
   assert.equal(await clearTopic.isDisabled(), true);
   await start.click();
-  await page.getByRole("article", { name: "知识点讲解", exact: true }).waitFor();
-  assert.equal(requests.filter((item) => item.endpoint.endsWith("/chat")).at(-1).body.conversation_token, undefined);
+  await page
+    .getByRole("article", { name: "知识点讲解", exact: true })
+    .waitFor();
+  assert.equal(
+    requests.filter((item) => item.endpoint.endsWith("/chat")).at(-1).body
+      .conversation_token,
+    undefined,
+  );
   await page.goto(`${baseUrl}/learn/machine_learning/${topics[0].id}`);
   await page.getByRole("article", { name: "作答反馈", exact: true }).waitFor();
   assert.deepEqual(problems, []);
@@ -603,9 +660,7 @@ try {
   await historyDialog
     .getByRole("button", { name: "新建对话", exact: true })
     .click();
-  await page
-    .getByRole("heading", { name: "示例问题", exact: true })
-    .waitFor();
+  await page.getByRole("heading", { name: "示例问题", exact: true }).waitFor();
   await page
     .getByRole("textbox", { name: "你的问题", exact: true })
     .fill("请解释梯度和导数的关系");

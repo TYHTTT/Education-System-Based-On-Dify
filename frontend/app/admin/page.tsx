@@ -43,7 +43,10 @@ export default function AdminHomePage() {
             <Link href="/admin/courses" className="btn-primary">
               管理课程
             </Link>
-            <Link href="/admin/knowledge-graph" className="btn-secondary-on-dark">
+            <Link
+              href="/admin/knowledge-graph"
+              className="btn-secondary-on-dark"
+            >
               查看知识图谱
             </Link>
           </>

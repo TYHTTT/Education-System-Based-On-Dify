@@ -13,7 +13,7 @@ class PostgresConnection:
     def __init__(self, connection: psycopg.Connection[dict[str, Any]]) -> None:
         self._connection = connection
 
-    def __enter__(self) -> "PostgresConnection":
+    def __enter__(self) -> PostgresConnection:
         return self
 
     def __exit__(self, exc_type: object, exc_value: object, traceback: object) -> bool:

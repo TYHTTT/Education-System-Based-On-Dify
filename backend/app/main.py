@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import logging
 import inspect
+import logging
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -11,24 +11,24 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app import __version__
-from app.api.chat import router as chat_router
 from app.api.admins import router as admins_router
-from app.api.courses import router as courses_router, admin_router as admin_courses_router
-from app.api.topic_management import router as topic_management_router
+from app.api.chat import router as chat_router
+from app.api.course_content import router as course_content_router
+from app.api.courses import admin_router as admin_courses_router
+from app.api.courses import router as courses_router
 from app.api.curriculum import router as curriculum_router
 from app.api.health import router as health_router
+from app.api.knowledge_graph import router as knowledge_graph_router
 from app.api.learning import router as learning_router
 from app.api.students import router as students_router
-from app.api.course_content import router as course_content_router
-from app.api.knowledge_graph import router as knowledge_graph_router
+from app.api.topic_management import router as topic_management_router
 from app.core.config import Settings, get_settings
 from app.core.exceptions import AppError
 from app.core.logging import configure_logging
-from app.services.dify import DifyClient
-from app.services.learning_repository import LearningRepository
 from app.services.admin_repository import AdminRepository
 from app.services.course_repository import CourseRepository
-
+from app.services.dify import DifyClient
+from app.services.learning_repository import LearningRepository
 
 logger = logging.getLogger(__name__)
 
@@ -80,9 +80,15 @@ def create_app(
     )
     app.state.settings = app_settings
     app.state.learning_repository = app_learning_repository
-    app.state.admin_repository = admin_repository or AdminRepository(app_settings.database_url)
-    app.state.course_repository = course_repository or CourseRepository(app_settings.database_url)
-    app.state.llm_client = llm_client if llm_client is not None else DifyClient(app_settings)
+    app.state.admin_repository = admin_repository or AdminRepository(
+        app_settings.database_url
+    )
+    app.state.course_repository = course_repository or CourseRepository(
+        app_settings.database_url
+    )
+    app.state.llm_client = (
+        llm_client if llm_client is not None else DifyClient(app_settings)
+    )
 
     app.add_middleware(
         CORSMiddleware,
@@ -102,8 +108,12 @@ def create_app(
         )
 
     @app.exception_handler(RequestValidationError)
-    async def validation_error_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
-        logger.info("请求参数校验失败: %s (%d errors)", request.url.path, len(exc.errors()))
+    async def validation_error_handler(
+        request: Request, exc: RequestValidationError
+    ) -> JSONResponse:
+        logger.info(
+            "请求参数校验失败: %s (%d errors)", request.url.path, len(exc.errors())
+        )
         return JSONResponse(
             status_code=422,
             content={"error": {"code": "validation_error", "message": "请求参数无效"}},
@@ -122,7 +132,9 @@ def create_app(
         logger.exception("未处理的服务器异常: %s", type(exc).__name__)
         return JSONResponse(
             status_code=500,
-            content={"error": {"code": "internal_error", "message": "服务器暂时无法处理请求"}},
+            content={
+                "error": {"code": "internal_error", "message": "服务器暂时无法处理请求"}
+            },
         )
 
     app.include_router(health_router)

@@ -37,12 +37,23 @@ export default function MobileNavigation({
         onClick={() => setOpen((value) => !value)}
         className="btn-secondary size-11 p-0"
       >
-        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className="size-5">
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          className="size-5"
+        >
           <path d={open ? "m6 6 12 12M6 18 18 6" : "M4 6h16M4 12h16M4 18h16"} />
         </svg>
       </button>
       {open && (
-        <div id="mobile-navigation" className="absolute right-0 top-[calc(100%+12px)] w-[min(320px,calc(100vw-32px))] rounded-xl border border-hairline bg-canvas p-3 shadow-modal">
+        <div
+          id="mobile-navigation"
+          className="absolute right-0 top-[calc(100%+12px)] w-[min(320px,calc(100vw-32px))] rounded-xl border border-hairline bg-canvas p-3 shadow-modal"
+        >
           <nav aria-label={label} className="space-y-1">
             {items.map((item) => (
               <Link
@@ -56,7 +67,11 @@ export default function MobileNavigation({
               </Link>
             ))}
           </nav>
-          {children && <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-hairline pt-3">{children}</div>}
+          {children && (
+            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-hairline pt-3">
+              {children}
+            </div>
+          )}
         </div>
       )}
     </div>

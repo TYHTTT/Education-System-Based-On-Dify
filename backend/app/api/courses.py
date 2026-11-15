@@ -5,14 +5,13 @@ from fastapi import APIRouter, Depends, Query, Request
 from app.api.admins import require_admin
 from app.core.types import Course
 from app.schemas.course import (
+    CourseDetailResponse,
+    CourseListResponse,
+    CourseResponse,
     CreateCourseRequest,
     UpdateCourseRequest,
-    CourseResponse,
-    CourseListResponse,
-    CourseDetailResponse,
 )
 from app.services.course_repository import CourseRepository
-
 
 router = APIRouter(tags=["courses"])
 admin_router = APIRouter(

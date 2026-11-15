@@ -1,10 +1,13 @@
 import pytest
 from pydantic import ValidationError
+
 from app.core.config import Settings
 
 
 def test_dify_configuration_and_secret_redaction():
-    settings = Settings(_env_file=None, dify_api_key="app-secret", dify_inputs={"tenant": "education"})
+    settings = Settings(
+        _env_file=None, dify_api_key="app-secret", dify_inputs={"tenant": "education"}
+    )
     assert settings.dify_api_key.get_secret_value() == "app-secret"
     assert "app-secret" not in repr(settings)
     assert not hasattr(settings, "embedding_dimension")

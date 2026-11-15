@@ -1,11 +1,10 @@
-from datetime import datetime, timedelta, timezone
 import secrets
 import uuid
+from datetime import UTC, datetime, timedelta
 
 from app.core.exceptions import AdminUnauthorizedError
 from app.core.security import hash_password, hash_session_token, verify_password
 from app.db.database import PostgresDatabase
-
 
 PUBLIC_COLUMNS = "id, username, display_name, created_at, last_active_at"
 
@@ -18,9 +17,14 @@ class AdminRepository:
 
     @staticmethod
     def _session():
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         token = secrets.token_urlsafe(32)
-        return token, hash_session_token(token), now.isoformat(), (now + timedelta(days=30)).isoformat()
+        return (
+            token,
+            hash_session_token(token),
+            now.isoformat(),
+            (now + timedelta(days=30)).isoformat(),
+        )
 
     def register(self, *, username: str, password: str, display_name: str) -> dict:
         token, token_hash, now, expires = self._session()
@@ -31,8 +35,16 @@ class AdminRepository:
                     id,username,display_name,password_hash,session_token_hash,
                     session_expires_at,created_at,last_active_at
                 ) VALUES (?,?,?,?,?,?,?,?) RETURNING {PUBLIC_COLUMNS}""",
-                (str(uuid.uuid4()), username.lower(), display_name.strip(), password_hash,
-                 token_hash, expires, now, now),
+                (
+                    str(uuid.uuid4()),
+                    username.lower(),
+                    display_name.strip(),
+                    password_hash,
+                    token_hash,
+                    expires,
+                    now,
+                    now,
+                ),
             ).fetchone()
         return {**dict(row), "access_token": token}
 
@@ -54,7 +66,7 @@ class AdminRepository:
         return {**dict(account), "access_token": token} if account else None
 
     def from_token(self, token: str) -> dict:
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         with self.database.connect() as connection:
             account = connection.execute(
                 f"""UPDATE administrators SET last_active_at=?

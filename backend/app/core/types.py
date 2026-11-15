@@ -1,8 +1,7 @@
-from enum import Enum
 import re
+from enum import Enum
 
 from pydantic_core import core_schema
-
 
 UUID_ID_PATTERN = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 # Legacy identifiers remain valid for existing records and seed imports.

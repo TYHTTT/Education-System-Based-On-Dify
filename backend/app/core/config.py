@@ -7,7 +7,6 @@ from typing import Any, Literal
 from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -42,7 +41,7 @@ class Settings(BaseSettings):
     max_message_length: int = Field(default=8000, ge=1, le=100_000)
 
     @model_validator(mode="after")
-    def validate_and_resolve(self) -> "Settings":
+    def validate_and_resolve(self) -> Settings:
         origins = self.cors_origins
         if self.app_env == "production" and "*" in origins:
             raise ValueError("生产环境不允许 FRONTEND_ORIGIN 使用通配符")

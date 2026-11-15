@@ -7,7 +7,6 @@ from pydantic import BaseModel
 
 from app.core.types import Course
 
-
 TopicStatus = Literal[
     "not_started",
     "learning",

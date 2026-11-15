@@ -8,8 +8,7 @@ import {
   type RelatedTopicCandidates,
 } from "@/lib/topic-management";
 
-const inputClass =
-  "form-field min-w-0";
+const inputClass = "form-field min-w-0";
 export default function RelatedTopicsPicker({
   topicId,
   courseId,
@@ -83,7 +82,9 @@ export default function RelatedTopicsPicker({
   function runSearch() {
     const keyword = query.trim();
     if (!keyword) return;
-    setData((current) => current ? { ...current, items: [], total: 0 } : null);
+    setData((current) =>
+      current ? { ...current, items: [], total: 0 } : null,
+    );
     setError("");
     setCompletedSearch(null);
     setLoading(true);
@@ -92,7 +93,7 @@ export default function RelatedTopicsPicker({
 
   function changePage(nextPage: number) {
     setLoading(true);
-    setSearch((current) => current ? { ...current, page: nextPage } : null);
+    setSearch((current) => (current ? { ...current, page: nextPage } : null));
   }
 
   function clearSearch() {
@@ -195,83 +196,91 @@ export default function RelatedTopicsPicker({
         </button>
       </div>
       {search && (loading || error || completedSearch === search) && (
-      <div className="max-h-52 overflow-y-auto overscroll-contain rounded-xl border border-slate-200">
-        {loading ? (
-          <p role="status" className="p-4 text-sm text-slate-400">
-            正在加载相关知识点…
-          </p>
-        ) : error ? (
-          <p role="alert" className="p-4 text-sm text-rose-700">
-            {error}
-            <button
-              type="button"
-              onClick={() => setVersion((value) => value + 1)}
-              className="ml-2 underline"
+        <div className="max-h-52 overflow-y-auto overscroll-contain rounded-xl border border-slate-200">
+          {loading ? (
+            <p role="status" className="p-4 text-sm text-slate-400">
+              正在加载相关知识点…
+            </p>
+          ) : error ? (
+            <p role="alert" className="p-4 text-sm text-rose-700">
+              {error}
+              <button
+                type="button"
+                onClick={() => setVersion((value) => value + 1)}
+                className="ml-2 underline"
+              >
+                重试
+              </button>
+            </p>
+          ) : data?.items.length ? (
+            <ul
+              aria-label="可选相关知识点"
+              className="divide-y divide-slate-100"
             >
-              重试
-            </button>
-          </p>
-        ) : data?.items.length ? (
-          <ul aria-label="可选相关知识点" className="divide-y divide-slate-100">
-            {data.items.map((topic) => (
-              <li key={topic.id}>
-                <label className="flex cursor-pointer items-start gap-3 px-3 py-2.5 hover:bg-slate-50">
-                  <input
-                    type="checkbox"
-                    aria-label={`关联${topic.title}（${topic.course_title} / ${topic.chapter_title}）`}
-                    checked={selected.includes(topic.id)}
-                    onChange={(event) =>
-                      onChange(
-                        event.target.checked
-                          ? [...selected, topic.id]
-                          : selected.filter((id) => id !== topic.id),
-                      )
-                    }
-                    className="mt-1 size-4 shrink-0 accent-indigo-600"
-                  />
-                  <span className="min-w-0">
-                    <span className="block break-words text-sm text-slate-700">
-                      {topic.title}
+              {data.items.map((topic) => (
+                <li key={topic.id}>
+                  <label className="flex cursor-pointer items-start gap-3 px-3 py-2.5 hover:bg-slate-50">
+                    <input
+                      type="checkbox"
+                      aria-label={`关联${topic.title}（${topic.course_title} / ${topic.chapter_title}）`}
+                      checked={selected.includes(topic.id)}
+                      onChange={(event) =>
+                        onChange(
+                          event.target.checked
+                            ? [...selected, topic.id]
+                            : selected.filter((id) => id !== topic.id),
+                        )
+                      }
+                      className="mt-1 size-4 shrink-0 accent-indigo-600"
+                    />
+                    <span className="min-w-0">
+                      <span className="block break-words text-sm text-slate-700">
+                        {topic.title}
+                      </span>
+                      <span className="mt-0.5 block break-words text-xs text-slate-400">
+                        {topic.course_title} / {topic.chapter_title}
+                        {topic.course_active ? "" : " · 课程停用"}
+                      </span>
                     </span>
-                    <span className="mt-0.5 block break-words text-xs text-slate-400">
-                      {topic.course_title} / {topic.chapter_title}
-                      {topic.course_active ? "" : " · 课程停用"}
-                    </span>
-                  </span>
-                </label>
-              </li>
-            ))}
-          </ul>
-        ) : completedSearch === search ? (
-          <p className="p-4 text-sm text-slate-400">没有匹配的知识点</p>
-        ) : null}
-      </div>
-      )}
-      {search && completedSearch === search && data && !loading && !error && data.total > data.page_size && (
-        <div className="flex items-center justify-between gap-2 text-xs text-slate-500">
-          <span>
-            共 {data.total} 个 · 第 {page} 页
-          </span>
-          <div className="flex gap-3">
-            <button
-              type="button"
-              disabled={page <= 1}
-              onClick={() => changePage(page - 1)}
-              className="text-indigo-700 disabled:text-slate-300"
-            >
-              上一页
-            </button>
-            <button
-              type="button"
-              disabled={page * data.page_size >= data.total}
-              onClick={() => changePage(page + 1)}
-              className="text-indigo-700 disabled:text-slate-300"
-            >
-              下一页
-            </button>
-          </div>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          ) : completedSearch === search ? (
+            <p className="p-4 text-sm text-slate-400">没有匹配的知识点</p>
+          ) : null}
         </div>
       )}
+      {search &&
+        completedSearch === search &&
+        data &&
+        !loading &&
+        !error &&
+        data.total > data.page_size && (
+          <div className="flex items-center justify-between gap-2 text-xs text-slate-500">
+            <span>
+              共 {data.total} 个 · 第 {page} 页
+            </span>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => changePage(page - 1)}
+                className="text-indigo-700 disabled:text-slate-300"
+              >
+                上一页
+              </button>
+              <button
+                type="button"
+                disabled={page * data.page_size >= data.total}
+                onClick={() => changePage(page + 1)}
+                className="text-indigo-700 disabled:text-slate-300"
+              >
+                下一页
+              </button>
+            </div>
+          </div>
+        )}
     </div>
   );
 }

@@ -12,7 +12,6 @@ from app.schemas.admin import (
 )
 from app.services.admin_repository import AdminRepository
 
-
 router = APIRouter(prefix="/api/v1/admins", tags=["administrators"])
 
 

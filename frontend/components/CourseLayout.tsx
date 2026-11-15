@@ -367,10 +367,7 @@ export default function CourseLayout({ children }: { children: ReactNode }) {
                 </Link>
               )}
               {!topicId && lastTopic && (
-                <Link
-                  href={lastTopic}
-                  className="link mt-3 block text-sm"
-                >
+                <Link href={lastTopic} className="link mt-3 block text-sm">
                   返回上次阅读位置 →
                 </Link>
               )}

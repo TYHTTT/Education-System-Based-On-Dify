@@ -68,8 +68,7 @@ export function stepGraph(simulation: GraphSimulation, alpha = 1) {
       const distance = Math.hypot(dx, dy);
       const sameCourse = a.course === b.course;
       const separation = a.radius + b.radius + (sameCourse ? 55 : 85);
-      const repel =
-        (sameCourse ? 88 : 50) / Math.max(64, distance * distance);
+      const repel = (sameCourse ? 88 : 50) / Math.max(64, distance * distance);
       const collision = (Math.max(0, separation - distance) * 0.25) / distance;
       const force = (repel + collision) * alpha;
       a.vx += dx * force;
@@ -107,7 +106,8 @@ export function stepGraph(simulation: GraphSimulation, alpha = 1) {
 export function layoutGraph(data: KnowledgeGraphData) {
   // Keep course anchors stable even when API collections arrive in a different order.
   const courses = [...data.courses].sort(
-    (a, b) => a.title.localeCompare(b.title, "zh-CN") || a.id.localeCompare(b.id),
+    (a, b) =>
+      a.title.localeCompare(b.title, "zh-CN") || a.id.localeCompare(b.id),
   );
   const byCourse = new Map(
     courses.map((course) => [course.id, [] as GraphNode[]]),

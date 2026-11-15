@@ -63,11 +63,7 @@ function HistoryPanel({
 }) {
   return (
     <div className="flex h-full min-h-0 flex-col px-3 py-5">
-      <button
-        type="button"
-        onClick={onNew}
-        className="btn-primary w-full"
-      >
+      <button type="button" onClick={onNew} className="btn-primary w-full">
         <PlusIcon className="size-4" />
         新建对话
       </button>
@@ -218,12 +214,10 @@ export default function HomePage() {
             learning_mode: "free_qa",
             history: token
               ? []
-              : previous
-                  .slice(-12)
-                  .map(({ role, content }) => ({
-                    role,
-                    content: content.slice(0, 20000),
-                  })),
+              : previous.slice(-12).map(({ role, content }) => ({
+                  role,
+                  content: content.slice(0, 20000),
+                })),
             ...(token ? { conversation_token: token } : {}),
           },
           controller.signal,

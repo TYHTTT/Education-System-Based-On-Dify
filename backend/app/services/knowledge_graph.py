@@ -9,23 +9,41 @@ class KnowledgeGraph:
         # Read all three collections from one snapshot while administrators edit.
         visible_course = "TRUE" if admin else "c.active=1"
         with self.database.connect() as connection:
-            connection.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY")
-            courses = [dict(row) for row in connection.execute(
-                f"SELECT c.id,c.title,c.active,c.graph_color AS color FROM courses c WHERE {visible_course} ORDER BY c.title,c.id"
-            ).fetchall()]
+            connection.execute(
+                "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY"
+            )
+            courses = [
+                dict(row)
+                for row in connection.execute(
+                    f"SELECT c.id,c.title,c.active,c.graph_color AS color FROM courses c WHERE {visible_course} ORDER BY c.title,c.id"
+                ).fetchall()
+            ]
             for course in courses:
                 course["active"] = bool(course["active"])
-            nodes = [dict(row) for row in connection.execute(f"""
+            nodes = [
+                dict(row)
+                for row in connection.execute(f"""
                 SELECT t.id,t.course,t.title,t.description,ch.sort_order AS stage,ch.title AS stage_title,t.order_index
                 FROM curriculum_topics t JOIN courses c ON c.id=t.course
                 JOIN course_chapters ch ON ch.id=t.chapter_id AND ch.course_id=t.course
                 WHERE t.active=1 AND {visible_course}
                 ORDER BY c.title,c.id,ch.sort_order,t.order_index,t.id
-            """).fetchall()]
+            """).fetchall()
+            ]
             ids = [node["id"] for node in nodes]
-            edges = [dict(row) for row in connection.execute("""
+            edges = (
+                [
+                    dict(row)
+                    for row in connection.execute(
+                        """
                 SELECT topic_a_id AS source,topic_b_id AS target,relation_type AS type
                 FROM topic_relations WHERE topic_a_id=ANY(?) AND topic_b_id=ANY(?)
                 ORDER BY topic_a_id,topic_b_id
-            """, (ids, ids)).fetchall()] if ids else []
+            """,
+                        (ids, ids),
+                    ).fetchall()
+                ]
+                if ids
+                else []
+            )
         return {"courses": courses, "nodes": nodes, "edges": edges}

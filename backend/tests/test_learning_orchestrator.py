@@ -44,8 +44,6 @@ def state(**overrides: object) -> LearningOrchestratorInput:
     return LearningOrchestratorInput(**values)  # type: ignore[arg-type]
 
 
-
-
 def test_not_started_starts_learning() -> None:
     decision = decide_next_action(state(current_topic_status="not_started"))
     assert decision.next_action == "start_learning"
@@ -65,9 +63,7 @@ def test_insufficient_evidence_practices() -> None:
 
 
 def test_critical_error_remediates_before_more_practice() -> None:
-    decision = decide_next_action(
-        state(gate=gate(critical=1, attempts=1, mastery=0.6))
-    )
+    decision = decide_next_action(state(gate=gate(critical=1, attempts=1, mastery=0.6)))
     assert decision.next_action == "remediate"
 
 

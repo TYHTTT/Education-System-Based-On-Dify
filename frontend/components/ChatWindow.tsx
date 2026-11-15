@@ -63,9 +63,7 @@ export default function ChatWindow({
     return (
       <div className="flex min-h-full items-center justify-center px-5 py-10 sm:px-8 sm:py-section">
         <div className="w-full max-w-3xl animate-fade-up text-center">
-          <h2 className="text-heading-5 text-ink">
-            示例问题
-          </h2>
+          <h2 className="text-heading-5 text-ink">示例问题</h2>
           <div className="mt-5 grid gap-4 text-left sm:grid-cols-2">
             {examples.map(({ title, question }, index) => (
               <button

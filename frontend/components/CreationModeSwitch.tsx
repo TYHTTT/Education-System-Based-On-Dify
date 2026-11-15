@@ -10,8 +10,15 @@ export default function CreationModeSwitch({
   onChange: (bulk: boolean) => void;
 }) {
   return (
-    <div role="group" aria-label="新增方式" className="inline-flex gap-1 rounded-lg bg-surface p-1">
-      {[{ bulk: false, label: "单个新增" }, { bulk: true, label: "批量新增" }].map((mode) => (
+    <div
+      role="group"
+      aria-label="新增方式"
+      className="inline-flex gap-1 rounded-lg bg-surface p-1"
+    >
+      {[
+        { bulk: false, label: "单个新增" },
+        { bulk: true, label: "批量新增" },
+      ].map((mode) => (
         <button
           key={mode.label}
           type="button"

@@ -10,7 +10,6 @@ from app.schemas.student import (
 )
 from app.services.learning_repository import LearningRepository
 
-
 router = APIRouter(prefix="/api/v1/students", tags=["students"])
 
 

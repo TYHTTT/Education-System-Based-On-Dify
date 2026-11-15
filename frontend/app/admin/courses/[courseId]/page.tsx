@@ -66,10 +66,7 @@ function CourseDetails({ courseId }: { courseId: string }) {
   }
   return (
     <section className="page-container">
-      <Link
-        href="/admin/courses"
-        className="link text-sm"
-      >
+      <Link href="/admin/courses" className="link text-sm">
         ← 返回课程管理
       </Link>
       {error && (
@@ -120,10 +117,7 @@ function CourseDetails({ courseId }: { courseId: string }) {
               onCancel={() => setEditing(false)}
             />
           ) : (
-            <section
-              aria-label="课程基本信息"
-              className="card mt-6 p-5 sm:p-8"
-            >
+            <section aria-label="课程基本信息" className="card mt-6 p-5 sm:p-8">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 className="text-lg font-bold text-slate-900">基本信息</h2>
                 <div className="flex gap-2">

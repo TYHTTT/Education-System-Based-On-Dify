@@ -73,9 +73,19 @@ export default function LearningShell({ children }: { children: ReactNode }) {
             </button>
           </div>
           <MobileNavigation key={pathname} label="主导航" items={navigation}>
-            <p className="w-full truncate px-3 pb-1 text-sm font-medium text-charcoal">{student?.display_name}</p>
-            <Link href="/admin" className="btn-ghost">管理后台</Link>
-            <button type="button" onClick={() => void logout()} className="btn-secondary">退出</button>
+            <p className="w-full truncate px-3 pb-1 text-sm font-medium text-charcoal">
+              {student?.display_name}
+            </p>
+            <Link href="/admin" className="btn-ghost">
+              管理后台
+            </Link>
+            <button
+              type="button"
+              onClick={() => void logout()}
+              className="btn-secondary"
+            >
+              退出
+            </button>
           </MobileNavigation>
         </div>
       </header>

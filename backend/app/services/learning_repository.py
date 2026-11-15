@@ -4,14 +4,12 @@ import json
 import secrets
 import uuid
 from collections.abc import Sequence
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
-import psycopg
-
 from app.core.exceptions import (
-    CourseTopicMismatchError,
     CourseNotFoundError,
+    CourseTopicMismatchError,
     StudentNotFoundError,
     TopicNotFoundError,
 )
@@ -59,47 +57,74 @@ class LearningRepository:
 
     @staticmethod
     def _now() -> str:
-        return datetime.now(timezone.utc).isoformat()
+        return datetime.now(UTC).isoformat()
 
     @staticmethod
     def _row(row: dict[str, Any] | None) -> dict[str, Any] | None:
         return dict(row) if row is not None else None
 
-    def register_student(self, *, username: str, password: str, display_name: str) -> dict[str, Any]:
+    def register_student(
+        self, *, username: str, password: str, display_name: str
+    ) -> dict[str, Any]:
         student_id, now = str(uuid.uuid4()), self._now()
         normalized_username = username.strip().lower()
         with self._connect() as connection:
-            existing = connection.execute("SELECT 1 FROM students WHERE username = ?", (normalized_username,)).fetchone()
+            existing = connection.execute(
+                "SELECT 1 FROM students WHERE username = ?", (normalized_username,)
+            ).fetchone()
             if existing is not None:
                 raise ValueError("username_taken")
             connection.execute(
                 """INSERT INTO students(id, username, display_name, password_hash, created_at, last_active_at)
                    VALUES (?, ?, ?, ?, ?, ?)""",
-                (student_id, normalized_username, display_name.strip(), hash_password(password), now, now),
+                (
+                    student_id,
+                    normalized_username,
+                    display_name.strip(),
+                    hash_password(password),
+                    now,
+                    now,
+                ),
             )
         return self._issue_session(student_id)
 
-    def authenticate_student(self, *, username: str, password: str) -> dict[str, Any] | None:
+    def authenticate_student(
+        self, *, username: str, password: str
+    ) -> dict[str, Any] | None:
         with self._connect() as connection:
             student = connection.execute(
                 "SELECT id, username, display_name, password_hash, created_at FROM students WHERE username = ? AND active = 1",
                 (username.strip().lower(),),
             ).fetchone()
-        if student is None or not verify_password(password, student["password_hash"] or ""):
+        if student is None or not verify_password(
+            password, student["password_hash"] or ""
+        ):
             return None
         return self._issue_session(student["id"])
 
     def _issue_session(self, student_id: str) -> dict[str, Any]:
-        token, session_id, now = secrets.token_urlsafe(32), str(uuid.uuid4()), self._now()
-        expires_at = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+        token, session_id, now = (
+            secrets.token_urlsafe(32),
+            str(uuid.uuid4()),
+            self._now(),
+        )
+        expires_at = (datetime.now(UTC) + timedelta(days=30)).isoformat()
         with self._connect() as connection:
             connection.execute(
                 """INSERT INTO student_sessions(id, student_id, token_hash, expires_at, created_at, last_used_at)
                    VALUES (?, ?, ?, ?, ?, ?)""",
-                (session_id, student_id, hash_session_token(token), expires_at, now, now),
+                (
+                    session_id,
+                    student_id,
+                    hash_session_token(token),
+                    expires_at,
+                    now,
+                    now,
+                ),
             )
             student = connection.execute(
-                "SELECT id, username, display_name, created_at FROM students WHERE id = ?", (student_id,)
+                "SELECT id, username, display_name, created_at FROM students WHERE id = ?",
+                (student_id,),
             ).fetchone()
         return {**dict(student), "access_token": token}
 
@@ -115,13 +140,22 @@ class LearningRepository:
             if student is None:
                 raise StudentNotFoundError()
             if touch:
-                connection.execute("UPDATE student_sessions SET last_used_at = ? WHERE token_hash = ?", (now, hash_session_token(token)))
-                connection.execute("UPDATE students SET last_active_at = ? WHERE id = ?", (now, student["id"]))
+                connection.execute(
+                    "UPDATE student_sessions SET last_used_at = ? WHERE token_hash = ?",
+                    (now, hash_session_token(token)),
+                )
+                connection.execute(
+                    "UPDATE students SET last_active_at = ? WHERE id = ?",
+                    (now, student["id"]),
+                )
         return dict(student)
 
     def revoke_session(self, token: str) -> None:
         with self._connect() as connection:
-            connection.execute("DELETE FROM student_sessions WHERE token_hash = ?", (hash_session_token(token),))
+            connection.execute(
+                "DELETE FROM student_sessions WHERE token_hash = ?",
+                (hash_session_token(token),),
+            )
 
     def get_student(self, student_id: str) -> dict[str, Any] | None:
         with self._connect() as connection:
@@ -153,32 +187,41 @@ class LearningRepository:
             raise StudentNotFoundError()
         return dict(row)
 
-
     def upsert_curriculum(self, seeds: Sequence[CurriculumSeed]) -> None:
         """Upsert stable topics and their placements atomically."""
 
         now = self._now()
-        topics = [
-            (seed.course.value, topic)
-            for seed in seeds
-            for topic in seed.topics
-        ]
+        topics = [(seed.course.value, topic) for seed in seeds for topic in seed.topics]
         with self._connect() as connection:
             chapters = {}
             used_chapters = []
             for course in sorted({course for course, _ in topics}):
-                connection.execute("SELECT id FROM courses WHERE id=? FOR UPDATE", (course,)).fetchone()
+                connection.execute(
+                    "SELECT id FROM courses WHERE id=? FOR UPDATE", (course,)
+                ).fetchone()
             for course, topic in topics:
                 key = (course, topic.stage)
                 if key in chapters:
                     continue
-                chapter = connection.execute("""SELECT id,sort_order,title FROM course_chapters
+                chapter = connection.execute(
+                    """SELECT id,sort_order,title FROM course_chapters
                     WHERE course_id=? AND title=? AND NOT(id=ANY(?)) ORDER BY sort_order,id LIMIT 1""",
-                    (course, topic.stage_title, used_chapters)).fetchone()
+                    (course, topic.stage_title, used_chapters),
+                ).fetchone()
                 if chapter is None:
-                    order = connection.execute("SELECT coalesce(max(sort_order),0)+1 AS position FROM course_chapters WHERE course_id=?", (course,)).fetchone()["position"]
-                    chapter = {"id": str(uuid.uuid4()), "sort_order": order, "title": topic.stage_title}
-                    connection.execute("INSERT INTO course_chapters(id,course_id,sort_order,title) VALUES (?,?,?,?)", (chapter["id"], course, order, chapter["title"]))
+                    order = connection.execute(
+                        "SELECT coalesce(max(sort_order),0)+1 AS position FROM course_chapters WHERE course_id=?",
+                        (course,),
+                    ).fetchone()["position"]
+                    chapter = {
+                        "id": str(uuid.uuid4()),
+                        "sort_order": order,
+                        "title": topic.stage_title,
+                    }
+                    connection.execute(
+                        "INSERT INTO course_chapters(id,course_id,sort_order,title) VALUES (?,?,?,?)",
+                        (chapter["id"], course, order, chapter["title"]),
+                    )
                 chapters[key] = dict(chapter)
                 used_chapters.append(chapter["id"])
             for course, topic in topics:
@@ -228,10 +271,18 @@ class LearningRepository:
 
             for course, topic in topics:
                 chapter = chapters[(course, topic.stage)]
-                connection.execute("""INSERT INTO topic_placements(course_id,topic_id,parent_group_id,group_title,order_index)
+                connection.execute(
+                    """INSERT INTO topic_placements(course_id,topic_id,parent_group_id,group_title,order_index)
                     VALUES (?,?,?,?,?) ON CONFLICT(course_id,topic_id) DO UPDATE SET
                     parent_group_id=excluded.parent_group_id,group_title=excluded.group_title,order_index=excluded.order_index""",
-                    (course,topic.id,chapter["id"],chapter["title"],topic.order_index))
+                    (
+                        course,
+                        topic.id,
+                        chapter["id"],
+                        chapter["title"],
+                        topic.order_index,
+                    ),
+                )
 
     @staticmethod
     def _dump_json(value: Any) -> str:
@@ -243,9 +294,7 @@ class LearningRepository:
 
     def _topic_record(self, row: dict[str, Any]) -> dict[str, Any]:
         record = dict(row)
-        for column, output in (
-            ("learning_objectives_json", "learning_objectives"),
-        ):
+        for column, output in (("learning_objectives_json", "learning_objectives"),):
             record[output] = self._load_json(record.pop(column), [])
         record["active"] = bool(record["active"])
         return record
@@ -253,7 +302,8 @@ class LearningRepository:
     def require_course(self, course: Course | str) -> dict[str, Any]:
         with self._connect() as connection:
             row = connection.execute(
-                "SELECT * FROM courses WHERE id=? AND active=1", (course.value if isinstance(course, Course) else course,)
+                "SELECT * FROM courses WHERE id=? AND active=1",
+                (course.value if isinstance(course, Course) else course,),
             ).fetchone()
         if row is None:
             raise CourseNotFoundError()
@@ -266,7 +316,9 @@ class LearningRepository:
         active_only: bool = True,
         student_id: str | None = None,
     ) -> list[dict[str, Any]]:
-        course_value = course.value if isinstance(course, Course) else Course(course).value
+        course_value = (
+            course.value if isinstance(course, Course) else Course(course).value
+        )
         self.require_course(course_value)
         params: list[Any] = []
         state_columns = "NULL AS state_status, NULL AS state_mastery, NULL AS state_confidence, NULL AS state_evidence_count"
@@ -301,7 +353,9 @@ class LearningRepository:
     ) -> dict[str, Any] | None:
         params: list[Any] = []
         join = ""
-        state_columns = "NULL AS state_status, NULL AS state_mastery, NULL AS state_confidence"
+        state_columns = (
+            "NULL AS state_status, NULL AS state_mastery, NULL AS state_confidence"
+        )
         if student_id is not None:
             params.append(student_id)
             join = (
@@ -354,11 +408,6 @@ class LearningRepository:
                 (topic_id, topic_id, topic_id),
             ).fetchall()
         return [dict(row) for row in rows]
-
-
-
-
-
 
     def ensure_topic_state(
         self,
@@ -428,7 +477,9 @@ class LearningRepository:
         state: str,
     ) -> str:
         self.require_student(student_id, touch=False)
-        course_value = course.value if isinstance(course, Course) else Course(course).value
+        course_value = (
+            course.value if isinstance(course, Course) else Course(course).value
+        )
         if topic_id is not None:
             topic = self.require_topic(topic_id)
             if topic["course"] != course_value:

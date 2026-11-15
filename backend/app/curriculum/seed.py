@@ -10,7 +10,6 @@ from app.curriculum.models import CurriculumSeed
 from app.curriculum.validation import CurriculumValidationError, validate_curriculum
 from app.services.learning_repository import LearningRepository
 
-
 SEED_DIRECTORY = Path(__file__).resolve().parent / "seeds"
 DEFAULT_SEED_PATHS = (
     SEED_DIRECTORY / "machine_learning.json",

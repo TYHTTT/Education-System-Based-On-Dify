@@ -35,7 +35,11 @@ class LearningService:
         state = self.repository.get_topic_state(student_id, topic_id)
         status = self._status(state)
         return {
-            **{key: value for key, value in topic.items() if not key.startswith("state_")},
+            **{
+                key: value
+                for key, value in topic.items()
+                if not key.startswith("state_")
+            },
             "status": status,
             "mastery": (
                 float(state["mastery"])
@@ -83,7 +87,11 @@ class LearningService:
             )
         current = self._current_topic(views)
         if not views:
-            decision = {"next_action": "start_learning", "reasons": ["当前课程暂无知识点"], "recommended_topic_id": None}
+            decision = {
+                "next_action": "start_learning",
+                "reasons": ["当前课程暂无知识点"],
+                "recommended_topic_id": None,
+            }
         elif current is None:
             decision = {
                 "next_action": "course_completed",
@@ -94,7 +102,9 @@ class LearningService:
             starting = current["status"] == "not_started"
             decision = {
                 "next_action": "start_learning" if starting else "continue_learning",
-                "reasons": ["按课程编排开始下一个知识点" if starting else "继续当前知识点的学习"],
+                "reasons": [
+                    "按课程编排开始下一个知识点" if starting else "继续当前知识点的学习"
+                ],
                 "recommended_topic_id": current["id"],
             }
         counts = {

@@ -80,9 +80,7 @@ export default function LearnHomePage() {
                   href={`/learn/${course.id}`}
                   className={`card-tint group flex min-h-72 flex-col p-6 transition-shadow hover:shadow-card sm:p-8 ${tint}`}
                 >
-                  <h2 className="text-heading-4 text-ink">
-                    {course.title}
-                  </h2>
+                  <h2 className="text-heading-4 text-ink">{course.title}</h2>
                   <span className="mt-3 self-start rounded-md bg-white/70 px-2 py-1 text-[12px] font-medium text-charcoal">
                     {course.topic_count ?? 0} 个知识点
                   </span>

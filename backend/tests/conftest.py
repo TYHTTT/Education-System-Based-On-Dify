@@ -20,7 +20,12 @@ def postgres_test_database_url() -> Iterator[str]:
     if "test" not in database_name.lower():
         pytest.fail("POSTGRES_TEST_DATABASE_URL 必须指向名称包含 test 的专用数据库")
 
-    schema_path = Path(__file__).resolve().parents[2] / "operations" / "database" / "initialize_postgresql.sql"
+    schema_path = (
+        Path(__file__).resolve().parents[2]
+        / "operations"
+        / "database"
+        / "initialize_postgresql.sql"
+    )
     database = PostgresDatabase(database_url)
     with database.connect() as connection:
         connection.execute_script(schema_path.read_text(encoding="utf-8"))
@@ -32,7 +37,9 @@ def postgres_test_database_url() -> Iterator[str]:
             """
         ).fetchall()
         connection.execute(
-            "TRUNCATE TABLE " + ", ".join(row["name"] for row in tables) + " RESTART IDENTITY CASCADE"
+            "TRUNCATE TABLE "
+            + ", ".join(row["name"] for row in tables)
+            + " RESTART IDENTITY CASCADE"
         )
         connection.execute_script(schema_path.read_text(encoding="utf-8"))
     yield database_url

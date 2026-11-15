@@ -1,16 +1,17 @@
 from fastapi import APIRouter, Depends, Query, Request
+
 from app.api.admins import require_admin
 from app.core.types import Course
 from app.schemas.topic_management import (
-    TopicId,
-    TopicWrite,
     BatchTitles,
-    TopicBatchCreate,
-    TopicOrder,
-    ChapterId,
-    ChapterWrite,
-    ChapterOrder,
     ChapterDelete,
+    ChapterId,
+    ChapterOrder,
+    ChapterWrite,
+    TopicBatchCreate,
+    TopicId,
+    TopicOrder,
+    TopicWrite,
 )
 from app.services.topic_management import TopicManagement
 
@@ -45,12 +46,16 @@ def create(course_id: Course, payload: TopicWrite, manager=Depends(service)):
 
 
 @router.post(PREFIX + "/batch", status_code=201)
-def create_batch(course_id: Course, payload: TopicBatchCreate, manager=Depends(service)):
+def create_batch(
+    course_id: Course, payload: TopicBatchCreate, manager=Depends(service)
+):
     return manager.create_topics(course_id, payload.chapter_id, payload.titles)
 
 
 @router.post(PREFIX + "/groups/batch", status_code=201)
-def create_groups_batch(course_id: Course, payload: BatchTitles, manager=Depends(service)):
+def create_groups_batch(
+    course_id: Course, payload: BatchTitles, manager=Depends(service)
+):
     return manager.create_chapters(course_id, payload.titles)
 
 
@@ -81,7 +86,9 @@ def remove_group(
     chapter_id: ChapterId,
     manager=Depends(service),
 ):
-    return manager.remove_chapter(course_id, chapter_id, payload.title, payload.topic_ids)
+    return manager.remove_chapter(
+        course_id, chapter_id, payload.title, payload.topic_ids
+    )
 
 
 @router.post(PREFIX + "/groups/order")

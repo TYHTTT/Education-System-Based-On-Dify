@@ -1,10 +1,7 @@
 import type { ChatResponse, Course } from "./types";
 
 export type TopicAction =
-  | "topic_teaching"
-  | "topic_clarification"
-  | "topic_practice"
-  | "topic_answer";
+  "topic_teaching" | "topic_clarification" | "topic_practice" | "topic_answer";
 export type TopicInputMode = "clarification" | "answer";
 export type TopicTurn = {
   action: TopicAction;
@@ -41,15 +38,14 @@ const UUID_ID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 const COURSE_ID = `(?:${UUID_ID}|[a-z][a-z0-9_]{1,63})`;
 const TOPIC_ID = `(?:${UUID_ID}|[a-z][a-z0-9_]*)\\.[a-z0-9_]+`;
 const SCOPE = new RegExp(`^${COURSE_ID}:${TOPIC_ID}$`);
-const LEARNING_PATH = new RegExp(`^/learn/${COURSE_ID}/${TOPIC_ID}(?:\\?[^\\s#]*)?$`);
+const LEARNING_PATH = new RegExp(
+  `^/learn/${COURSE_ID}/${TOPIC_ID}(?:\\?[^\\s#]*)?$`,
+);
 export function topicChatKey(course: Course, topicId: string): string {
   return `${course}:${topicId}`;
 }
 export function isLearningPath(path: unknown): path is string {
-  return (
-    typeof path === "string" &&
-    LEARNING_PATH.test(path)
-  );
+  return typeof path === "string" && LEARNING_PATH.test(path);
 }
 export function emptyTopicChat(): TopicChatState {
   return {

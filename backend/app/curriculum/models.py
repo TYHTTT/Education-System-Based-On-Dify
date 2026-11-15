@@ -19,10 +19,8 @@ class TopicSeed(BaseModel):
     active: bool = True
 
     @model_validator(mode="after")
-    def validate_unique_lists(self) -> "TopicSeed":
-        for field_name in (
-            "learning_objectives",
-        ):
+    def validate_unique_lists(self) -> TopicSeed:
+        for field_name in ("learning_objectives",):
             values = getattr(self, field_name)
             if len(values) != len(set(values)):
                 raise ValueError(f"{self.id}.{field_name} 不能包含重复项")
@@ -36,7 +34,7 @@ class CurriculumSeed(BaseModel):
     topics: list[TopicSeed] = Field(min_length=1)
 
     @model_validator(mode="after")
-    def validate_stable_identifiers(self) -> "CurriculumSeed":
+    def validate_stable_identifiers(self) -> CurriculumSeed:
         prefix = {
             Course.MACHINE_LEARNING: "ml.",
             Course.ADVANCED_MATHEMATICS: "math.",

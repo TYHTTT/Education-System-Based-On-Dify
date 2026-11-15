@@ -1,10 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { placeGraphCallout, type GraphCalloutObstacle } from "@/lib/graph-callout";
+import {
+  placeGraphCallout,
+  type GraphCalloutObstacle,
+} from "@/lib/graph-callout";
 
 export default function GraphNodeCallout({
-  anchor, radius, viewport, nodes, children,
+  anchor,
+  radius,
+  viewport,
+  nodes,
+  children,
 }: {
   anchor: { x: number; y: number };
   radius: number;
@@ -14,12 +21,21 @@ export default function GraphNodeCallout({
 }) {
   const panel = useRef<HTMLElement>(null);
   const [height, setHeight] = useState(0);
-  const placement = placeGraphCallout(anchor, radius, { width: 310, height: height || 380 }, viewport, nodes);
+  const placement = placeGraphCallout(
+    anchor,
+    radius,
+    { width: 310, height: height || 380 },
+    viewport,
+    nodes,
+  );
   const visible = placement !== null && height > 0;
   useEffect(() => {
     if (!panel.current) return;
     const observer = new ResizeObserver(([entry]) => {
-      setHeight(entry.borderBoxSize[0]?.blockSize ?? entry.target.getBoundingClientRect().height);
+      setHeight(
+        entry.borderBoxSize[0]?.blockSize ??
+          entry.target.getBoundingClientRect().height,
+      );
     });
     observer.observe(panel.current);
     return () => observer.disconnect();
@@ -35,7 +51,11 @@ export default function GraphNodeCallout({
           height={viewport.height}
         >
           <path
-            d={placement.points.map((point, index) => `${index ? "L" : "M"}${point.x},${point.y}`).join(" ")}
+            d={placement.points
+              .map(
+                (point, index) => `${index ? "L" : "M"}${point.x},${point.y}`,
+              )
+              .join(" ")}
             fill="none"
             stroke="#9ca3af"
             strokeWidth="1"

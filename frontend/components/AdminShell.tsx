@@ -16,7 +16,9 @@ export default function AdminShell({ children }: { children: ReactNode }) {
     { href: "/admin/knowledge-graph", label: "知识图谱" },
   ].map((item) => ({
     ...item,
-    active: pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href + "/")),
+    active:
+      pathname === item.href ||
+      (item.href !== "/admin" && pathname.startsWith(item.href + "/")),
   }));
   async function signOut() {
     setLeaving(true);
@@ -64,8 +66,15 @@ export default function AdminShell({ children }: { children: ReactNode }) {
             </button>
           </div>
           <MobileNavigation key={pathname} label="后台导航" items={navigation}>
-            <Link href="/learn" className="btn-ghost">学生端</Link>
-            <button type="button" disabled={leaving} onClick={() => void signOut()} className="btn-secondary">
+            <Link href="/learn" className="btn-ghost">
+              学生端
+            </Link>
+            <button
+              type="button"
+              disabled={leaving}
+              onClick={() => void signOut()}
+              className="btn-secondary"
+            >
               {leaving ? "正在退出…" : "退出管理后台"}
             </button>
           </MobileNavigation>

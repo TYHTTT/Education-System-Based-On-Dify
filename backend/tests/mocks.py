@@ -8,11 +8,21 @@ class MockLLMClient:
         self.answer_text = answer
         self.calls: list[list[dict[str, str]]] = []
 
-    async def answer(self, *, course, question, history, topic_id=None, user=None, conversation_id=None):
+    async def answer(
+        self,
+        *,
+        course,
+        question,
+        history,
+        topic_id=None,
+        user=None,
+        conversation_id=None,
+    ):
         self.calls.append([*history, {"role": "user", "content": question}])
         sources = resource_snapshots(getattr(self, "resources", []), course=course)
         return {
-            "answer": self.answer_text, "course": course,
+            "answer": self.answer_text,
+            "course": course,
             "sources": [{**source, "snippet": source["content"]} for source in sources],
             "retrieval_count": len(sources),
         }

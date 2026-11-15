@@ -4,7 +4,9 @@
 
 /* Design tokens: see DESIGN.md (Notion-inspired system). */
 :root {
-  --font-sans: "Notion Sans", Inter, -apple-system, system-ui, "Segoe UI", Helvetica, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --font-sans:
+    "Notion Sans", Inter, -apple-system, system-ui, "Segoe UI", Helvetica,
+    "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   --color-primary: #5645d4;
   --color-primary-pressed: #4534b3;
@@ -191,11 +193,15 @@ select {
   padding: 0.5rem 0;
 }
 
-button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, summary:focus-visible {
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+summary:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 3px;
 }
-
 
 .prose .katex {
   font-size: 1.05em;
@@ -225,8 +231,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   color-scheme: light;
 }
 
-.knowledge-graph[data-admin="true"] { height: calc(100svh - 97px); }
-.knowledge-graph:fullscreen { height: 100svh; border: 0; border-radius: 0; }
+.knowledge-graph[data-admin="true"] {
+  height: calc(100svh - 97px);
+}
+.knowledge-graph:fullscreen {
+  height: 100svh;
+  border: 0;
+  border-radius: 0;
+}
 .knowledge-graph[data-graph-theme="dark"] {
   --graph-bg: #0a1530;
   --graph-panel: rgba(26, 42, 82, 0.96);
@@ -246,12 +258,24 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   box-shadow: 0 1px 3px rgb(0 0 0 / 4%);
   backdrop-filter: blur(12px);
 }
-.knowledge-graph .graph-title { color: var(--graph-text); }
-.knowledge-graph .graph-secondary { color: var(--graph-secondary); }
-.knowledge-graph .graph-muted { color: var(--graph-muted); }
-.knowledge-graph .graph-divider { border-color: var(--graph-border); }
-.knowledge-graph .graph-link { color: #0075de; }
-.knowledge-graph[data-graph-theme="dark"] .graph-link { color: #8fc8ff; }
+.knowledge-graph .graph-title {
+  color: var(--graph-text);
+}
+.knowledge-graph .graph-secondary {
+  color: var(--graph-secondary);
+}
+.knowledge-graph .graph-muted {
+  color: var(--graph-muted);
+}
+.knowledge-graph .graph-divider {
+  border-color: var(--graph-border);
+}
+.knowledge-graph .graph-link {
+  color: #0075de;
+}
+.knowledge-graph[data-graph-theme="dark"] .graph-link {
+  color: #8fc8ff;
+}
 .knowledge-graph .graph-tool {
   display: inline-flex;
   width: 36px;
@@ -261,38 +285,95 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   flex-shrink: 0;
   border-radius: 8px;
   color: var(--graph-secondary);
-  transition: background 120ms, color 120ms;
+  transition:
+    background 120ms,
+    color 120ms;
 }
 .knowledge-graph .graph-tool:hover,
 .knowledge-graph .graph-result:hover,
-.knowledge-graph .graph-chip:hover { background: var(--graph-hover); color: var(--graph-text); }
-.knowledge-graph .graph-tool[aria-pressed="true"] { color: var(--graph-accent); }
-.knowledge-graph .graph-search { color: var(--graph-muted); }
-.knowledge-graph .graph-search input { min-height: 44px; color: var(--graph-text); font-size: 14px; }
-.knowledge-graph .graph-search input::placeholder { color: var(--graph-muted); }
-.knowledge-graph .graph-search:focus-within { border-color: var(--graph-accent); }
-.knowledge-graph .graph-search input:focus-visible { outline: 0; }
-.knowledge-graph .graph-chip { background: var(--graph-hover); color: var(--graph-secondary); }
-.knowledge-graph .graph-legend { color: var(--graph-secondary); }
-.knowledge-graph .graph-legend:hover { color: var(--graph-text); }
-.knowledge-graph .graph-node { transition: opacity 150ms; }
-.knowledge-graph .graph-edge { transition: stroke-opacity 150ms, stroke 150ms; }
+.knowledge-graph .graph-chip:hover {
+  background: var(--graph-hover);
+  color: var(--graph-text);
+}
+.knowledge-graph .graph-tool[aria-pressed="true"] {
+  color: var(--graph-accent);
+}
+.knowledge-graph .graph-search {
+  color: var(--graph-muted);
+}
+.knowledge-graph .graph-search input {
+  min-height: 44px;
+  color: var(--graph-text);
+  font-size: 14px;
+}
+.knowledge-graph .graph-search input::placeholder {
+  color: var(--graph-muted);
+}
+.knowledge-graph .graph-search:focus-within {
+  border-color: var(--graph-accent);
+}
+.knowledge-graph .graph-search input:focus-visible {
+  outline: 0;
+}
+.knowledge-graph .graph-chip {
+  background: var(--graph-hover);
+  color: var(--graph-secondary);
+}
+.knowledge-graph .graph-legend {
+  color: var(--graph-secondary);
+}
+.knowledge-graph .graph-legend:hover {
+  color: var(--graph-text);
+}
+.knowledge-graph .graph-node {
+  transition: opacity 150ms;
+}
+.knowledge-graph .graph-edge {
+  transition:
+    stroke-opacity 150ms,
+    stroke 150ms;
+}
 /* Explicit cursor artwork keeps its outline through browser/OS theme changes. */
-.knowledge-graph .graph-canvas { cursor: url("/cursors/graph-grab.svg") 10 10, grab; }
+.knowledge-graph .graph-canvas {
+  cursor:
+    url("/cursors/graph-grab.svg") 10 10,
+    grab;
+}
 .knowledge-graph .graph-node,
 .knowledge-graph button,
-.knowledge-graph a { cursor: url("/cursors/graph-pointer.svg") 6 2, pointer; }
+.knowledge-graph a {
+  cursor:
+    url("/cursors/graph-pointer.svg") 6 2,
+    pointer;
+}
 .knowledge-graph .graph-canvas:active,
-.knowledge-graph .graph-canvas:active .graph-node { cursor: url("/cursors/graph-grabbing.svg") 10 10, grabbing; }
-.knowledge-graph [data-node-id]:focus-visible { outline: none; }
+.knowledge-graph .graph-canvas:active .graph-node {
+  cursor:
+    url("/cursors/graph-grabbing.svg") 10 10,
+    grabbing;
+}
+.knowledge-graph [data-node-id]:focus-visible {
+  outline: none;
+}
 .knowledge-graph button:focus-visible,
-.knowledge-graph a:focus-visible { outline-color: var(--graph-accent); }
+.knowledge-graph a:focus-visible {
+  outline-color: var(--graph-accent);
+}
 @media (max-width: 639px) {
   .knowledge-graph,
-  .knowledge-graph[data-admin="true"] { height: calc(100svh - 89px); }
-  .knowledge-graph .graph-tool { width: 44px; height: 44px; }
-  .knowledge-graph .graph-fullscreen { display: none; }
-  .pill-tab { min-height: 44px; }
+  .knowledge-graph[data-admin="true"] {
+    height: calc(100svh - 89px);
+  }
+  .knowledge-graph .graph-tool {
+    width: 44px;
+    height: 44px;
+  }
+  .knowledge-graph .graph-fullscreen {
+    display: none;
+  }
+  .pill-tab {
+    min-height: 44px;
+  }
 }
 
 .prose table {
@@ -334,14 +415,26 @@ html[data-theme="dark"] {
 }
 
 [data-theme="dark"] .text-charcoal\/80,
-[data-theme="dark"] .text-charcoal\/70 { color: #c7c6c3; }
-[data-theme="dark"] .text-charcoal\/50 { color: #a4a29d; }
+[data-theme="dark"] .text-charcoal\/70 {
+  color: #c7c6c3;
+}
+[data-theme="dark"] .text-charcoal\/50 {
+  color: #a4a29d;
+}
 [data-theme="dark"] .text-brand-purple-800,
 [data-theme="dark"] .text-indigo-900,
-[data-theme="dark"] .text-indigo-800 { color: #d6b6f6; }
-[data-theme="dark"] .text-emerald-700 { color: #8bd8a0; }
-[data-theme="dark"] .text-brand-orange-deep { color: #ffc499; }
-[data-theme="dark"] .bg-white\/70 { background-color: #ffffff12; }
+[data-theme="dark"] .text-indigo-800 {
+  color: #d6b6f6;
+}
+[data-theme="dark"] .text-emerald-700 {
+  color: #8bd8a0;
+}
+[data-theme="dark"] .text-brand-orange-deep {
+  color: #ffc499;
+}
+[data-theme="dark"] .bg-white\/70 {
+  background-color: #ffffff12;
+}
 
 [data-theme="dark"] .bg-surface,
 [data-theme="dark"] .bg-surface-soft,
@@ -403,16 +496,32 @@ html[data-theme="dark"] {
 }
 
 /* Pastel tints become deep, low-saturation versions in dark mode. */
-[data-theme="dark"] .bg-tint-peach { background-color: #3a2a1f !important; }
-[data-theme="dark"] .bg-tint-rose { background-color: #3a2430 !important; }
-[data-theme="dark"] .bg-tint-mint { background-color: #1f3326 !important; }
+[data-theme="dark"] .bg-tint-peach {
+  background-color: #3a2a1f !important;
+}
+[data-theme="dark"] .bg-tint-rose {
+  background-color: #3a2430 !important;
+}
+[data-theme="dark"] .bg-tint-mint {
+  background-color: #1f3326 !important;
+}
 [data-theme="dark"] .bg-tint-lavender,
-[data-theme="dark"] .bg-indigo-50 { background-color: #2a2540 !important; }
-[data-theme="dark"] .bg-tint-sky { background-color: #1f2c3a !important; }
+[data-theme="dark"] .bg-indigo-50 {
+  background-color: #2a2540 !important;
+}
+[data-theme="dark"] .bg-tint-sky {
+  background-color: #1f2c3a !important;
+}
 [data-theme="dark"] .bg-tint-yellow,
-[data-theme="dark"] .bg-tint-yellow-bold { background-color: #3a341c !important; }
-[data-theme="dark"] .bg-tint-cream { background-color: #2f2c22 !important; }
-[data-theme="dark"] .card-tint { color: #e9e9e7 !important; }
+[data-theme="dark"] .bg-tint-yellow-bold {
+  background-color: #3a341c !important;
+}
+[data-theme="dark"] .bg-tint-cream {
+  background-color: #2f2c22 !important;
+}
+[data-theme="dark"] .card-tint {
+  color: #e9e9e7 !important;
+}
 
 [data-theme="dark"] ::selection {
   background: #3a2a99;

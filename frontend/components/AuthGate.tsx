@@ -47,11 +47,7 @@ function AdminGate({ children }: { children: ReactNode }) {
         <p role="alert" className="mt-3 text-sm text-slate-600">
           {error}
         </p>
-        <button
-          type="button"
-          onClick={retry}
-          className="btn-primary mt-6"
-        >
+        <button type="button" onClick={retry} className="btn-primary mt-6">
           重试
         </button>
       </section>

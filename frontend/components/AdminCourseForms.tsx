@@ -3,12 +3,9 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { CourseInput, CourseRecord } from "@/lib/types";
 
-export const inputClass =
-  "form-field mt-1.5";
-export const buttonClass =
-  "btn-secondary";
-export const primaryClass =
-  "btn-primary disabled:cursor-wait";
+export const inputClass = "form-field mt-1.5";
+export const buttonClass = "btn-secondary";
+export const primaryClass = "btn-primary disabled:cursor-wait";
 export function message(error: unknown) {
   return error instanceof Error ? error.message : "操作失败，请重试。";
 }
@@ -157,9 +154,12 @@ export function DeleteDialog({
         删除课程
       </h2>
       <p className="mt-4 break-words text-sm leading-6 text-slate-600">
-        确定永久删除“{course.title}”？该课程的全部章节、知识点、图谱连线、学生学习状态及学习会话将一并删除。
+        确定永久删除“{course.title}
+        ”？该课程的全部章节、知识点、图谱连线、学生学习状态及学习会话将一并删除。
       </p>
-      <p className="mt-3 text-sm font-semibold text-rose-700">此操作无法恢复。</p>
+      <p className="mt-3 text-sm font-semibold text-rose-700">
+        此操作无法恢复。
+      </p>
       {error && (
         <p role="alert" className="mt-4 text-sm text-rose-700">
           {error}

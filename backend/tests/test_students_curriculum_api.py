@@ -21,19 +21,35 @@ def _client(postgres_test_database_url) -> tuple[TestClient, LearningRepository]
 
 def test_registered_student_can_login_and_logout(postgres_test_database_url) -> None:
     client, repository = _client(postgres_test_database_url)
-    response = client.post("/api/v1/students/register", json={"username": "test_user", "password": "test-password", "display_name": "测试学生"})
+    response = client.post(
+        "/api/v1/students/register",
+        json={
+            "username": "test_user",
+            "password": "test-password",
+            "display_name": "测试学生",
+        },
+    )
 
     assert response.status_code == 201
     payload = response.json()
     assert payload["student_id"]
     assert repository.get_student(payload["student_id"]) is not None
-    logged_in = client.post("/api/v1/students/login", json={"username": "test_user", "password": "test-password"})
+    logged_in = client.post(
+        "/api/v1/students/login",
+        json={"username": "test_user", "password": "test-password"},
+    )
     assert logged_in.status_code == 200
     token = logged_in.json()["access_token"]
     assert token != payload["access_token"]
     assert repository.student_from_token(token)["id"] == payload["student_id"]
-    assert client.post("/api/v1/students/logout", headers={"Authorization": f"Bearer {token}"}).status_code == 204
+    assert (
+        client.post(
+            "/api/v1/students/logout", headers={"Authorization": f"Bearer {token}"}
+        ).status_code
+        == 204
+    )
     import pytest
+
     with pytest.raises(StudentNotFoundError):
         repository.student_from_token(token)
 
@@ -49,14 +65,18 @@ def test_missing_student_is_rejected(postgres_test_database_url) -> None:
         raise AssertionError("missing student should be rejected")
 
 
-def test_learning_request_touches_last_active_at(postgres_test_database_url, monkeypatch) -> None:
+def test_learning_request_touches_last_active_at(
+    postgres_test_database_url, monkeypatch
+) -> None:
     client, repository = _client(postgres_test_database_url)
     monkeypatch.setattr(
         LearningRepository,
         "_now",
         staticmethod(lambda: "2026-09-01T10:00:00+00:00"),
     )
-    student = repository.register_student(username="test_user", password="test-password", display_name="测试学生")
+    student = repository.register_student(
+        username="test_user", password="test-password", display_name="测试学生"
+    )
     monkeypatch.setattr(
         LearningRepository,
         "_now",
@@ -75,9 +95,13 @@ def test_learning_request_touches_last_active_at(postgres_test_database_url, mon
     )
 
 
-def test_curriculum_response_hides_unstarted_beta_prior(postgres_test_database_url) -> None:
+def test_curriculum_response_hides_unstarted_beta_prior(
+    postgres_test_database_url,
+) -> None:
     client, repository = _client(postgres_test_database_url)
-    student = repository.register_student(username="test_user", password="test-password", display_name="测试学生")
+    student = repository.register_student(
+        username="test_user", password="test-password", display_name="测试学生"
+    )
 
     response = client.get(
         "/api/v1/curriculum/topics",
@@ -97,9 +121,13 @@ def test_curriculum_response_hides_unstarted_beta_prior(postgres_test_database_u
     assert "locked_reason" not in second and "prerequisites" not in second
 
 
-def test_topic_detail_exposes_objectives_and_empty_dimension_state(postgres_test_database_url) -> None:
+def test_topic_detail_exposes_objectives_and_empty_dimension_state(
+    postgres_test_database_url,
+) -> None:
     client, repository = _client(postgres_test_database_url)
-    student = repository.register_student(username="test_user", password="test-password", display_name="测试学生")
+    student = repository.register_student(
+        username="test_user", password="test-password", display_name="测试学生"
+    )
 
     response = client.get(
         "/api/v1/curriculum/topics/ml.logistic_regression",

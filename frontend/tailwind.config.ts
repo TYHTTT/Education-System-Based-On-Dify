@@ -152,10 +152,22 @@ const config: Config = {
         ],
       },
       fontSize: {
-        "hero-display": ["80px", { lineHeight: "1.05", letterSpacing: "-2px", fontWeight: "600" }],
-        "display-lg": ["56px", { lineHeight: "1.10", letterSpacing: "-1px", fontWeight: "600" }],
-        "heading-1": ["48px", { lineHeight: "1.15", letterSpacing: "-0.5px", fontWeight: "600" }],
-        "heading-2": ["36px", { lineHeight: "1.20", letterSpacing: "-0.5px", fontWeight: "600" }],
+        "hero-display": [
+          "80px",
+          { lineHeight: "1.05", letterSpacing: "-2px", fontWeight: "600" },
+        ],
+        "display-lg": [
+          "56px",
+          { lineHeight: "1.10", letterSpacing: "-1px", fontWeight: "600" },
+        ],
+        "heading-1": [
+          "48px",
+          { lineHeight: "1.15", letterSpacing: "-0.5px", fontWeight: "600" },
+        ],
+        "heading-2": [
+          "36px",
+          { lineHeight: "1.20", letterSpacing: "-0.5px", fontWeight: "600" },
+        ],
         "heading-3": ["28px", { lineHeight: "1.25", fontWeight: "600" }],
         "heading-4": ["22px", { lineHeight: "1.30", fontWeight: "600" }],
         "heading-5": ["18px", { lineHeight: "1.40", fontWeight: "600" }],

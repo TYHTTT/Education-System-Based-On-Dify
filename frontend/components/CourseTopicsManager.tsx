@@ -110,11 +110,7 @@ export default function CourseTopicsManager({
       controller.abort();
     };
   }, [courseId, version, withAdmin]);
-  async function mutate(
-    method: string,
-    suffix: string,
-    body?: unknown,
-  ) {
+  async function mutate(method: string, suffix: string, body?: unknown) {
     setBusy(true);
     setError("");
     setNotice("");
@@ -203,7 +199,9 @@ export default function CourseTopicsManager({
             }
             className={actionClass}
             onClick={() =>
-              setExpandedGroups(new Set(outline?.groups.map((group) => group.id)))
+              setExpandedGroups(
+                new Set(outline?.groups.map((group) => group.id)),
+              )
             }
           >
             展开全部
@@ -318,7 +316,9 @@ export default function CourseTopicsManager({
             });
           }}
         >
-          <p className="w-full break-all text-xs text-slate-400">章节 ID：{renaming.id}</p>
+          <p className="w-full break-all text-xs text-slate-400">
+            章节 ID：{renaming.id}
+          </p>
           <label className="flex-1 text-sm text-slate-600">
             章节名称
             <input
@@ -407,7 +407,9 @@ export default function CourseTopicsManager({
                   <ArrowRightIcon
                     className={`size-4 shrink-0 text-slate-400 transition-transform ${expandedGroups.has(group.id) ? "rotate-90" : ""}`}
                   />
-                  <span className="break-words" title={`章节 ID：${group.id}`}>{group.title}</span>
+                  <span className="break-words" title={`章节 ID：${group.id}`}>
+                    {group.title}
+                  </span>
                   <span className="shrink-0 text-xs font-normal text-slate-400">
                     {group.topics.length} 个知识点
                   </span>

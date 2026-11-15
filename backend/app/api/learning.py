@@ -11,7 +11,6 @@ from app.api.dependencies import (
 from app.core.types import Course
 from app.services.learning_service import LearningService
 
-
 router = APIRouter(prefix="/api/v1/learning", tags=["learning"])
 
 

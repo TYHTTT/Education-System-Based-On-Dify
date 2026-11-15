@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Header, Request
 
-from app.core.types import Course
 from app.api.dependencies import student_id_from_authorization
+from app.core.types import Course
 
 router = APIRouter(prefix="/api/v1", tags=["course-content"])
 

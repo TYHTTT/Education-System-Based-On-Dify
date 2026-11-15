@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from app.core.types import Course, TOPIC_ID_PATTERN
+from app.core.types import TOPIC_ID_PATTERN, Course
 
 
 class HistoryMessage(BaseModel):
@@ -41,7 +41,7 @@ class ChatRequest(BaseModel):
     ] = "free_qa"
 
     @model_validator(mode="after")
-    def learning_requires_topic(self) -> "ChatRequest":
+    def learning_requires_topic(self) -> ChatRequest:
         if self.course is None and (
             self.topic_id is not None or self.learning_mode != "free_qa"
         ):

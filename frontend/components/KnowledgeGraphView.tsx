@@ -631,14 +631,19 @@ export default function KnowledgeGraphView({
       {detail ? (
         <GraphNodeCallout
           key={detail.id}
-          anchor={{ x: detail.x * view.scale + view.x, y: detail.y * view.scale + view.y }}
+          anchor={{
+            x: detail.x * view.scale + view.x,
+            y: detail.y * view.scale + view.y,
+          }}
           radius={Math.max(detail.radius * view.scale, 3.5) + 2}
           viewport={size}
-          nodes={positions.filter((node) => node.id !== detail.id).map((node) => ({
-            x: node.x * view.scale + view.x,
-            y: node.y * view.scale + view.y,
-            radius: Math.max(node.radius * view.scale, 3.5),
-          }))}
+          nodes={positions
+            .filter((node) => node.id !== detail.id)
+            .map((node) => ({
+              x: node.x * view.scale + view.x,
+              y: node.y * view.scale + view.y,
+              radius: Math.max(node.radius * view.scale, 3.5),
+            }))}
         >
           <div className="flex items-start justify-between gap-2">
             <p

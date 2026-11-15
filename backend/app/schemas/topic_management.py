@@ -1,10 +1,10 @@
 from typing import Annotated
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
 from app.core.types import TOPIC_ID_PATTERN, UUID_ID_PATTERN
 
-TopicId = Annotated[
-    str, Field(pattern=TOPIC_ID_PATTERN, max_length=160)
-]
+TopicId = Annotated[str, Field(pattern=TOPIC_ID_PATTERN, max_length=160)]
 ChapterId = Annotated[str, Field(pattern=rf"^{UUID_ID_PATTERN}$")]
 
 

@@ -4,8 +4,8 @@ from collections import OrderedDict
 
 from fastapi import APIRouter, Header, Request
 
-from app.api.students import learning_repository_from_request
 from app.api.dependencies import student_id_from_authorization
+from app.api.students import learning_repository_from_request
 from app.core.types import Course
 from app.schemas.curriculum import (
     CurriculumResponse,
@@ -14,7 +14,6 @@ from app.schemas.curriculum import (
     TopicSummaryResponse,
 )
 from app.services.learning_repository import LearningRepository
-
 
 router = APIRouter(prefix="/api/v1/curriculum", tags=["curriculum"])
 

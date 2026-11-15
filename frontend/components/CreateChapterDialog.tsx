@@ -47,7 +47,9 @@ export default function CreateChapterDialog({
     };
   }, [returnFocus]);
   useEffect(() => {
-    ref.current?.querySelector<HTMLElement>('[name="chapter_title"]')?.focus({ preventScroll: true });
+    ref.current
+      ?.querySelector<HTMLElement>('[name="chapter_title"]')
+      ?.focus({ preventScroll: true });
   }, [bulk]);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -77,7 +79,14 @@ export default function CreateChapterDialog({
         新增章节
       </h2>
       <form onSubmit={submit} className="mt-5">
-        <CreationModeSwitch bulk={bulk} disabled={saving} onChange={(value) => { setBulk(value); setError(""); }} />
+        <CreationModeSwitch
+          bulk={bulk}
+          disabled={saving}
+          onChange={(value) => {
+            setBulk(value);
+            setError("");
+          }}
+        />
         <label className="mt-4 block text-sm text-slate-700">
           {bulk ? "章节名称（每行一个）" : "章节名称"}
           {bulk ? (
@@ -104,7 +113,12 @@ export default function CreateChapterDialog({
             />
           )}
         </label>
-        {bulk && <p className="mt-2 text-xs text-slate-500">共 {splitNames(batchText).length} 个章节，空行自动忽略，每次最多 200 个。</p>}
+        {bulk && (
+          <p className="mt-2 text-xs text-slate-500">
+            共 {splitNames(batchText).length} 个章节，空行自动忽略，每次最多 200
+            个。
+          </p>
+        )}
         {error && (
           <p role="alert" className="mt-3 text-sm text-rose-700">
             {error}

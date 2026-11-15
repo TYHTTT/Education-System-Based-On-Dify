@@ -2,13 +2,12 @@ from fastapi import APIRouter, Header, HTTPException, Request
 
 from app.api.dependencies import agent_from_request, student_id_from_authorization
 from app.core.exceptions import CourseTopicMismatchError
+from app.schemas.chat import ChatRequest, ChatResponse
 from app.services.conversation_tokens import (
     issue_conversation_token,
     read_conversation_token,
 )
-from app.schemas.chat import ChatRequest, ChatResponse
 from app.services.topic_prompts import teaching_question
-
 
 router = APIRouter(prefix="/api/v1", tags=["chat"])
 
@@ -75,7 +74,9 @@ async def chat(
             )
         if payload.learning_mode == "topic_teaching":
             question = teaching_question(
-                question, topic, repository.get_related_topics(payload.topic_id),
+                question,
+                topic,
+                repository.get_related_topics(payload.topic_id),
             )
         if student_id is not None and payload.learning_mode != "free_qa":
             repository.create_learning_session(

@@ -11,12 +11,9 @@ import RelatedTopicsPicker from "@/components/RelatedTopicsPicker";
 import CreationModeSwitch from "@/components/CreationModeSwitch";
 import { parseBatchNames, splitNames } from "@/lib/batch-names";
 
-export const fieldClass =
-  "form-field mt-1.5";
-export const actionClass =
-  "btn-secondary";
-export const primaryClass =
-  "btn-primary";
+export const fieldClass = "form-field mt-1.5";
+export const actionClass = "btn-secondary";
+export const primaryClass = "btn-primary";
 const lines = (value: FormDataEntryValue | null) =>
   String(value ?? "")
     .split("\n")
@@ -82,7 +79,9 @@ export default function KnowledgePointEditor({
     };
   }, [returnFocus]);
   useEffect(() => {
-    ref.current?.querySelector<HTMLElement>('[name="title"], [name="batch_titles"]')?.focus({ preventScroll: true });
+    ref.current
+      ?.querySelector<HTMLElement>('[name="title"], [name="batch_titles"]')
+      ?.focus({ preventScroll: true });
   }, [bulk]);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -103,7 +102,9 @@ export default function KnowledgePointEditor({
       } else {
         await onSave({
           title: String(data.get("title")).trim(),
-          description: String(data.get("description") ?? topic?.description ?? "").trim(),
+          description: String(
+            data.get("description") ?? topic?.description ?? "",
+          ).trim(),
           chapter_id: target.id,
           learning_objectives: lines(data.get("learning_objectives")),
           related_topic_ids: relatedIds,
@@ -182,7 +183,14 @@ export default function KnowledgePointEditor({
           <fieldset disabled={saving} className="grid gap-6 sm:grid-cols-2">
             {!topic && (
               <div className="sm:col-span-2">
-                <CreationModeSwitch bulk={bulk} disabled={saving} onChange={(value) => { setBulk(value); setError(""); }} />
+                <CreationModeSwitch
+                  bulk={bulk}
+                  disabled={saving}
+                  onChange={(value) => {
+                    setBulk(value);
+                    setError("");
+                  }}
+                />
               </div>
             )}
             {bulk && !topic && (
@@ -199,7 +207,8 @@ export default function KnowledgePointEditor({
                   className={`${fieldClass} resize-y`}
                 />
                 <span className="mt-2 block text-xs text-slate-500">
-                  添加到“{initial?.title}”，共 {splitNames(batchText).length} 个知识点，空行自动忽略，每次最多 200 个。
+                  添加到“{initial?.title}”，共 {splitNames(batchText).length}{" "}
+                  个知识点，空行自动忽略，每次最多 200 个。
                 </span>
               </label>
             )}
@@ -207,33 +216,33 @@ export default function KnowledgePointEditor({
               disabled={saving || (bulk && !topic)}
               className={bulk && !topic ? "hidden" : "contents"}
             >
-            <label className="text-sm text-slate-700 sm:col-span-2">
-              知识点名称
-              <input
-                name="title"
-                required
-                maxLength={100}
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                className={fieldClass}
+              <label className="text-sm text-slate-700 sm:col-span-2">
+                知识点名称
+                <input
+                  name="title"
+                  required
+                  maxLength={100}
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  className={fieldClass}
+                />
+              </label>
+              <RelatedTopicsPicker
+                topicId={topic?.id}
+                courseId={courseId}
+                selected={relatedIds}
+                initialTopics={topic?.related_topics ?? []}
+                onChange={setRelatedIds}
               />
-            </label>
-            <RelatedTopicsPicker
-              topicId={topic?.id}
-              courseId={courseId}
-              selected={relatedIds}
-              initialTopics={topic?.related_topics ?? []}
-              onChange={setRelatedIds}
-            />
-            <label className="text-sm text-slate-700 sm:col-span-2">
-              学习目标（每行一项）
-              <textarea
-                name="learning_objectives"
-                rows={3}
-                defaultValue={topic?.learning_objectives.join("\n")}
-                className={fieldClass}
-              />
-            </label>
+              <label className="text-sm text-slate-700 sm:col-span-2">
+                学习目标（每行一项）
+                <textarea
+                  name="learning_objectives"
+                  rows={3}
+                  defaultValue={topic?.learning_objectives.join("\n")}
+                  className={fieldClass}
+                />
+              </label>
             </fieldset>
           </fieldset>
         </div>
@@ -256,7 +265,11 @@ export default function KnowledgePointEditor({
               取消
             </button>
             <button type="submit" disabled={saving} className={primaryClass}>
-              {saving ? "正在保存…" : bulk && !topic ? "批量创建知识点" : "保存编排"}
+              {saving
+                ? "正在保存…"
+                : bulk && !topic
+                  ? "批量创建知识点"
+                  : "保存编排"}
             </button>
           </div>
         </footer>

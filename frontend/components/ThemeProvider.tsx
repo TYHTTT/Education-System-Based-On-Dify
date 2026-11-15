@@ -27,19 +27,27 @@ function storedTheme(value: string | null): Theme {
 
 function getThemeSnapshot(): Theme {
   if (memoryOnly) return fallbackTheme;
-  try { return storedTheme(window.localStorage.getItem(THEME_STORAGE_KEY)); }
-  catch { return fallbackTheme; }
+  try {
+    return storedTheme(window.localStorage.getItem(THEME_STORAGE_KEY));
+  } catch {
+    return fallbackTheme;
+  }
 }
 
-function getServerThemeSnapshot(): Theme { return "light"; }
+function getServerThemeSnapshot(): Theme {
+  return "light";
+}
 
 function subscribeToTheme(listener: () => void) {
   themeListeners.add(listener);
   function onStorage(event: StorageEvent) {
     if (event.key !== THEME_STORAGE_KEY && event.key !== null) return;
     if (event.storageArea) {
-      try { if (event.storageArea !== window.localStorage) return; }
-      catch { return; }
+      try {
+        if (event.storageArea !== window.localStorage) return;
+      } catch {
+        return;
+      }
     }
     fallbackTheme = storedTheme(event.newValue);
     memoryOnly = false;
@@ -54,8 +62,12 @@ function subscribeToTheme(listener: () => void) {
 
 function updateTheme(nextTheme: Theme) {
   fallbackTheme = nextTheme;
-  try { window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme); memoryOnly = false; }
-  catch { memoryOnly = true; }
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    memoryOnly = false;
+  } catch {
+    memoryOnly = true;
+  }
   for (const listener of themeListeners) listener();
 }
 
@@ -65,7 +77,11 @@ function applyTheme(theme: Theme) {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const theme = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerThemeSnapshot);
+  const theme = useSyncExternalStore(
+    subscribeToTheme,
+    getThemeSnapshot,
+    getServerThemeSnapshot,
+  );
 
   useEffect(() => {
     applyTheme(theme);
