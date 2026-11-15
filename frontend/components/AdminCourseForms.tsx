@@ -66,15 +66,6 @@ export function CourseEditor({
               className={inputClass}
             />
           </label>
-          {course ? (
-            <p className="break-all text-xs text-slate-500 sm:col-span-2">
-              课程 ID：<span className="select-all font-mono">{course.id}</span>
-            </p>
-          ) : (
-            <p className="text-xs text-slate-500 sm:col-span-2">
-              课程 ID 由系统自动生成，创建后固定不变。
-            </p>
-          )}
           <label className="text-sm font-medium text-slate-700 sm:col-span-2">
             课程简介
             <textarea

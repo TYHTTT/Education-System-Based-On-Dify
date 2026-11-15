@@ -66,9 +66,10 @@ export function stepGraph(simulation: GraphSimulation, alpha = 1) {
       const dx = a.x - b.x || 0.01,
         dy = a.y - b.y || 0.01;
       const distance = Math.hypot(dx, dy);
-      const separation = a.radius + b.radius + 27;
+      const sameCourse = a.course === b.course;
+      const separation = a.radius + b.radius + (sameCourse ? 37 : 27);
       const repel =
-        (a.course === b.course ? 32 : 20) / Math.max(64, distance * distance);
+        (sameCourse ? 44 : 20) / Math.max(64, distance * distance);
       const collision = (Math.max(0, separation - distance) * 0.25) / distance;
       const force = (repel + collision) * alpha;
       a.vx += dx * force;
@@ -85,7 +86,7 @@ export function stepGraph(simulation: GraphSimulation, alpha = 1) {
     const distance = Math.hypot(dx, dy) || 1;
     const sameCourse = a.course === b.course;
     const force =
-      ((distance - (sameCourse ? 78 : 170)) / distance) *
+      ((distance - (sameCourse ? 96 : 170)) / distance) *
       (sameCourse ? 0.09 : 0.035) *
       alpha;
     a.vx += dx * force;
@@ -133,7 +134,7 @@ export function layoutGraph(data: KnowledgeGraphData) {
       x: Math.cos(index * 2.39996 - 0.5) * orbit,
       y: Math.sin(index * 2.39996 - 0.5) * orbit * 0.8,
     };
-    const radius = Math.sqrt(items.length) * 24 + 30;
+    const radius = Math.sqrt(items.length) * 29 + 30;
     clusters.push({
       ...course,
       ...center,

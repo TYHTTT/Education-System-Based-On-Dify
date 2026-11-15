@@ -643,7 +643,6 @@ export default function KnowledgeGraphView({
           <h2 className="graph-title mt-1 break-words text-sm font-semibold">
             {detail.title}
           </h2>
-          <p className="graph-muted mt-1 break-all text-[10px]">{detail.id}</p>
           {detail.description && (
             <p className="graph-secondary mt-3 line-clamp-3 text-xs leading-5">
               {detail.description}
