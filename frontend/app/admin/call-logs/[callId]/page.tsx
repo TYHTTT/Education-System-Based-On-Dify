@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState, type ReactNode } from "react";
 import { useAdmin } from "@/components/AdminProvider";
+import DifyCallCost from "@/components/DifyCallCost";
 import { message } from "@/components/AdminCourseForms";
 import { ApiError, getAdminDifyCallLog } from "@/lib/api";
 import {
@@ -205,13 +206,8 @@ function CallLogDetailContent() {
                   <Field label="总 Token">
                     {formatCallTokens(data.total_tokens)}
                   </Field>
-                  <Field label="Dify 报告费用">
-                    <span className="tabular-nums">
-                      {data.total_price ?? "未知"}
-                    </span>
-                    <span className="ml-2 text-xs text-steel">
-                      {data.currency ?? "币种未知"}
-                    </span>
+                  <Field label="费用（人民币参考换算）">
+                    <DifyCallCost log={data} />
                   </Field>
                 </dl>
                 {incompleteUsage && (

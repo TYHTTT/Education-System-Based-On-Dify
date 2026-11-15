@@ -42,6 +42,12 @@ export interface DifyCallLogSummary {
   total_tokens: number | null;
   total_price: string | null;
   currency: string | null;
+  cny_conversion: {
+    amount: string;
+    rate: string;
+    rate_date: string | null;
+    source: "Frankfurter" | "original";
+  } | null;
 }
 
 export interface DifyCallLogList {

@@ -3,11 +3,13 @@ from decimal import Decimal
 from unittest.mock import Mock
 from uuid import uuid4
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import Settings
 from app.main import create_app
+from app.services.cny_conversion import CnyConverter
 from app.services.dify_call_logs import (
     DifyCallContext,
     DifyCallLogRepository,
@@ -24,7 +26,20 @@ def api(postgres_test_database_url):
     settings = Settings(
         _env_file=None, app_env="test", database_url=postgres_test_database_url
     )
-    app = create_app(settings, llm_client=MockLLMClient())
+    converter = CnyConverter(
+        transport=httpx.MockTransport(
+            lambda request: httpx.Response(
+                200,
+                json={
+                    "base": request.url.path.split("/")[-2].upper(),
+                    "quote": "CNY",
+                    "rate": "6.6646",
+                    "date": "2026-11-15",
+                },
+            )
+        )
+    )
+    app = create_app(settings, llm_client=MockLLMClient(), cny_converter=converter)
     account = app.state.admin_repository.register(
         username="log_admin", password="test-password", display_name="测试管理员"
     )
@@ -160,6 +175,8 @@ def test_summary_joins_names_preserves_decimal_and_excludes_detail_fields(api):
     assert item["course_title"] == "机器学习"
     assert item["topic_title"] == "测试知识点"
     assert item["total_price"] == "0.000123456789012345678901"
+    assert item["cny_conversion"]["rate"] == "6.6646"
+    assert item["cny_conversion"]["source"] == "Frankfurter"
     assert item["prompt_tokens"] == 0
     assert item["is_anonymous"] is False
     assert item["duration_ms"] == 1500
@@ -182,6 +199,7 @@ def test_summary_joins_names_preserves_decimal_and_excludes_detail_fields(api):
         "total_tokens",
         "total_price",
         "currency",
+        "cny_conversion",
     }
     assert "private-message" not in str(item)
     assert "private-task" not in str(item)
@@ -278,6 +296,10 @@ def test_detail_contains_request_ids_times_and_exact_usage_without_credentials(a
     assert item["completion_tokens"] == 12
     assert item["total_price"] == "0.000123456789012345678901"
     assert item["currency"] == "USD"
+    assert Decimal(item["cny_conversion"]["amount"]) == Decimal(
+        "0.000123456789012345678901"
+    ) * Decimal("6.6646")
+    assert item["cny_conversion"]["rate_date"] == "2026-11-15"
     assert item["http_status"] == 200
     assert item["error_code"] is None
     assert item["error_summary"] is None
@@ -305,6 +327,7 @@ def test_detail_contains_request_ids_times_and_exact_usage_without_credentials(a
         "total_tokens",
         "total_price",
         "currency",
+        "cny_conversion",
         "request_id",
         "finished_at",
         "http_status",

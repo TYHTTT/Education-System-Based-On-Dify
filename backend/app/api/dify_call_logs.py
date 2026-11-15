@@ -20,12 +20,18 @@ def list_call_logs(
     page_size: int = Query(default=20, ge=1, le=50),
 ):
     response.headers["Cache-Control"] = "no-store"
-    return request.app.state.dify_call_log_repository.list(
+    result = request.app.state.dify_call_log_repository.list(
         page=page, page_size=page_size
     )
+    result["items"] = [
+        request.app.state.cny_converter.enrich(item) for item in result["items"]
+    ]
+    return result
 
 
 @router.get("/{call_id}", response_model=DifyCallLogDetail)
 def call_log_detail(call_id: UUID, request: Request, response: Response):
     response.headers["Cache-Control"] = "no-store"
-    return request.app.state.dify_call_log_repository.get(str(call_id))
+    return request.app.state.cny_converter.enrich(
+        request.app.state.dify_call_log_repository.get(str(call_id))
+    )

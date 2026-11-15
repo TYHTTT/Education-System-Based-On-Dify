@@ -28,6 +28,7 @@ from app.core.config import Settings, get_settings
 from app.core.exceptions import AppError
 from app.core.logging import configure_logging
 from app.services.admin_repository import AdminRepository
+from app.services.cny_conversion import CnyConverter
 from app.services.course_repository import CourseRepository
 from app.services.dify import DifyClient
 from app.services.dify_call_logs import DifyCallLogRepository
@@ -45,6 +46,7 @@ def create_app(
     admin_repository: AdminRepository | None = None,
     course_repository: CourseRepository | None = None,
     dify_call_log_repository: DifyCallLogRepository | None = None,
+    cny_converter: CnyConverter | None = None,
 ) -> FastAPI:
     app_settings = settings or get_settings()
     configure_logging(
@@ -85,6 +87,7 @@ def create_app(
         lifespan=lifespan,
     )
     app.state.settings = app_settings
+    app.state.cny_converter = cny_converter or CnyConverter()
     app.state.learning_repository = app_learning_repository
     app.state.admin_repository = admin_repository or AdminRepository(
         app_settings.database_url

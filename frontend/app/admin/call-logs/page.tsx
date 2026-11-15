@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useAdmin } from "@/components/AdminProvider";
+import DifyCallCost from "@/components/DifyCallCost";
 import { message } from "@/components/AdminCourseForms";
 import { getAdminDifyCallLogs } from "@/lib/api";
 import {
@@ -96,7 +97,7 @@ function CallLogsContent() {
             调用日志
           </h1>
           <p className="mt-3 text-sm leading-6 text-steel">
-            按时间倒序查看 Dify 调用，费用以 Dify 返回的数据为准。
+            按时间倒序查看 Dify 调用，人民币按当前参考汇率估算，原始费用保留。
           </p>
         </div>
         <button
@@ -243,16 +244,7 @@ function CallLogsContent() {
                         </p>
                       </td>
                       <td className="max-w-48 break-all px-4 py-5 tabular-nums">
-                        {log.total_price === null ? (
-                          "未知"
-                        ) : (
-                          <>
-                            {log.total_price}
-                            <span className="mt-1 block text-xs text-steel">
-                              {log.currency ?? "币种未知"}
-                            </span>
-                          </>
-                        )}
+                        <DifyCallCost log={log} compact />
                       </td>
                       <td className="whitespace-nowrap px-4 py-5 tabular-nums">
                         {formatCallDuration(log.duration_ms)}

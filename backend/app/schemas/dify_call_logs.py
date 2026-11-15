@@ -1,8 +1,19 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_serializer
+
+
+class CnyConversion(BaseModel):
+    amount: Decimal
+    rate: Decimal
+    rate_date: date | None
+    source: Literal["Frankfurter", "original"]
+
+    @field_serializer("amount", "rate", when_used="json")
+    def decimal_string(self, value: Decimal) -> str:
+        return format(value, "f")
 
 
 class DifyCallLogSummary(BaseModel):
@@ -32,6 +43,7 @@ class DifyCallLogSummary(BaseModel):
     # Serialize Decimal as a string to preserve small prices in the browser.
     total_price: Decimal | None
     currency: str | None
+    cny_conversion: CnyConversion | None = None
 
 
 class DifyCallLogList(BaseModel):
