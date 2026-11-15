@@ -29,6 +29,7 @@ from app.core.logging import configure_logging
 from app.services.admin_repository import AdminRepository
 from app.services.course_repository import CourseRepository
 from app.services.dify import DifyClient
+from app.services.dify_call_logs import DifyCallLogRepository
 from app.services.dify_settings_repository import DifySettingsRepository
 from app.services.learning_repository import LearningRepository
 
@@ -42,6 +43,7 @@ def create_app(
     learning_repository: LearningRepository | None = None,
     admin_repository: AdminRepository | None = None,
     course_repository: CourseRepository | None = None,
+    dify_call_log_repository: DifyCallLogRepository | None = None,
 ) -> FastAPI:
     app_settings = settings or get_settings()
     configure_logging(
@@ -87,11 +89,16 @@ def create_app(
         app_settings.database_url
     )
     app.state.dify_settings_repository = DifySettingsRepository(app_settings)
+    app.state.dify_call_log_repository = (
+        dify_call_log_repository or DifyCallLogRepository(app_settings.database_url)
+    )
     app.state.course_repository = course_repository or CourseRepository(
         app_settings.database_url, cipher=app.state.dify_settings_repository.cipher
     )
     app.state.llm_client = (
-        llm_client if llm_client is not None else DifyClient(app_settings)
+        llm_client
+        if llm_client is not None
+        else DifyClient(app_settings, call_logs=app.state.dify_call_log_repository)
     )
 
     app.add_middleware(

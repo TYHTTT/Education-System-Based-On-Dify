@@ -1,13 +1,18 @@
 from fastapi import APIRouter, Header, HTTPException, Request
 
-from app.api.dependencies import agent_from_request, student_id_from_authorization, runtime_dify_settings
+from app.api.dependencies import (
+    agent_from_request,
+    runtime_dify_settings,
+    student_id_from_authorization,
+)
 from app.core.exceptions import CourseTopicMismatchError
 from app.schemas.chat import ChatRequest, ChatResponse, TopicEvaluation
-from app.services.learning_scores import evaluation_question, parse_evaluation
 from app.services.conversation_tokens import (
     issue_conversation_token,
     read_conversation_token,
 )
+from app.services.dify_call_logs import DifyCallContext
+from app.services.learning_scores import evaluation_question, parse_evaluation
 from app.services.topic_prompts import teaching_question
 
 router = APIRouter(prefix="/api/v1", tags=["chat"])
@@ -41,7 +46,9 @@ async def chat(
     repository = request.app.state.learning_repository
     student_id = student_id_from_authorization(authorization, repository)
     if payload.learning_mode == "topic_answer" and student_id is None:
-        raise HTTPException(status_code=401, detail="请先登录再提交答案，以保存学习分数。")
+        raise HTTPException(
+            status_code=401, detail="请先登录再提交答案，以保存学习分数。"
+        )
     if payload.course is not None:
         repository.require_course(payload.course)
     settings = runtime_dify_settings(request, payload.course)
@@ -84,6 +91,15 @@ async def chat(
             )
     if payload.learning_mode == "topic_answer":
         question = evaluation_question(question)
+    context = {
+        "student_id": student_id,
+        "course_id": payload.course.value if payload.course else None,
+        "topic_id": payload.topic_id,
+        "business_type": payload.learning_mode,
+    }
+    if payload.request_id is not None:
+        context["request_id"] = str(payload.request_id)
+    request.state.dify_call_context = DifyCallContext(**context)
     agent = agent_from_request(request)
     result = await agent.answer(
         course=payload.course,
@@ -108,7 +124,9 @@ async def chat(
         response.evaluation = TopicEvaluation(score=score, threshold=threshold)
         if score is not None:
             state = repository.record_topic_score(
-                student_id=student_id, topic_id=payload.topic_id, course=payload.course,
+                student_id=student_id,
+                topic_id=payload.topic_id,
+                course=payload.course,
                 score=score,
             )
             response.evaluation.threshold = state["completion_threshold"]

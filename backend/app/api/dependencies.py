@@ -4,9 +4,9 @@ from fastapi import Depends, Header, Request
 
 from app.core.config import Settings
 from app.core.exceptions import ConfigurationError
+from app.services.dify import DifyClient
 from app.services.learning_repository import LearningRepository
 from app.services.learning_service import LearningService
-from app.services.dify import DifyClient
 
 
 def runtime_dify_settings(request: Request, course=None) -> Settings:
@@ -19,12 +19,19 @@ def runtime_dify_settings(request: Request, course=None) -> Settings:
 
 def agent_from_request(request: Request):
     request_llm_client = getattr(request.state, "llm_client", None)
-    if request_llm_client is not None:
-        return request_llm_client
-    if request.app.state.llm_client is not None:
-        client = request.app.state.llm_client
+    client = (
+        request_llm_client
+        if request_llm_client is not None
+        else request.app.state.llm_client
+    )
+    if client is not None:
         if isinstance(client, DifyClient):
-            return DifyClient(runtime_dify_settings(request), http_client=client.http)
+            return DifyClient(
+                runtime_dify_settings(request),
+                http_client=client.http,
+                call_logs=request.app.state.dify_call_log_repository,
+                call_context=getattr(request.state, "dify_call_context", None),
+            )
         return client
     raise ConfigurationError("请在管理员后台配置 Dify Agent 服务")
 

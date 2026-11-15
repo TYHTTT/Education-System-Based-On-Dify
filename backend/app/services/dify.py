@@ -2,20 +2,47 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
+import logging
 from decimal import Decimal, InvalidOperation
+from time import perf_counter
 from uuid import uuid4
 
 import httpx
+from anyio import CancelScope
+from psycopg import Error as PostgresError
+from starlette.concurrency import run_in_threadpool
 
 from app.core.config import Settings
-from app.core.exceptions import ConfigurationError, LLMServiceError
+from app.core.exceptions import (
+    CallLogUnavailableError,
+    ConfigurationError,
+    LLMServiceError,
+)
 from app.core.types import Course
+from app.services.dify_call_logs import (
+    DifyCallContext,
+    DifyCallLogRepository,
+    DifyCallOutcome,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class DifyClient:
-    def __init__(self, settings: Settings, *, transport=None, http_client=None) -> None:
+    def __init__(
+        self,
+        settings: Settings,
+        *,
+        transport=None,
+        http_client=None,
+        call_logs: DifyCallLogRepository | None = None,
+        call_context: DifyCallContext | None = None,
+    ) -> None:
         self.settings = settings
+        self.call_logs = call_logs
+        self.call_context = call_context
         self._owns_http = http_client is None
         self.http = (
             http_client
@@ -43,6 +70,71 @@ class DifyClient:
             raise ConfigurationError(
                 "请在管理员后台配置当前课程或自由问答的 Dify 地址和密钥"
             )
+        context = self.call_context or DifyCallContext(
+            student_id=user,
+            course_id=str(course) if course else None,
+            topic_id=topic_id,
+        )
+        call_id = None
+        if self.call_logs is not None:
+            try:
+                call_id = await run_in_threadpool(
+                    self.call_logs.start, context, self.settings.dify_credential_id
+                )
+            except (PostgresError, OSError, ValueError) as exc:
+                raise CallLogUnavailableError(
+                    internal_message=f"Dify call log start: {type(exc).__name__}"
+                ) from None
+        outcome = DifyCallOutcome()
+        started = perf_counter()
+        try:
+            result = await self._run(
+                query,
+                key=key,
+                outcome=outcome,
+                course=course,
+                topic_id=topic_id,
+                user=user,
+                conversation_id=conversation_id,
+            )
+            outcome.status = "succeeded"
+            outcome.error_code = None
+            return result
+        except asyncio.CancelledError:
+            outcome.status = "cancelled"
+            outcome.error_code = "cancelled"
+            raise
+        finally:
+            if call_id is not None:
+                with CancelScope(shield=True):
+                    try:
+                        await run_in_threadpool(
+                            self.call_logs.finish,
+                            call_id,
+                            outcome,
+                            max(0, round((perf_counter() - started) * 1000)),
+                            secret=key,
+                        )
+                    except (PostgresError, OSError, ValueError) as exc:
+                        # Keep the durable in-progress record for reconciliation.
+                        # Never log exception text: it may contain SQL parameters.
+                        logger.error(
+                            "Dify call log finish failed: %s (%s)",
+                            call_id,
+                            type(exc).__name__,
+                        )
+
+    async def _run(
+        self,
+        query: str,
+        *,
+        key: str,
+        outcome: DifyCallOutcome,
+        course: Course | None,
+        topic_id: str | None,
+        user: str | None,
+        conversation_id: str | None,
+    ) -> dict:
         payload = {
             "inputs": {
                 **{
@@ -64,6 +156,7 @@ class DifyClient:
         agent_answer = ""
         remote_conversation_id = conversation_id
         remote_ids = dict.fromkeys(("message_id", "task_id", "workflow_run_id"))
+        outcome.identifiers = {"conversation_id": conversation_id, **remote_ids}
         metadata = {}
         ended = False
         try:
@@ -73,14 +166,19 @@ class DifyClient:
                 headers={"Authorization": f"Bearer {key}"},
                 json=payload,
             ) as response:
+                outcome.http_status = response.status_code
                 response.raise_for_status()
                 if "application/json" in response.headers.get("content-type", ""):
                     body = json.loads(await response.aread(), parse_float=Decimal)
                     _capture_response_ids(body, remote_ids)
                     answer = body.get("answer", "")
                     metadata = body.get("metadata") or {}
+                    outcome.usage = _usage_snapshot(metadata)
                     remote_conversation_id = (
                         body.get("conversation_id") or remote_conversation_id
+                    )
+                    outcome.identifiers.update(
+                        remote_ids, conversation_id=remote_conversation_id
                     )
                     ended = True
                 else:
@@ -96,7 +194,11 @@ class DifyClient:
                         remote_conversation_id = (
                             event.get("conversation_id") or remote_conversation_id
                         )
+                        outcome.identifiers.update(
+                            remote_ids, conversation_id=remote_conversation_id
+                        )
                         if kind == "error":
+                            outcome.error_code = "upstream_error"
                             raise LLMServiceError(
                                 "Dify Agent 处理失败，请检查应用配置后重试"
                             )
@@ -112,8 +214,18 @@ class DifyClient:
                             agent_answer = ""
                         elif kind == "message_end":
                             metadata = event.get("metadata") or {}
+                            outcome.usage = _usage_snapshot(metadata)
                             ended = True
         except (httpx.HTTPError, ValueError, TypeError, AttributeError) as exc:
+            if isinstance(exc, httpx.TimeoutException):
+                outcome.status = "timeout"
+                outcome.error_code = "timeout"
+            elif isinstance(exc, httpx.HTTPStatusError):
+                outcome.error_code = "http_error"
+            elif isinstance(exc, httpx.HTTPError):
+                outcome.error_code = "transport_error"
+            else:
+                outcome.error_code = "invalid_response"
             # Do not return upstream response bodies, headers, or credentials.
             raise LLMServiceError(
                 "Dify 服务请求失败，请检查服务地址、密钥或稍后重试",
@@ -122,6 +234,7 @@ class DifyClient:
         if answer == "":
             answer = agent_answer
         if not ended or not isinstance(answer, str) or not answer.strip():
+            outcome.error_code = "incomplete_response"
             raise LLMServiceError("Dify 返回了空回答或未完整结束的响应，请重试")
         resources = (
             metadata.get("retriever_resources", [])

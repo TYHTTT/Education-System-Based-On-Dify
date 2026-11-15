@@ -251,6 +251,7 @@ def test_existing_database_upgrade_is_additive_and_idempotent(
         connection.execute(
             "ALTER TABLE dify_free_qa_settings DROP COLUMN dify_credential_id"
         )
+        connection.execute("DROP TABLE dify_call_logs")
         connection.execute("DROP TABLE dify_credentials")
     assert migrate_database(settings) == {"courses": 1, "free_qa": 1}
     assert migrate_database(settings) == {"courses": 0, "free_qa": 0}

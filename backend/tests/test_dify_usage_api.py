@@ -1,4 +1,5 @@
 import json
+from unittest.mock import Mock
 
 import httpx
 import pytest
@@ -7,6 +8,7 @@ from fastapi.testclient import TestClient
 from app.core.config import Settings
 from app.main import create_app
 from app.services.dify import DifyClient
+from app.services.dify_call_logs import DifyCallLogRepository
 
 
 @pytest.mark.parametrize("carrier", ["json", "stream"])
@@ -43,9 +45,12 @@ def test_chat_does_not_expose_internal_usage_or_upstream_ids(monkeypatch, carrie
             text="".join("data: " + json.dumps(event) + "\n\n" for event in events),
         )
 
+    call_logs = Mock(spec=DifyCallLogRepository)
+    call_logs.start.return_value = "call-one"
     app = create_app(
         settings,
         llm_client=DifyClient(settings, transport=httpx.MockTransport(handler)),
+        dify_call_log_repository=call_logs,
     )
     monkeypatch.setattr(
         app.state.dify_settings_repository,
@@ -56,6 +61,8 @@ def test_chat_does_not_expose_internal_usage_or_upstream_ids(monkeypatch, carrie
         response = client.post("/api/v1/chat", json={"message": "问题"})
     assert response.status_code == 200
     assert response.json()["answer"] == "回答"
+    call_logs.start.assert_called_once()
+    call_logs.finish.assert_called_once()
     assert "usage" not in response.json()
     for name, value in identifiers.items():
         assert name not in response.json()

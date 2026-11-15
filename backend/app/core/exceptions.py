@@ -26,6 +26,12 @@ class LLMServiceError(AppError):
     public_message = "大模型服务暂时不可用，请稍后重试"
 
 
+class CallLogUnavailableError(AppError):
+    status_code = 503
+    code = "CALL_LOG_UNAVAILABLE"
+    public_message = "调用记录服务暂时不可用，请稍后重试"
+
+
 class StudentNotFoundError(AppError):
     status_code = 404
     code = "STUDENT_NOT_FOUND"

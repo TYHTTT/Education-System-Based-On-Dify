@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -24,6 +25,9 @@ class HistoryMessage(BaseModel):
 
 class ChatRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
+
+    # Reuse for explicit retries of one business request; each attempt is logged.
+    request_id: UUID | None = None
 
     course: Course | None = None
     # The route applies the configured MAX_MESSAGE_LENGTH. This is only an
