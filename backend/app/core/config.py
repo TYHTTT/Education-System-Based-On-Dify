@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     # Runtime requests populate these values from administrator-managed records.
     dify_api_base_url: str = "https://api.dify.ai/v1"
     dify_api_key: SecretStr = SecretStr("")
+    dify_credential_id: str | None = Field(default=None, exclude=True, repr=False)
     dify_timeout_seconds: float = Field(default=120, gt=0, le=600)
     dify_inputs: dict[str, Any] = Field(default_factory=dict)
 

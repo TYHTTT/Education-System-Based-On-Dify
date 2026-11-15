@@ -31,6 +31,15 @@ CREATE TABLE IF NOT EXISTS student_sessions (
     last_used_at TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS dify_credentials (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    api_base_url TEXT NOT NULL,
+    key_fingerprint TEXT NOT NULL CHECK (key_fingerprint ~ '^[0-9a-f]{64}$'),
+    api_key_encrypted TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (api_base_url, key_fingerprint)
+);
+
 CREATE TABLE IF NOT EXISTS courses (
     id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     title TEXT NOT NULL,
@@ -39,6 +48,7 @@ CREATE TABLE IF NOT EXISTS courses (
     completion_threshold DOUBLE PRECISION NOT NULL DEFAULT 80 CHECK (completion_threshold >= 0 AND completion_threshold <= 100),
     dify_api_base_url TEXT NOT NULL DEFAULT 'https://api.dify.ai/v1',
     dify_api_key_encrypted TEXT,
+    dify_credential_id TEXT REFERENCES dify_credentials(id),
     graph_color TEXT NOT NULL DEFAULT (
         (ARRAY['#2563eb','#c2410c','#047857','#9333ea','#be185d','#0e7490','#a16207','#475569'])
         [1 + floor(random() * 8)::integer]
@@ -58,6 +68,7 @@ CREATE TABLE IF NOT EXISTS dify_free_qa_settings (
     id INTEGER PRIMARY KEY CHECK (id=1),
     api_base_url TEXT NOT NULL DEFAULT 'https://api.dify.ai/v1',
     api_key_encrypted TEXT,
+    dify_credential_id TEXT REFERENCES dify_credentials(id),
     updated_at TEXT NOT NULL DEFAULT to_char(CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"+00:00"')
 );
 INSERT INTO dify_free_qa_settings(id) VALUES (1) ON CONFLICT (id) DO NOTHING;
