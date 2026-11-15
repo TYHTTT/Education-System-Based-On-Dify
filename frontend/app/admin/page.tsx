@@ -30,6 +30,12 @@ const QUICK_LINKS = [
     description: "以学生视角浏览课程目录与学习路径。",
     tint: "bg-tint-peach",
   },
+  {
+    href: "/admin/call-logs",
+    title: "调用日志",
+    description: "查看最近的 Dify 调用、Token 用量、费用与执行状态。",
+    tint: "bg-tint-lavender",
+  },
 ];
 
 export default function AdminHomePage() {

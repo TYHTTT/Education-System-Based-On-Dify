@@ -17,6 +17,7 @@ from app.api.course_content import router as course_content_router
 from app.api.courses import admin_router as admin_courses_router
 from app.api.courses import router as courses_router
 from app.api.curriculum import router as curriculum_router
+from app.api.dify_call_logs import router as dify_call_logs_router
 from app.api.dify_settings import router as dify_settings_router
 from app.api.health import router as health_router
 from app.api.knowledge_graph import router as knowledge_graph_router
@@ -155,6 +156,7 @@ def create_app(
     app.include_router(courses_router)
     app.include_router(admin_courses_router)
     app.include_router(dify_settings_router)
+    app.include_router(dify_call_logs_router)
     app.include_router(topic_management_router)
     app.include_router(curriculum_router)
     app.include_router(learning_router)

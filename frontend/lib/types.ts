@@ -23,6 +23,34 @@ export interface FreeQaDifySettings {
   updated_at: string;
 }
 
+export interface DifyCallLogSummary {
+  id: string;
+  credential_id: string | null;
+  student_id: string | null;
+  student_name: string | null;
+  course_id: string | null;
+  course_title: string | null;
+  topic_id: string | null;
+  topic_title: string | null;
+  business_type: "free_qa" | "topic_teaching" | "topic_clarification" | "topic_practice" | "topic_answer" | "diagnosis";
+  is_anonymous: boolean;
+  started_at: string;
+  duration_ms: number | null;
+  status: "in_progress" | "succeeded" | "failed" | "timeout" | "cancelled";
+  prompt_tokens: number | null;
+  completion_tokens: number | null;
+  total_tokens: number | null;
+  total_price: string | null;
+  currency: string | null;
+}
+
+export interface DifyCallLogList {
+  items: DifyCallLogSummary[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
 export interface CourseInput {
   title: string;
   description: string;

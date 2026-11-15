@@ -5,6 +5,7 @@ import type {
   CourseRecord,
   AdminCourseRecord,
   FreeQaDifySettings,
+  DifyCallLogList,
   CourseInput,
   CourseDetail,
   CourseList,
@@ -270,6 +271,19 @@ export function updateCourse(
 export function getAdminDifySettings(token: string, signal?: AbortSignal): Promise<FreeQaDifySettings> {
   return request<FreeQaDifySettings>("/api/v1/admin/settings/free-qa", {
     headers: studentHeaders(token), signal,
+  });
+}
+
+export function getAdminDifyCallLogs(
+  token: string,
+  page: number,
+  signal?: AbortSignal,
+): Promise<DifyCallLogList> {
+  const params = new URLSearchParams({ page: String(page), page_size: "20" });
+  return request<DifyCallLogList>(`/api/v1/admin/dify/call-logs?${params}`, {
+    headers: studentHeaders(token),
+    cache: "no-store",
+    signal,
   });
 }
 

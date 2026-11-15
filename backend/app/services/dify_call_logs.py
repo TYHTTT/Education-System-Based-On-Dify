@@ -30,6 +30,30 @@ class DifyCallLogRepository:
     def __init__(self, database_url: str) -> None:
         self.database = PostgresDatabase(database_url)
 
+    def list(self, *, page: int = 1, page_size: int = 20) -> dict:
+        with self.database.connect() as connection:
+            # Count and page use one snapshot even while new calls arrive.
+            connection.execute(
+                "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
+            )
+            total = connection.execute(
+                "SELECT count(*) AS count FROM dify_call_logs"
+            ).fetchone()["count"]
+            items = connection.execute(
+                """SELECT l.id,l.credential_id,l.student_id,
+                coalesce(s.display_name,s.username) AS student_name,
+                l.course_id,c.title AS course_title,l.topic_id,t.title AS topic_title,
+                l.business_type,l.is_anonymous,l.started_at,l.duration_ms,l.status,
+                l.prompt_tokens,l.completion_tokens,l.total_tokens,l.total_price,l.currency
+                FROM dify_call_logs l
+                LEFT JOIN students s ON s.id=l.student_id
+                LEFT JOIN courses c ON c.id=l.course_id
+                LEFT JOIN curriculum_topics t ON t.id=l.topic_id
+                ORDER BY l.started_at DESC,l.id DESC LIMIT ? OFFSET ?""",
+                (page_size, (page - 1) * page_size),
+            ).fetchall()
+        return {"items": items, "total": total, "page": page, "page_size": page_size}
+
     def start(self, context: DifyCallContext, credential_id: str | None) -> str:
         call_id = str(uuid4())
         with self.database.connect() as connection:
