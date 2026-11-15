@@ -12,11 +12,11 @@ import CreationModeSwitch from "@/components/CreationModeSwitch";
 import { parseBatchNames, splitNames } from "@/lib/batch-names";
 
 export const fieldClass =
-  "mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900";
+  "form-field mt-1.5";
 export const actionClass =
-  "rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:border-indigo-300 disabled:opacity-40";
+  "btn-secondary";
 export const primaryClass =
-  "rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-40";
+  "btn-primary";
 const lines = (value: FormDataEntryValue | null) =>
   String(value ?? "")
     .split("\n")
@@ -164,8 +164,8 @@ export default function KnowledgePointEditor({
         onSubmit={submit}
         className="flex max-h-[calc(100dvh-2rem)] flex-col"
       >
-        <header className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-100 px-5 py-4 sm:px-6">
-          <h2 id={headingId} className="text-lg font-bold text-slate-900">
+        <header className="flex shrink-0 items-center justify-between gap-4 border-b border-hairline px-5 py-4 sm:px-6">
+          <h2 id={headingId} className="text-heading-4 text-ink">
             {topic ? "编辑知识点" : "新增知识点"}
           </h2>
           <button
@@ -173,13 +173,13 @@ export default function KnowledgePointEditor({
             aria-label="关闭知识点编辑器"
             disabled={saving}
             onClick={onCancel}
-            className="flex size-9 shrink-0 items-center justify-center rounded-lg text-xl text-slate-500 hover:bg-slate-100 disabled:opacity-40"
+            className="btn-ghost size-11 shrink-0 p-0 text-xl text-steel"
           >
             ×
           </button>
         </header>
         <div className="min-h-0 overflow-y-auto overscroll-contain p-5 sm:p-6">
-          <fieldset disabled={saving} className="grid gap-4 sm:grid-cols-2">
+          <fieldset disabled={saving} className="grid gap-6 sm:grid-cols-2">
             {!topic && (
               <div className="sm:col-span-2">
                 <CreationModeSwitch bulk={bulk} disabled={saving} onChange={(value) => { setBulk(value); setError(""); }} />
@@ -237,7 +237,7 @@ export default function KnowledgePointEditor({
             </fieldset>
           </fieldset>
         </div>
-        <footer className="shrink-0 border-t border-slate-100 px-5 py-4 sm:px-6">
+        <footer className="shrink-0 border-t border-hairline bg-surface-soft px-5 py-4 sm:px-6">
           {error && (
             <p
               role="alert"

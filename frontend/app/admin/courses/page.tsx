@@ -12,6 +12,7 @@ import {
 } from "@/components/AdminCourseForms";
 import { getAdminCourses } from "@/lib/api";
 import type { CourseList } from "@/lib/types";
+import { PlusIcon } from "@/components/Icons";
 
 export default function AdminCoursesPage() {
   const { withAdmin } = useAdmin();
@@ -48,10 +49,15 @@ export default function AdminCoursesPage() {
   }, [withAdmin, query, status, page, version]);
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-slate-900">课程管理</h1>
+    <section className="page-container">
+      <div className="flex flex-wrap items-end justify-between gap-5 border-b border-hairline pb-8">
+        <div>
+          <p className="eyebrow">Course management</p>
+          <h1 className="mt-2 text-heading-3 text-ink sm:text-heading-2">课程管理</h1>
+          <p className="mt-3 text-sm leading-6 text-steel">维护课程内容与知识结构，安排学生的学习路径。</p>
+        </div>
         <Link href="/admin/courses/new-course" className={primaryClass}>
+          <PlusIcon className="size-4" />
           新增课程
         </Link>
       </div>
@@ -62,7 +68,7 @@ export default function AdminCoursesPage() {
           setQuery(search.trim());
           setPage(1);
         }}
-        className="mt-6 flex flex-wrap items-end gap-3"
+        className="mt-8 flex flex-wrap items-end gap-3 rounded-xl border border-hairline bg-surface-soft p-4 sm:p-5"
       >
         <label className="min-w-48 flex-1 text-sm text-slate-600">
           课程名称或标识
@@ -112,7 +118,7 @@ export default function AdminCoursesPage() {
           </button>
         </div>
       )}
-      <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white">
+      <div className="mt-6 overflow-hidden rounded-xl border border-hairline bg-canvas">
         {loading ? (
           <p role="status" className="p-8 text-center text-sm text-slate-500">
             正在加载课程…
@@ -157,9 +163,10 @@ export default function AdminCoursesPage() {
                           aria-label={`查看${course.title}详情`}
                           className="block px-5 py-5 outline-offset-[-4px] focus-visible:outline-2 focus-visible:outline-indigo-500"
                         >
-                          <p className="font-semibold text-slate-900 group-hover:text-indigo-700">
+                          <p className="font-semibold text-ink group-hover:text-link">
                             {course.title}
                           </p>
+                          {course.description && <p className="mt-1 max-w-xl truncate text-[13px] leading-6 text-steel">{course.description}</p>}
                         </Link>
                       </td>
                       <td className="px-5 py-5 tabular-nums text-slate-600">

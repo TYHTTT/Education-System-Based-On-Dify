@@ -8,6 +8,13 @@ from app.db.database import PostgresDatabase
 from app.services.curriculum_cleanup import delete_course
 
 
+# Prefer distinct saturated hues before reusing a color in larger catalogs.
+COURSE_GRAPH_COLORS = (
+    "#2563eb", "#c2410c", "#047857", "#9333ea",
+    "#be185d", "#0e7490", "#a16207", "#475569",
+)
+
+
 COURSE_SELECT = """SELECT c.*,
     (SELECT count(*) FROM curriculum_topics t WHERE t.course=c.id AND t.active=1) AS topic_count,
     (SELECT count(*) FROM course_chapters ch WHERE ch.course_id=c.id) AS stage_count
@@ -54,9 +61,14 @@ class CourseRepository:
         now = datetime.now(timezone.utc).isoformat()
         try:
             with self.database.connect() as connection:
-                connection.execute("""INSERT INTO courses(id,title,description,active,created_at,updated_at)
-                    VALUES (?,?,?,?,?,?)""", (course_id, values["title"], values["description"],
-                    int(values["active"]), now, now))
+                # Serialize color allocation so simultaneous creates do not pick the same unused hue.
+                connection.execute("SELECT pg_advisory_xact_lock(725498105)")
+                usage = {row["graph_color"]: row["count"] for row in connection.execute(
+                    "SELECT graph_color,count(*) AS count FROM courses GROUP BY graph_color")}
+                color = min(COURSE_GRAPH_COLORS, key=lambda value: usage.get(value, 0))
+                connection.execute("""INSERT INTO courses(id,title,description,active,graph_color,created_at,updated_at)
+                    VALUES (?,?,?,?,?,?,?)""", (course_id, values["title"], values["description"],
+                    int(values["active"]), color, now, now))
         except UniqueViolation:
             raise CourseConflictError() from None
         return self.get(course_id)

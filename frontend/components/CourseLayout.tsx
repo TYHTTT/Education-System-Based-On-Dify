@@ -262,10 +262,10 @@ export default function CourseLayout({ children }: { children: ReactNode }) {
                   prefetch={false}
                   aria-current={active ? "page" : undefined}
                   onClick={closeMobile}
-                  className={`my-1 block rounded-xl border px-3 py-2.5 text-sm ${active ? "border-indigo-200 bg-indigo-50 text-indigo-900" : "border-transparent text-slate-600 hover:bg-slate-50"}`}
+                  className={`my-1 block rounded-lg border px-3 py-2.5 text-sm ${active ? "border-hairline bg-surface text-ink" : "border-transparent text-steel hover:bg-surface-soft"}`}
                 >
                   <span className="block font-medium">{topic.title}</span>
-                  <span className="mt-1 block text-[10px] text-slate-500">
+                  <span className="mt-1 block text-[12px] text-steel">
                     <span aria-hidden="true">{state.symbol}</span> {state.label}
                   </span>
                 </Link>
@@ -289,7 +289,7 @@ export default function CourseLayout({ children }: { children: ReactNode }) {
           aria-expanded={mobileOpen}
           aria-controls="course-outline"
           onClick={() => setMobileOpen(true)}
-          className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold"
+          className="btn-secondary"
         >
           ☰ 课程目录
         </button>
@@ -354,13 +354,13 @@ export default function CourseLayout({ children }: { children: ReactNode }) {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="例如：梯度、内积"
-                className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                className="form-field mt-2 bg-surface-soft"
               />
               {recommended && !query && (
                 <Link
                   prefetch={false}
                   href={topicHref(recommended)}
-                  className="mt-3 block rounded-xl bg-indigo-50 p-3 text-xs text-indigo-800"
+                  className="mt-3 block rounded-xl bg-tint-yellow p-4 text-sm text-charcoal"
                 >
                   <span className="block font-bold">建议学习</span>
                   <span className="mt-1 block">{recommended.title} →</span>
@@ -369,7 +369,7 @@ export default function CourseLayout({ children }: { children: ReactNode }) {
               {!topicId && lastTopic && (
                 <Link
                   href={lastTopic}
-                  className="mt-3 block text-xs font-semibold text-indigo-700"
+                  className="link mt-3 block text-sm"
                 >
                   返回上次阅读位置 →
                 </Link>

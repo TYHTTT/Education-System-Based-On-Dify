@@ -4,11 +4,11 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { CourseInput, CourseRecord } from "@/lib/types";
 
 export const inputClass =
-  "mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500";
+  "form-field mt-1.5";
 export const buttonClass =
-  "rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 hover:border-indigo-300 disabled:cursor-not-allowed disabled:opacity-50";
+  "btn-secondary";
 export const primaryClass =
-  "rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-wait disabled:opacity-50";
+  "btn-primary disabled:cursor-wait";
 export function message(error: unknown) {
   return error instanceof Error ? error.message : "操作失败，请重试。";
 }
@@ -48,13 +48,13 @@ export function CourseEditor({
   return (
     <section
       aria-label={course ? "编辑课程" : "新增课程"}
-      className="mt-6 rounded-3xl border border-indigo-200 bg-white p-5 sm:p-6"
+      className="card mt-6 p-5 sm:p-8"
     >
-      <h2 className="text-lg font-bold text-slate-900">
+      <h2 className="text-heading-4 text-ink">
         {course ? "编辑课程" : "新增课程"}
       </h2>
       <form aria-label="课程信息" onSubmit={submit} className="mt-5">
-        <fieldset disabled={saving} className="grid gap-4 sm:grid-cols-2">
+        <fieldset disabled={saving} className="grid gap-6 sm:grid-cols-2">
           <label className="text-sm font-medium text-slate-700 sm:col-span-2">
             课程名称
             <input
@@ -94,7 +94,7 @@ export function CourseEditor({
             {error}
           </p>
         )}
-        <div className="mt-5 flex justify-end gap-3">
+        <div className="mt-6 flex flex-wrap justify-end gap-3 border-t border-hairline-soft pt-6">
           <button
             disabled={saving}
             type="button"
@@ -148,7 +148,7 @@ export function DeleteDialog({
         if (deleting) event.preventDefault();
         else onCancel();
       }}
-      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-xl backdrop:bg-slate-950/40"
+      className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md overflow-y-auto rounded-xl border border-hairline bg-canvas p-6 shadow-modal backdrop:bg-slate-950/40"
     >
       <h2
         id="delete-course-heading"
@@ -178,7 +178,7 @@ export function DeleteDialog({
           disabled={deleting}
           type="button"
           onClick={() => void remove()}
-          className="rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
+          className="btn bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50"
         >
           {deleting ? "正在删除…" : "确认删除"}
         </button>

@@ -31,13 +31,13 @@ function TopicCard({ topic, course }: { topic: CurriculumTopicSummary; course: C
   const content = (
     <>
       <div className="flex items-start justify-between gap-3">
-        <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-slate-100 text-xs font-bold tabular-nums text-slate-500">
+        <span className="grid size-8 shrink-0 place-items-center rounded-md bg-surface text-[13px] font-semibold tabular-nums text-steel">
           {topic.order_index ?? "·"}
         </span>
         <TopicStatusBadge status={topic.status} />
       </div>
-      <h3 className="mt-4 text-sm font-semibold text-slate-900">{topic.title}</h3>
-      {topic.description && <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-slate-500">{topic.description}</p>}
+      <h3 className="mt-4 text-base font-semibold text-ink">{topic.title}</h3>
+      {topic.description && <p className="mt-1.5 line-clamp-2 text-[13px] leading-5 text-steel">{topic.description}</p>}
       <div className="mt-4">
         <MasteryBar value={visibleMastery(topic)} compact />
       </div>
@@ -47,10 +47,10 @@ function TopicCard({ topic, course }: { topic: CurriculumTopicSummary; course: C
   return (
     <Link
       href={`/learn/${course}/${encodeURIComponent(topic.id)}`}
-      className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+      className="group rounded-xl border border-hairline bg-canvas p-5 transition hover:border-hairline-strong hover:shadow-card"
     >
       {content}
-      <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600">
+      <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-link">
         进入知识点 <ArrowRightIcon className="size-3.5 transition-transform group-hover:translate-x-0.5" />
       </span>
     </Link>
@@ -117,8 +117,8 @@ export default function CourseDashboardPage() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6">
         <AlertIcon className="mx-auto size-9 text-amber-500" />
-        <h1 className="mt-4 text-xl font-bold text-slate-900">课程不存在</h1>
-        <Link href="/learn" className="mt-5 inline-flex rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white">返回课程列表</Link>
+        <h1 className="mt-4 text-heading-4 text-ink">课程不存在</h1>
+        <Link href="/learn" className="btn-dark mt-5">返回课程列表</Link>
       </div>
     );
   }
@@ -132,23 +132,23 @@ export default function CourseDashboardPage() {
 
   return (
     <div className="min-h-[calc(100svh-65px)] bg-canvas">
-      <div className="mx-auto max-w-7xl px-4 py-7 sm:px-6 sm:py-10 lg:px-8">
+      <div className="mx-auto max-w-container px-4 py-8 sm:px-8 sm:py-12">
         <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
           <div>
-            <Link href="/learn" className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 transition hover:text-indigo-700">
+            <Link href="/learn" className="inline-flex items-center gap-1.5 text-sm font-medium text-steel transition hover:text-ink">
               <ArrowLeftIcon className="size-3.5" /> 切换课程
             </Link>
-            <div className="mt-4 flex items-center gap-4">
-              <span className={`grid size-12 place-items-center rounded-2xl text-lg font-bold text-white shadow-lg ${course === "machine_learning" ? "bg-gradient-to-br from-indigo-600 to-violet-600" : "bg-gradient-to-br from-cyan-600 to-sky-600"}`}>
+            <div className="mt-5 flex items-center gap-4">
+              <span className={`grid size-12 place-items-center rounded-lg text-lg font-semibold text-white ${course === "machine_learning" ? "bg-primary" : "bg-link"}`}>
                 {meta.shortLabel}
               </span>
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600">Learning Dashboard</p>
-                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">{meta.label}学习路径</h1>
+                <p className="eyebrow">Learning Dashboard</p>
+                <h1 className="mt-1 text-heading-3 text-ink sm:text-heading-2">{meta.label}学习路径</h1>
               </div>
             </div>
           </div>
-          <Link href="/?view=chat" className="inline-flex w-fit items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-indigo-200 hover:text-indigo-700">
+          <Link href="/?view=chat" className="btn-secondary w-fit">
             自由问答 <ArrowRightIcon className="size-4" />
           </Link>
         </div>
@@ -168,65 +168,67 @@ export default function CourseDashboardPage() {
           </div>
         ) : currentDashboard?.total_topics === 0 ? (<section className="mt-7 rounded-3xl border border-slate-200 bg-white p-10 text-center"><h2 className="text-lg font-semibold text-slate-800">当前课程暂无知识点</h2><p className="mt-3 text-sm text-slate-500">课程内容准备好后会显示在这里。</p></section>) : currentDashboard && currentCurriculum ? (
           <>
-            <section className="mt-7 grid gap-4 lg:grid-cols-[1.35fr_0.9fr]">
-              <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+            <section className="mt-8 grid gap-6 lg:grid-cols-[1.35fr_0.9fr]">
+              <div className="card-feature">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <span className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500"><ChartIcon className="size-4 text-indigo-600" />总体进度</span>
-                    <p className="mt-3 text-3xl font-bold tabular-nums text-slate-950">{currentDashboard.mastered_count}<span className="ml-1 text-base font-medium text-slate-400">/ {currentDashboard.total_topics}</span></p>
-                    <p className="mt-1 text-xs text-slate-500">知识点已有掌握记录</p>
+                    <span className="inline-flex items-center gap-2 text-sm font-medium text-steel"><ChartIcon className="size-4 text-primary" />总体进度</span>
+                    <p className="mt-3 text-heading-2 tabular-nums text-ink">{currentDashboard.mastered_count}<span className="ml-1 text-base font-medium text-stone">/ {currentDashboard.total_topics}</span></p>
+                    <p className="mt-1 text-sm text-steel">知识点已有掌握记录</p>
                   </div>
-                  {activeStage && <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-[11px] font-semibold text-indigo-700">当前 · 阶段 {activeStage.stage}</span>}
+                  {activeStage && <span className="tag-purple">当前 · 阶段 {activeStage.stage}</span>}
                 </div>
                 <div className="mt-6"><MasteryBar value={progress} label="课程完成度" /></div>
                 <div className="mt-6 grid grid-cols-3 gap-3">
                   {[
-                    ["已掌握", currentDashboard.mastered_count, "text-emerald-700 bg-emerald-50"],
-                    ["学习中", currentDashboard.learning_count, "text-indigo-700 bg-indigo-50"],
-                    ["可开始", currentDashboard.not_started_count, "text-sky-700 bg-sky-50"],
+                    ["已掌握", currentDashboard.mastered_count, "bg-tint-mint"],
+                    ["学习中", currentDashboard.learning_count, "bg-tint-lavender"],
+                    ["可开始", currentDashboard.not_started_count, "bg-tint-sky"],
                   ].map(([label, value, className]) => (
-                    <div key={String(label)} className={`rounded-2xl p-3 ${className}`}>
-                      <p className="text-xl font-bold tabular-nums">{value}</p>
-                      <p className="mt-1 text-[11px] font-medium">{label}</p>
+                    <div key={String(label)} className={`rounded-lg p-4 text-charcoal ${className}`}>
+                      <p className="text-heading-4 tabular-nums">{value}</p>
+                      <p className="mt-1 text-[13px] font-medium">{label}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-indigo-200 bg-gradient-to-br from-indigo-600 to-violet-700 p-5 text-white shadow-soft sm:p-6">
-                <span className="inline-flex items-center gap-2 text-xs font-semibold text-indigo-100"><TargetIcon className="size-4" />推荐下一步</span>
-                <h2 className="mt-4 text-xl font-bold">{recommended?.title ?? nextActionLabel(currentDashboard.next_action)}</h2>
-                <p className="mt-2 text-sm leading-6 text-indigo-100">{nextActionLabel(currentDashboard.next_action)}</p>
+              <div className="card-tint flex flex-col bg-tint-yellow-bold">
+                <span className="inline-flex items-center gap-2 text-sm font-semibold text-charcoal"><TargetIcon className="size-4" />推荐下一步</span>
+                <h2 className="mt-4 text-heading-4 text-ink">{recommended?.title ?? nextActionLabel(currentDashboard.next_action)}</h2>
+                <p className="mt-2 text-sm leading-6 text-charcoal">{nextActionLabel(currentDashboard.next_action)}</p>
                 {currentDashboard.reasons.length > 0 && (
-                  <ul className="mt-4 space-y-1.5 text-xs leading-5 text-indigo-100">
+                  <ul className="mt-4 space-y-1.5 text-[13px] leading-5 text-charcoal">
                     {currentDashboard.reasons.slice(0, 3).map((reason) => <li key={reason} className="flex gap-2"><span aria-hidden="true">·</span><span>{reason}</span></li>)}
                   </ul>
                 )}
                 {recommended && (
-                  <Link href={`/learn/${course}/${encodeURIComponent(recommended.id)}`} className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-50">
-                    继续学习 <ArrowRightIcon className="size-4" />
-                  </Link>
+                  <div className="mt-auto pt-6">
+                    <Link href={`/learn/${course}/${encodeURIComponent(recommended.id)}`} className="btn-dark">
+                      继续学习 <ArrowRightIcon className="size-4" />
+                    </Link>
+                  </div>
                 )}
               </div>
             </section>
 
-            <section className="mt-7 space-y-6">
-              <div className="space-y-5">
+            <section className="mt-section-sm space-y-6">
+              <div className="space-y-6">
                 <div className="flex items-end justify-between gap-4">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600">Curriculum</p>
-                    <h2 className="mt-1 text-xl font-bold text-slate-900">课程阶段与知识点</h2>
+                    <p className="eyebrow">Curriculum</p>
+                    <h2 className="mt-1 text-heading-3 text-ink">课程阶段与知识点</h2>
                   </div>
-                  <span className="text-xs text-slate-400">学习状态</span>
+                  <span className="text-[13px] text-stone">学习状态</span>
                 </div>
                 {currentCurriculum.stages.map((stage) => (
-                  <section key={stage.stage} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                  <section key={stage.stage} className="card">
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3">
-                        <span className="grid size-9 place-items-center rounded-xl bg-indigo-50 font-bold tabular-nums text-indigo-700">{stage.stage}</span>
+                        <span className="grid size-9 place-items-center rounded-lg bg-tint-lavender font-semibold tabular-nums text-brand-purple-800">{stage.stage}</span>
                         <div>
-                          <h3 className="text-sm font-bold text-slate-900">{stage.title}</h3>
-                          <p className="mt-0.5 text-[11px] text-slate-400">{stage.topics.length} 个知识点</p>
+                          <h3 className="text-heading-5 text-ink">{stage.title}</h3>
+                          <p className="mt-0.5 text-[13px] text-stone">{stage.topics.length} 个知识点</p>
                         </div>
                       </div>
                       <LayersIcon className="size-5 text-slate-300" />

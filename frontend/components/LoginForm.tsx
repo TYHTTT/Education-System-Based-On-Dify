@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type CSSProperties, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   loginAdmin,
@@ -10,10 +10,18 @@ import {
 } from "@/lib/api";
 import { useAdmin } from "@/components/AdminProvider";
 import { useStudent } from "@/components/StudentProvider";
+import BrandMark from "@/components/BrandMark";
 
 type Role = "student" | "admin";
-const inputClass =
-  "mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-500";
+const inputClass = "text-input mt-1.5";
+const LOGIN_DOTS: Array<{ className: string; style: CSSProperties }> = [
+  { className: "left-[4%] top-[20%] size-8", style: { background: "#f5d75e", "--r": "-8deg" } as CSSProperties },
+  { className: "left-[10%] bottom-[14%] size-5", style: { background: "#ff64c8", "--r": "12deg" } as CSSProperties },
+  { className: "left-[44%] top-[12%] size-3", style: { background: "#2a9d99" } as CSSProperties },
+  { className: "right-[5%] top-[14%] size-6", style: { background: "#dd5b00", "--r": "10deg" } as CSSProperties },
+  { className: "right-[3%] bottom-[20%] size-9", style: { background: "#d6b6f6", "--r": "-6deg" } as CSSProperties },
+  { className: "left-[48%] bottom-[10%] size-4", style: { background: "#1aae39", "--r": "4deg" } as CSSProperties },
+];
 
 export default function LoginForm({
   initialRole = "student",
@@ -86,15 +94,49 @@ export default function LoginForm({
   }
 
   return (
-    <main className="grid min-h-svh place-items-center bg-canvas px-4 py-8">
+    <main className="hero-band flex min-h-svh flex-col">
+      {LOGIN_DOTS.map((dot, index) => (
+        <span
+          key={index}
+          aria-hidden="true"
+          className={`hero-dot hidden md:block ${dot.className}`}
+          style={dot.style}
+        />
+      ))}
+      <div className="mx-auto flex h-16 w-full max-w-container items-center px-4 sm:px-8">
+        <BrandMark onDark />
+      </div>
+      <div className="mx-auto grid w-full max-w-container flex-1 items-center gap-12 px-4 pb-section pt-6 sm:px-8 lg:grid-cols-[1.1fr_minmax(0,440px)] lg:gap-16">
+        <div className="text-center lg:text-left">
+          <p className="text-[11px] font-semibold uppercase tracking-[1px] text-white/60">
+            Course Coach · 课程问答助手
+          </p>
+          <p className="mt-4 text-[36px] font-semibold leading-[1.2] tracking-[-0.5px] text-white max-[359px]:text-[32px] sm:text-display-lg lg:text-[48px] xl:text-[64px] lg:leading-[1.15] lg:tracking-[-1.5px]">
+            <span className="block">你的 AI 课程导师，</span>
+            <span className="block">随时在线。</span>
+          </p>
+          <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-white/70 sm:text-subtitle lg:mx-0">
+            讲解、练习、评价与掌握度追踪，围绕每一个知识点形成完整的学习闭环。
+          </p>
+          <ul className="mt-8 hidden flex-wrap gap-2 lg:flex">
+            {["知识点讲解", "分层练习", "掌握度追踪", "知识图谱"].map((item) => (
+              <li
+                key={item}
+                className="rounded-md border border-white/15 bg-white/5 px-2.5 py-1 text-[13px] font-medium text-white/80"
+              >
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
       <section
         aria-label="账户登录"
-        className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-soft sm:p-8"
+        className="mx-auto w-full max-w-md rounded-xl border border-hairline bg-canvas p-6 text-ink shadow-mockup sm:p-8"
       >
         <div
           role="group"
           aria-label="登录身份"
-          className="grid grid-cols-2 gap-1 rounded-2xl bg-slate-100 p-1"
+          className="flex gap-2"
         >
           {(["student", "admin"] as const).map((item) => (
             <button
@@ -103,13 +145,13 @@ export default function LoginForm({
               disabled={submitting}
               aria-pressed={role === item}
               onClick={() => selectRole(item)}
-              className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition ${role === item ? "bg-white text-indigo-700 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}
+              className={`pill-tab ${role === item ? "pill-tab-active" : ""}`}
             >
               {item === "student" ? "学生" : "管理员"}
             </button>
           ))}
         </div>
-        <h1 className="mt-7 text-2xl font-bold text-slate-900">
+        <h1 className="mt-7 text-heading-3 text-ink">
           {isAdmin
             ? registering
               ? "创建管理员"
@@ -204,7 +246,7 @@ export default function LoginForm({
           {(formError || error) && (
             <p
               role="alert"
-              className="rounded-xl bg-rose-50 px-3 py-2.5 text-sm text-rose-700"
+              className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm text-rose-700"
             >
               {formError || error}
             </p>
@@ -212,7 +254,7 @@ export default function LoginForm({
           <button
             disabled={submitting}
             type="submit"
-            className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-wait disabled:opacity-60"
+            className="btn-primary h-11 w-full disabled:cursor-wait"
           >
             {submitting
               ? "正在处理…"
@@ -232,7 +274,7 @@ export default function LoginForm({
             setRegistering((value) => !value);
             setFormError("");
           }}
-          className="mt-5 text-sm font-semibold text-indigo-700 hover:text-indigo-900 disabled:opacity-60"
+          className="link mt-5 text-sm disabled:opacity-60"
         >
           {registering
             ? "已有账户？登录"
@@ -241,6 +283,7 @@ export default function LoginForm({
               : "没有账户？创建账户"}
         </button>
       </section>
+      </div>
     </main>
   );
 }

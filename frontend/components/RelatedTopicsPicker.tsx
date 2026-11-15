@@ -9,7 +9,7 @@ import {
 } from "@/lib/topic-management";
 
 const inputClass =
-  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-indigo-500";
+  "form-field min-w-0";
 export default function RelatedTopicsPicker({
   topicId,
   courseId,
@@ -139,7 +139,7 @@ export default function RelatedTopicsPicker({
                   type="button"
                   aria-label={`移除关联${topic?.title ?? id}`}
                   onClick={() => onChange(selected.filter((key) => key !== id))}
-                  className="flex size-6 shrink-0 items-center justify-center rounded hover:bg-indigo-100"
+                  className="flex size-9 shrink-0 items-center justify-center rounded-md hover:bg-indigo-100"
                 >
                   ×
                 </button>
@@ -189,7 +189,7 @@ export default function RelatedTopicsPicker({
           type="button"
           disabled={!query.trim() || loading}
           onClick={runSearch}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
+          className="btn-primary"
         >
           搜索
         </button>

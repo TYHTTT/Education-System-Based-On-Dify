@@ -5,6 +5,13 @@ import ChatMessage from "@/components/ChatMessage";
 import { SparklesIcon } from "@/components/Icons";
 import type { ChatMessage as ChatMessageType } from "@/lib/types";
 
+const EXAMPLE_TINTS = [
+  "bg-tint-peach",
+  "bg-tint-rose",
+  "bg-tint-mint",
+  "bg-tint-sky",
+];
+
 interface ChatWindowProps {
   messages: ChatMessageType[];
   examples: { title: string; question: string }[];
@@ -19,10 +26,10 @@ function ThinkingIndicator() {
       role="status"
       aria-label="正在整理回答"
     >
-      <div className="mt-0.5 hidden size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-sm sm:grid">
-        <SparklesIcon className="size-4.5" />
+      <div className="mt-0.5 hidden size-8 shrink-0 place-items-center rounded-lg bg-primary text-white sm:grid">
+        <SparklesIcon className="size-4" />
       </div>
-      <div className="rounded-2xl rounded-tl-md border border-slate-200 bg-white px-5 py-4 shadow-soft">
+      <div className="rounded-xl border border-hairline bg-canvas px-5 py-4">
         <div className="flex items-center gap-3">
           <div className="flex gap-1.5" aria-hidden="true">
             {[0, 1, 2].map((index) => (
@@ -54,32 +61,33 @@ export default function ChatWindow({
 
   if (messages.length === 0 && !isLoading) {
     return (
-      <div className="flex min-h-full items-center justify-center px-5 py-8 sm:px-8 sm:py-12">
-        <div className="w-full max-w-2xl animate-fade-up">
-          <div className="grid size-12 place-items-center rounded-2xl bg-indigo-50 text-indigo-600">
-            <SparklesIcon className="size-6" />
-          </div>
-          <h2 className="mt-6 text-balance text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+      <div className="flex min-h-full items-center justify-center px-5 py-10 sm:px-8 sm:py-section">
+        <div className="w-full max-w-3xl animate-fade-up text-center">
+          <span className="badge-purple">
+            <SparklesIcon className="mr-1.5 size-3.5" />
+            Course Coach
+          </span>
+          <h2 className="mt-5 text-balance text-heading-3 text-ink sm:text-heading-1">
             有什么想聊的？
           </h2>
-          <p className="mt-3 max-w-xl text-sm leading-7 text-slate-500">
+          <p className="mx-auto mt-4 max-w-xl text-subtitle text-steel">
             从一个问题开始，一起理解概念、拆解难题、探索思路。
           </p>
-          <div className="mt-8 grid gap-3 text-left sm:grid-cols-2">
-            {examples.map(({ title, question }) => (
+          <div className="mt-10 grid gap-4 text-left sm:grid-cols-2">
+            {examples.map(({ title, question }, index) => (
               <button
                 key={question}
                 type="button"
                 onClick={() => onExample(question)}
-                className="group rounded-xl border border-slate-200/80 bg-white p-4 text-left text-sm leading-6 transition hover:border-indigo-300 hover:bg-indigo-50/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                className={`card-tint group flex flex-col p-6 text-left transition-shadow hover:shadow-card ${EXAMPLE_TINTS[index % EXAMPLE_TINTS.length]}`}
               >
-                <span className="block text-xs font-medium text-slate-400">
+                <span className="text-[13px] font-semibold text-charcoal/70">
                   {title}
                 </span>
-                <span className="mt-1 block text-slate-700">
+                <span className="mt-2 flex items-start justify-between gap-3 text-base font-medium leading-6 text-ink">
                   {question}
                   <span
-                    className="ml-2 inline-block text-indigo-400"
+                    className="shrink-0 text-charcoal/50 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                     aria-hidden="true"
                   >
                     ↗

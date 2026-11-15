@@ -65,10 +65,10 @@ function CourseDetails({ courseId }: { courseId: string }) {
     router.replace("/admin/courses");
   }
   return (
-    <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+    <section className="page-container">
       <Link
         href="/admin/courses"
-        className="text-sm text-slate-500 hover:text-indigo-700"
+        className="link text-sm"
       >
         ← 返回课程管理
       </Link>
@@ -98,7 +98,7 @@ function CourseDetails({ courseId }: { courseId: string }) {
         <>
           <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h1 className="break-words text-2xl font-bold text-slate-900">
+              <h1 className="break-words text-heading-3 text-ink sm:text-heading-2">
                 {course.title}
               </h1>
             </div>
@@ -122,7 +122,7 @@ function CourseDetails({ courseId }: { courseId: string }) {
           ) : (
             <section
               aria-label="课程基本信息"
-              className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6"
+              className="card mt-6 p-5 sm:p-8"
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 className="text-lg font-bold text-slate-900">基本信息</h2>

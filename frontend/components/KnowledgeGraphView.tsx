@@ -108,6 +108,9 @@ export default function KnowledgeGraphView({
   const [dark, setDark] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const activeId = hovered ?? focused ?? pinned;
+  const activeCourse = activeId
+    ? coursesById.get(nodesById.get(activeId)?.course ?? "")
+    : undefined;
   const related = activeId ? neighbors.get(activeId) : undefined;
   const detail = nodesById.get(focused ?? pinned ?? "");
   const fit = useMemo(() => fitNodes(positions, size), [positions, size]);
@@ -285,7 +288,7 @@ export default function KnowledgeGraphView({
     }
   }
   function tone(color: string) {
-    return dark ? color : `color-mix(in srgb, ${color} 65%, #282333)`;
+    return dark ? `color-mix(in srgb, ${color} 78%, white)` : color;
   }
 
   return (
@@ -297,7 +300,7 @@ export default function KnowledgeGraphView({
     >
       <div className="pointer-events-none absolute inset-x-4 top-4 z-10 flex items-start justify-between gap-3 sm:inset-x-6 sm:top-5">
         <div>
-          <h1 className="graph-title text-sm font-semibold">知识图谱</h1>
+          <h1 className="graph-title text-lg font-semibold">知识图谱</h1>
           <p className="graph-muted mt-1 whitespace-nowrap text-[10px] sm:text-[11px]">
             <span className="hidden sm:inline">
               {data.courses.length} 门课程
@@ -349,7 +352,7 @@ export default function KnowledgeGraphView({
         </div>
       </div>
 
-      <div className="absolute left-4 top-20 z-20 w-[min(280px,calc(100%-32px))] sm:left-6">
+      <div className="absolute left-4 top-24 z-20 w-[min(280px,calc(100%-32px))] sm:left-6 sm:top-24">
         <div className="graph-panel graph-search flex items-center gap-2 rounded-lg px-3">
           <Glyph name="search" />
           <label htmlFor="graph-search" className="sr-only">
@@ -507,7 +510,9 @@ export default function KnowledgeGraphView({
                   className="graph-edge"
                   fill="none"
                   stroke={
-                    highlighted ? "var(--graph-accent)" : "var(--graph-line)"
+                    highlighted && activeCourse
+                      ? tone(activeCourse.color)
+                      : "var(--graph-line)"
                   }
                   strokeWidth={highlighted ? 1.5 : 0.75}
                   strokeOpacity={activeId ? (highlighted ? 0.9 : 0.045) : 0.5}
@@ -525,7 +530,7 @@ export default function KnowledgeGraphView({
                   ? !matchIds.has(node.id)
                   : false;
               const color = tone(coursesById.get(node.course)!.color);
-              const radius = Math.max(node.radius, 2.5 / view.scale);
+              const radius = Math.max(node.radius, 3.5 / view.scale);
               const primary = activeId === node.id;
               return (
                 <g
@@ -572,9 +577,9 @@ export default function KnowledgeGraphView({
                       cy={node.y}
                       r={radius + 5 / view.scale}
                       fill="none"
-                      stroke="var(--graph-accent)"
-                      strokeOpacity="0.3"
-                      strokeWidth="1"
+                      stroke={color}
+                      strokeOpacity="0.8"
+                      strokeWidth="2"
                       vectorEffect="non-scaling-stroke"
                       pointerEvents="none"
                     />
@@ -584,7 +589,10 @@ export default function KnowledgeGraphView({
                     cx={node.x}
                     cy={node.y}
                     r={primary ? radius + 1 / view.scale : radius}
-                    fill={primary ? "var(--graph-accent)" : color}
+                    fill={color}
+                    stroke="var(--graph-bg)"
+                    strokeWidth="1"
+                    vectorEffect="non-scaling-stroke"
                     pointerEvents="none"
                   />
                   {visibleLabels.has(node.id) && (
@@ -634,7 +642,7 @@ export default function KnowledgeGraphView({
             <button
               type="button"
               onClick={clearSelection}
-              className="graph-tool -mr-1 -mt-1 !size-6"
+              className="graph-tool -mr-1 -mt-1"
               aria-label="取消选择"
             >
               <Glyph name="close" />
@@ -700,10 +708,11 @@ export default function KnowledgeGraphView({
                   );
                   if (points.length) setCustomView(fitNodes(points, size));
                 }}
-                className="graph-legend inline-flex items-center gap-1.5 text-[10px] sm:text-[11px]"
+                className="graph-legend inline-flex items-center gap-2 text-xs"
               >
                 <span
-                  className="size-1.5 rounded-full"
+                  aria-hidden="true"
+                  className="size-3 shrink-0 rounded-full"
                   style={{ background: tone(course.color) }}
                 />
                 {course.title}
@@ -717,7 +726,7 @@ export default function KnowledgeGraphView({
         </div>
       )}
 
-      <p className="graph-muted pointer-events-none absolute bottom-6 left-1/2 hidden -translate-x-1/2 text-[10px] xl:block">
+      <p className="graph-muted pointer-events-none absolute left-1/2 top-7 hidden -translate-x-1/2 text-[10px] xl:block">
         拖动节点或画布<span className="mx-2 opacity-40">·</span>滚轮缩放
       </p>
       <div

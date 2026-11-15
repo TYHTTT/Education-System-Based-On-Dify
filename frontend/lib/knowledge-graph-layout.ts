@@ -59,7 +59,7 @@ export function stepGraph(simulation: GraphSimulation, alpha = 1) {
   const { nodes, links } = simulation;
   for (let i = 0; i < nodes.length; i++) {
     const a = nodes[i];
-    a.vx += (a.anchorX - a.x) * 0.055 * alpha;
+    a.vx += (a.anchorX - a.x) * 0.035 * alpha;
     a.vy += (a.anchorY - a.y) * 0.055 * alpha;
     for (let j = i + 1; j < nodes.length; j++) {
       const b = nodes[j];
@@ -67,9 +67,9 @@ export function stepGraph(simulation: GraphSimulation, alpha = 1) {
         dy = a.y - b.y || 0.01;
       const distance = Math.hypot(dx, dy);
       const sameCourse = a.course === b.course;
-      const separation = a.radius + b.radius + (sameCourse ? 37 : 27);
+      const separation = a.radius + b.radius + (sameCourse ? 55 : 85);
       const repel =
-        (sameCourse ? 44 : 20) / Math.max(64, distance * distance);
+        (sameCourse ? 88 : 50) / Math.max(64, distance * distance);
       const collision = (Math.max(0, separation - distance) * 0.25) / distance;
       const force = (repel + collision) * alpha;
       a.vx += dx * force;
@@ -86,8 +86,8 @@ export function stepGraph(simulation: GraphSimulation, alpha = 1) {
     const distance = Math.hypot(dx, dy) || 1;
     const sameCourse = a.course === b.course;
     const force =
-      ((distance - (sameCourse ? 96 : 170)) / distance) *
-      (sameCourse ? 0.09 : 0.035) *
+      ((distance - (sameCourse ? 140 : 360)) / distance) *
+      (sameCourse ? 0.075 : 0.004) *
       alpha;
     a.vx += dx * force;
     a.vy += dy * force;
@@ -105,19 +105,22 @@ export function stepGraph(simulation: GraphSimulation, alpha = 1) {
 
 /** A seeded force layout: no concentric rings, group boundaries or synthetic edges. */
 export function layoutGraph(data: KnowledgeGraphData) {
-  // The API returns courses in name order, shared with the course catalog.
-  const courses = [...data.courses];
+  // Keep course anchors stable even when API collections arrive in a different order.
+  const courses = [...data.courses].sort(
+    (a, b) => a.title.localeCompare(b.title, "zh-CN") || a.id.localeCompare(b.id),
+  );
   const byCourse = new Map(
     courses.map((course) => [course.id, [] as GraphNode[]]),
   );
   for (const node of data.nodes) byCourse.get(node.course)?.push(node);
   const neighbors = graphNeighbors(data);
   const spacing = Math.max(
-    200,
+    260,
     ...courses.map(
-      (course) => Math.sqrt(byCourse.get(course.id)!.length) * 35 + 100,
+      (course) => Math.sqrt(byCourse.get(course.id)!.length) * 48 + 160,
     ),
   );
+  const columns = Math.ceil(Math.sqrt(courses.length));
   const clusters: CourseCluster[] = [];
   const nodes: ForceNode[] = [];
   courses.forEach((course, index) => {
@@ -129,12 +132,12 @@ export function layoutGraph(data: KnowledgeGraphData) {
           a.order_index - b.order_index ||
           a.id.localeCompare(b.id),
       );
-    const orbit = Math.sqrt(index) * spacing;
+    // A wide arrangement leaves clear gutters between courses and uses desktop width.
     const center = {
-      x: Math.cos(index * 2.39996 - 0.5) * orbit,
-      y: Math.sin(index * 2.39996 - 0.5) * orbit * 0.8,
+      x: (index % columns) * spacing * 1.65,
+      y: Math.floor(index / columns) * spacing * 1.05,
     };
-    const radius = Math.sqrt(items.length) * 29 + 30;
+    const radius = Math.sqrt(items.length) * 36 + 45;
     clusters.push({
       ...course,
       ...center,

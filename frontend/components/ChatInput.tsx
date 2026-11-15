@@ -44,7 +44,7 @@ export default function ChatInput({
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      <div className="rounded-2xl border border-slate-200 bg-slate-50/40 p-2 shadow-sm transition focus-within:border-indigo-300 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-100/70">
+      <div className="rounded-xl border border-hairline-strong bg-canvas p-2 shadow-sm transition focus-within:border-primary focus-within:shadow-[0_0_0_1px_#5645d4]">
         <div className="flex items-end gap-2">
           <textarea
             ref={textareaRef}
@@ -60,13 +60,13 @@ export default function ChatInput({
             disabled={disabled}
             placeholder={placeholder ?? "输入你的问题…"}
             aria-label="你的问题"
-            className="max-h-40 min-h-11 flex-1 resize-none bg-transparent px-3 py-2.5 text-[15px] leading-6 text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
+            className="max-h-40 min-h-11 flex-1 resize-none bg-transparent px-3 py-2.5 text-base leading-6 text-ink outline-none placeholder:text-muted focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
           />
           <button
             type="button"
             onClick={isLoading ? onStop : submit}
             disabled={!isLoading && (disabled || !value.trim())}
-            className="mb-1 grid size-10 shrink-0 place-items-center rounded-xl bg-indigo-600 text-white transition hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
+            className="mb-1 grid size-10 shrink-0 place-items-center rounded-lg bg-primary text-white transition-colors hover:bg-primary-pressed disabled:cursor-not-allowed disabled:bg-hairline disabled:text-muted"
             aria-label={isLoading ? "停止生成" : "发送问题"}
           >
             {isLoading ? (
@@ -76,7 +76,7 @@ export default function ChatInput({
             )}
           </button>
         </div>
-        <div className="flex items-center justify-between px-3 pb-1 pt-1 text-[11px] text-slate-400">
+        <div className="flex items-center justify-between px-3 pb-1 pt-1 text-[12px] text-stone">
           <span>Enter 发送 · Shift + Enter 换行</span>
           {value.length > MAX_LENGTH * 0.8 && (
             <span>

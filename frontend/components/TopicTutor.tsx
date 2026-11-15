@@ -363,7 +363,7 @@ export default function TopicTutor({
                       ? "在这里写下答案，多道题可按题号分别作答…"
                       : "说说你的疑问，让课程助手再讲一讲…"
                   }
-                  className="w-full resize-y rounded-xl border border-slate-200 p-3 text-sm leading-7 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-50"
+                  className="form-field resize-y leading-7 disabled:bg-surface"
                 />
                 <div className="flex justify-end gap-3">
                   <button
@@ -372,14 +372,14 @@ export default function TopicTutor({
                     onClick={() =>
                       update((current) => ({ ...current, inputMode: null }))
                     }
-                    className="rounded-xl px-4 py-2.5 text-sm text-slate-500 hover:bg-slate-50 disabled:opacity-40"
+                    className="btn-ghost text-steel"
                   >
                     收起
                   </button>
                   <button
                     type="submit"
                     disabled={!drafts[inputMode].trim() || Boolean(pending)}
-                    className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="btn-primary"
                   >
                     {inputMode === "answer" ? "提交答案" : "继续讲解"}
                   </button>
@@ -399,14 +399,14 @@ export default function TopicTutor({
                     <button
                       type="button"
                       onClick={() => openInput("clarification")}
-                      className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-600 hover:border-indigo-300 hover:text-indigo-600"
+                      className="btn-secondary"
                     >
                       没看懂
                     </button>
                     <button
                       type="button"
                       onClick={practice}
-                      className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+                      className="btn-primary"
                     >
                       {awaitingAnswer ? "继续作答" : "做练习"}
                     </button>
@@ -456,7 +456,7 @@ export default function TopicTutor({
                 onClick={() =>
                   void requestAnswer("topic_teaching", startMessage)
                 }
-                className="mt-7 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+                className="btn-primary mt-7"
               >
                 <PlayIcon className="size-4" />
                 开始学习

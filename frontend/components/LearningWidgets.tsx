@@ -5,7 +5,7 @@ export function TopicStatusBadge({ status }: { status: TopicStatus | string }) {
   const meta = statusMeta(status);
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${meta.badge}`}
+      className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[12px] font-semibold leading-[1.4] ${meta.badge}`}
     >
       <span aria-hidden="true">{meta.symbol}</span>
       {meta.label}
@@ -45,7 +45,7 @@ export function MasteryBar({
         aria-valuetext={percent(value)}
       >
         <div
-          className={`h-full rounded-full transition-[width] duration-500 ${evaluated ? "bg-gradient-to-r from-indigo-500 to-violet-500" : "bg-slate-200"}`}
+          className={`h-full rounded-full transition-[width] duration-500 ${evaluated ? "bg-primary" : "bg-slate-200"}`}
           style={{ width: evaluated ? `${bounded * 100}%` : "0%" }}
         />
       </div>
@@ -60,7 +60,7 @@ export function LoadingBlock({
 }) {
   return (
     <div
-      className="grid min-h-64 place-items-center rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"
+      className="grid min-h-64 place-items-center rounded-xl border border-hairline bg-canvas p-8"
       role="status"
     >
       <div className="text-center">

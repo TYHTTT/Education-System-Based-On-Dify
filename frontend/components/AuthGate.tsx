@@ -40,7 +40,7 @@ function AdminGate({ children }: { children: ReactNode }) {
     return <LoginForm initialRole="admin" error={error} />;
   return (
     <main className="grid min-h-svh place-items-center bg-canvas p-6">
-      <section className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8">
+      <section className="card-feature w-full max-w-md">
         <h1 className="text-xl font-semibold text-slate-900">
           管理员身份暂时无法验证
         </h1>
@@ -50,7 +50,7 @@ function AdminGate({ children }: { children: ReactNode }) {
         <button
           type="button"
           onClick={retry}
-          className="mt-6 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white"
+          className="btn-primary mt-6"
         >
           重试
         </button>
