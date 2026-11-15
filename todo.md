@@ -20,10 +20,15 @@
 
 ## 实现顺序
 
-- [ ] **1. 提取 Dify 用量信息**
+- [x] **1. 提取 Dify 用量信息**
   - 保留输入 Token、输出 Token、总 Token、费用、币种和上游请求标识。
   - 验收：普通 JSON 响应和流式响应均能解析；缺失用量标记为未知，不按零处理。
-  - 第一轮仅完成此项，修改 DifyClient 并验证解析结果。
+  - 已完成：`run()` 和 `answer()` 保留 `usage`（输入／输出／总 Token、总费用、币种）以及 `message_id`、`task_id`、`workflow_run_id`，继续保留 `conversation_id`。
+  - 金额以 `Decimal` 解析，缺失或无效字段为 `None`，保留实际报告的零值，不根据部分字段推算总量。流式标识从各事件收集，后续缺失字段不会清空已收集的标识。
+  - 验证：`backend` 目录执行 `.\.venv\Scripts\python.exe -m pytest tests/test_dify.py tests/test_dify_usage_api.py -q -p no:cacheprovider`，51 项通过；相关 Python 文件通过 Ruff 静态检查和格式检查。
+  - 覆盖：JSON／流式响应、两层客户端结果传递、缺失／无效／部分／零用量、金额精度，以及学生端响应不暴露用量、费用和上游标识。
+  - 现有回归限制：`tests/test_chat_api.py` 有 24 项失败，使用修改前的 DifyClient 复核后结果相同，主要涉及默认 PostgreSQL 认证失败和旧接口清单断言；本轮未扩大范围修复。
+  - 本轮采用模拟上游响应验证解析，尚未进行真实 Dify 用量完整性核对；调用日志入库及管理后台页面按后续步骤实现。
 
 - [ ] **2. 建立 API Key 内部身份**
   - 为凭据建立内部 ID，关联现有课程和自由问答配置；使用服务地址与密钥指纹识别凭据，密钥继续加密保存。

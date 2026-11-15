@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal
 
 import httpx
 import pytest
@@ -240,5 +241,216 @@ async def test_native_topic_conversation_keeps_query_short_and_captures_remote_i
         assert bodies[1]["conversation_id"] == "conversation-one"
         assert bodies[0]["user"] == bodies[1]["user"]
         assert "conversation_id" not in bodies[0]
+    finally:
+        await agent.close()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("carrier", ["json", "stream"])
+@pytest.mark.parametrize("method", ["run", "answer"])
+async def test_usage_and_upstream_ids_survive_both_client_methods(carrier, method):
+    usage = {
+        "prompt_tokens": 1033,
+        "completion_tokens": 128,
+        "total_tokens": 1161,
+        "total_price": "0.0012890000000000001",
+        "currency": "USD",
+    }
+    identifiers = {
+        "message_id": "message-one",
+        "task_id": "task-one",
+        "workflow_run_id": "workflow-one",
+        "conversation_id": "conversation-one",
+    }
+
+    def handler(request):
+        if carrier == "json":
+            return httpx.Response(
+                200,
+                json={"answer": "回答", "metadata": {"usage": usage}, **identifiers},
+            )
+        return sse(
+            [
+                {"event": "workflow_started", "workflow_run_id": "workflow-one"},
+                {"event": "agent_message", "answer": "回答", **identifiers},
+                {
+                    "event": "message_end",
+                    "metadata": {"usage": usage},
+                    "message_id": None,
+                    "task_id": "",
+                    "workflow_run_id": " ",
+                },
+            ]
+        )
+
+    agent = client(handler)
+    try:
+        if method == "run":
+            result = await agent.run("问题")
+        else:
+            result = await agent.answer(course=None, question="问题", history=[])
+        assert result["answer"] == "回答"
+        assert result["usage"] == {
+            **usage,
+            "total_price": Decimal("0.0012890000000000001"),
+        }
+        for name, value in identifiers.items():
+            assert result[name] == value
+    finally:
+        await agent.close()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("carrier", ["json", "stream"])
+@pytest.mark.parametrize(
+    "metadata",
+    [None, {}, [], "invalid", {"usage": None}, {"usage": []}, {"usage": "invalid"}],
+)
+async def test_missing_or_malformed_usage_remains_unknown(carrier, metadata):
+    def handler(request):
+        if carrier == "json":
+            return httpx.Response(200, json={"answer": "回答", "metadata": metadata})
+        return sse(
+            [
+                {"event": "message", "answer": "回答"},
+                {"event": "message_end", "metadata": metadata},
+            ]
+        )
+
+    agent = client(handler)
+    try:
+        result = await agent.answer(course=None, question="问题", history=[])
+        assert result["answer"] == "回答"
+        assert result["usage"] == {
+            "prompt_tokens": None,
+            "completion_tokens": None,
+            "total_tokens": None,
+            "total_price": None,
+            "currency": None,
+        }
+        assert result["message_id"] is None
+        assert result["task_id"] is None
+        assert result["workflow_run_id"] is None
+    finally:
+        await agent.close()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("carrier", ["json", "stream"])
+@pytest.mark.parametrize(
+    ("usage", "expected"),
+    [
+        (
+            {
+                "prompt_tokens": 0,
+                "completion_tokens": 0,
+                "total_tokens": 0,
+                "total_price": "0",
+                "currency": "USD",
+            },
+            {
+                "prompt_tokens": 0,
+                "completion_tokens": 0,
+                "total_tokens": 0,
+                "total_price": Decimal(0),
+                "currency": "USD",
+            },
+        ),
+        (
+            {"prompt_tokens": 12},
+            {
+                "prompt_tokens": 12,
+                "completion_tokens": None,
+                "total_tokens": None,
+                "total_price": None,
+                "currency": None,
+            },
+        ),
+        (
+            {
+                "prompt_tokens": -1,
+                "completion_tokens": True,
+                "total_tokens": 1.5,
+                "total_price": "not-a-price",
+                "currency": [],
+            },
+            {
+                "prompt_tokens": None,
+                "completion_tokens": None,
+                "total_tokens": None,
+                "total_price": None,
+                "currency": None,
+            },
+        ),
+    ],
+)
+async def test_zero_partial_and_invalid_usage_are_distinct(carrier, usage, expected):
+    def handler(request):
+        if carrier == "json":
+            return httpx.Response(
+                200, json={"answer": "回答", "metadata": {"usage": usage}}
+            )
+        return sse(
+            [
+                {"event": "message", "answer": "回答"},
+                {"event": "message_end", "metadata": {"usage": usage}},
+            ]
+        )
+
+    agent = client(handler)
+    try:
+        result = await agent.run("问题")
+        assert result["usage"] == expected
+    finally:
+        await agent.close()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "price", ["NaN", "sNaN", "Infinity", "-Infinity", "-0.01", True, [], {}]
+)
+async def test_invalid_prices_are_unknown_without_discarding_valid_tokens(price):
+    agent = client(
+        lambda request: httpx.Response(
+            200,
+            json={
+                "answer": "回答",
+                "metadata": {"usage": {"total_price": price, "prompt_tokens": 7}},
+            },
+        )
+    )
+    try:
+        usage = (await agent.run("问题"))["usage"]
+        assert usage["total_price"] is None
+        assert usage["prompt_tokens"] == 7
+    finally:
+        await agent.close()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("carrier", ["json", "stream"])
+async def test_json_numeric_prices_preserve_decimal_precision(carrier):
+    metadata = '"metadata":{"usage":{"total_price":0.12345678901234567890123456789}}'
+    if carrier == "json":
+        response = httpx.Response(
+            200,
+            headers={"Content-Type": "application/json"},
+            text='{"answer":"回答",' + metadata + "}",
+        )
+    else:
+        response = httpx.Response(
+            200,
+            headers={"Content-Type": "text/event-stream"},
+            text='data: {"event":"message","answer":"回答"}\n\n'
+            + 'data: {"event":"message_end",'
+            + metadata
+            + "}\n\n",
+        )
+    agent = client(lambda request: response)
+    try:
+        result = await agent.run("问题")
+        assert result["usage"]["total_price"] == Decimal(
+            "0.12345678901234567890123456789"
+        )
     finally:
         await agent.close()

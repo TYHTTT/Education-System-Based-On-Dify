@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from decimal import Decimal, InvalidOperation
 from uuid import uuid4
 
 import httpx
@@ -16,8 +17,12 @@ class DifyClient:
     def __init__(self, settings: Settings, *, transport=None, http_client=None) -> None:
         self.settings = settings
         self._owns_http = http_client is None
-        self.http = http_client if http_client is not None else httpx.AsyncClient(
-            timeout=settings.dify_timeout_seconds, transport=transport
+        self.http = (
+            http_client
+            if http_client is not None
+            else httpx.AsyncClient(
+                timeout=settings.dify_timeout_seconds, transport=transport
+            )
         )
 
     async def close(self) -> None:
@@ -35,7 +40,9 @@ class DifyClient:
     ) -> dict:
         key = self.settings.dify_api_key.get_secret_value().strip()
         if not key or not self.settings.dify_api_base_url.strip():
-            raise ConfigurationError("请在管理员后台配置当前课程或自由问答的 Dify 地址和密钥")
+            raise ConfigurationError(
+                "请在管理员后台配置当前课程或自由问答的 Dify 地址和密钥"
+            )
         payload = {
             "inputs": {
                 **{
@@ -56,6 +63,7 @@ class DifyClient:
         answer = ""
         agent_answer = ""
         remote_conversation_id = conversation_id
+        remote_ids = dict.fromkeys(("message_id", "task_id", "workflow_run_id"))
         metadata = {}
         ended = False
         try:
@@ -67,7 +75,8 @@ class DifyClient:
             ) as response:
                 response.raise_for_status()
                 if "application/json" in response.headers.get("content-type", ""):
-                    body = json.loads(await response.aread())
+                    body = json.loads(await response.aread(), parse_float=Decimal)
+                    _capture_response_ids(body, remote_ids)
                     answer = body.get("answer", "")
                     metadata = body.get("metadata") or {}
                     remote_conversation_id = (
@@ -81,7 +90,8 @@ class DifyClient:
                         data = line[5:].strip()
                         if not data or data == "[DONE]":
                             continue
-                        event = json.loads(data)
+                        event = json.loads(data, parse_float=Decimal)
+                        _capture_response_ids(event, remote_ids)
                         kind = event.get("event")
                         remote_conversation_id = (
                             event.get("conversation_id") or remote_conversation_id
@@ -122,6 +132,8 @@ class DifyClient:
             "answer": answer,
             "resources": resources if isinstance(resources, list) else [],
             "conversation_id": remote_conversation_id,
+            **remote_ids,
+            "usage": _usage_snapshot(metadata),
         }
 
     async def answer(
@@ -155,7 +167,49 @@ class DifyClient:
             "sources": [{**item, "snippet": item["content"][:600]} for item in sources],
             "retrieval_count": len(sources),
             "conversation_id": result.get("conversation_id"),
+            "message_id": result.get("message_id"),
+            "task_id": result.get("task_id"),
+            "workflow_run_id": result.get("workflow_run_id"),
+            "usage": result["usage"],
         }
+
+
+def _capture_response_ids(payload: dict, identifiers: dict) -> None:
+    """Keep IDs from any event; later omissions must not erase earlier IDs."""
+    for name in identifiers:
+        value = payload.get(name)
+        if isinstance(value, str) and value.strip():
+            identifiers[name] = value
+
+
+def _usage_snapshot(metadata: object) -> dict:
+    """Normalize reported usage without treating missing/invalid values as zero.
+
+    Prices remain Decimal values for backend accounting. Do not infer totals:
+    partial upstream usage must remain distinguishable from a complete report.
+    """
+    usage = metadata.get("usage") if isinstance(metadata, dict) else None
+    if not isinstance(usage, dict):
+        usage = {}
+    snapshot = {}
+    for name in ("prompt_tokens", "completion_tokens", "total_tokens"):
+        value = usage.get(name)
+        snapshot[name] = value if type(value) is int and value >= 0 else None
+    price = usage.get("total_price")
+    amount = None
+    if isinstance(price, (str, int, Decimal)) and not isinstance(price, bool):
+        try:
+            parsed = Decimal(price)
+            if parsed.is_finite() and parsed >= 0:
+                amount = parsed
+        except InvalidOperation:
+            pass
+    snapshot["total_price"] = amount
+    currency = usage.get("currency")
+    snapshot["currency"] = (
+        currency.strip() if isinstance(currency, str) and currency.strip() else None
+    )
+    return snapshot
 
 
 def resource_snapshots(resources: list, *, course: Course | None) -> list[dict]:
