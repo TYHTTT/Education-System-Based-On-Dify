@@ -9,7 +9,6 @@ from tests.mocks import MockLLMClient
 
 class Repository:
     def __init__(self):
-        self.sessions = []
         self.objectives = []
         self.related = []
 
@@ -34,9 +33,6 @@ class Repository:
         if token != "valid":
             raise StudentNotFoundError()
         return {"id": "student-one"}
-
-    def create_learning_session(self, **kwargs):
-        self.sessions.append(kwargs)
 
 
 @pytest.fixture
@@ -140,7 +136,6 @@ def test_topic_chat_preserves_authentication_course_check_and_session(api):
         ).status_code
         == 200
     )
-    assert repo.sessions[0]["student_id"] == "student-one"
     assert llm.calls == [
         [
             {
@@ -219,7 +214,6 @@ def test_start_learning_sends_saved_related_topics_and_nonempty_objectives_to_di
         "course": "machine_learning",
         "topic_id": "ml.machine_learning_basics",
     }
-    assert repository.sessions[0]["state"] == "topic_teaching"
 
 
 @pytest.mark.parametrize(
@@ -296,7 +290,6 @@ def test_clarification_sends_actual_dialogue_without_local_teaching_prompt(api):
         "course": "machine_learning",
         "topic_id": "ml.machine_learning_basics",
     }
-    assert repository.sessions[0]["state"] == "topic_clarification"
 
 
 def test_topic_practice_and_answer_continue_dify_with_short_queries_without_retrieval(
@@ -488,7 +481,6 @@ def test_free_chat_needs_no_course_and_keeps_cross_course_sources_and_native_his
     assert bodies[1]["query"] == "再举一个例子"
     assert bodies[1]["conversation_id"] == "free-conversation"
     assert all(body["inputs"] == {} for body in bodies)
-    assert repository.sessions == []
     rejected = client.post(
         "/api/v1/chat",
         headers={"Authorization": "Bearer valid"},

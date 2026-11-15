@@ -9,7 +9,6 @@ from typing import Any
 
 from app.core.exceptions import (
     CourseNotFoundError,
-    CourseTopicMismatchError,
     StudentNotFoundError,
     TopicNotFoundError,
 )
@@ -21,21 +20,15 @@ from app.db.database import PostgresConnection, PostgresDatabase
 
 
 class LearningRepository:
-    """Persistence for accounts, curriculum and Dify learning sessions."""
+    """Persistence for accounts, curriculum and learning scores."""
 
     TOPIC_STATE_UPDATE_FIELDS = frozenset(
         {
-            "alpha",
-            "beta",
             "mastery",
-            "confidence",
             "evidence_count",
             "attempt_count",
-            "practice_set_count",
-            "checkpoint_count",
             "latest_score",
             "best_score",
-            "latest_checkpoint_score",
             "status",
             "started_at",
             "last_practiced_at",
@@ -188,7 +181,7 @@ class LearningRepository:
         return dict(row)
 
     def upsert_curriculum(self, seeds: Sequence[CurriculumSeed]) -> None:
-        """Upsert stable topics and their placements atomically."""
+        """Upsert stable topics and their chapters atomically."""
 
         now = self._now()
         topics = [(seed.course.value, topic) for seed in seeds for topic in seed.topics]
@@ -236,51 +229,28 @@ class LearningRepository:
                 connection.execute(
                     """
                     INSERT INTO curriculum_topics (
-                        id, course, chapter_id, slug, title, stage, stage_title, order_index,
+                        id, course, chapter_id, title, order_index,
                         description, learning_objectives_json,
-                        active, created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(id) DO UPDATE SET
-                        slug = excluded.slug,
                         title = excluded.title,
                         chapter_id = excluded.chapter_id,
-                        stage = excluded.stage,
-                        stage_title = excluded.stage_title,
                         order_index = excluded.order_index,
                         description = excluded.description,
                         learning_objectives_json = excluded.learning_objectives_json,
-                        active = excluded.active,
                         updated_at = excluded.updated_at
                     """,
                     (
                         topic.id,
                         course,
                         chapter["id"],
-                        topic.slug,
                         topic.title,
-                        chapter["sort_order"],
-                        chapter["title"],
                         topic.order_index,
                         topic.description,
                         self._dump_json(topic.learning_objectives),
-                        int(topic.active),
                         now,
                         now,
-                    ),
-                )
-
-            for course, topic in topics:
-                chapter = chapters[(course, topic.stage)]
-                connection.execute(
-                    """INSERT INTO topic_placements(course_id,topic_id,parent_group_id,group_title,order_index)
-                    VALUES (?,?,?,?,?) ON CONFLICT(course_id,topic_id) DO UPDATE SET
-                    parent_group_id=excluded.parent_group_id,group_title=excluded.group_title,order_index=excluded.order_index""",
-                    (
-                        course,
-                        topic.id,
-                        chapter["id"],
-                        chapter["title"],
-                        topic.order_index,
                     ),
                 )
 
@@ -296,7 +266,6 @@ class LearningRepository:
         record = dict(row)
         for column, output in (("learning_objectives_json", "learning_objectives"),):
             record[output] = self._load_json(record.pop(column), [])
-        record["active"] = bool(record["active"])
         return record
 
     def require_course(self, course: Course | str) -> dict[str, Any]:
@@ -313,7 +282,6 @@ class LearningRepository:
         self,
         course: Course | str,
         *,
-        active_only: bool = True,
         student_id: str | None = None,
     ) -> list[dict[str, Any]]:
         course_value = (
@@ -321,7 +289,7 @@ class LearningRepository:
         )
         self.require_course(course_value)
         params: list[Any] = []
-        state_columns = "NULL AS state_status, NULL AS state_mastery, NULL AS state_confidence, NULL AS state_evidence_count, NULL AS state_latest_score"
+        state_columns = "NULL AS state_status, NULL AS state_mastery, NULL AS state_evidence_count, NULL AS state_latest_score"
         join = ""
         if student_id is not None:
             params.append(student_id)
@@ -331,18 +299,18 @@ class LearningRepository:
             )
             state_columns = (
                 "sts.status AS state_status, sts.mastery AS state_mastery, "
-                "sts.confidence AS state_confidence, sts.evidence_count AS state_evidence_count, sts.latest_score AS state_latest_score"
+                "sts.evidence_count AS state_evidence_count, sts.latest_score AS state_latest_score"
             )
         params.append(course_value)
-        active_clause = "AND t.active = 1" if active_only else ""
         with self._connect() as connection:
             rows = connection.execute(
                 f"""
-                SELECT t.*, {state_columns}
+                SELECT t.*, ch.sort_order AS stage, ch.title AS stage_title, {state_columns}
                 FROM curriculum_topics t
+                JOIN course_chapters ch ON ch.id=t.chapter_id AND ch.course_id=t.course
                 {join}
-                WHERE t.course = ? {active_clause}
-                ORDER BY t.stage, t.order_index
+                WHERE t.course = ?
+                ORDER BY ch.sort_order, t.order_index, t.id
                 """,
                 tuple(params),
             ).fetchall()
@@ -354,7 +322,7 @@ class LearningRepository:
         params: list[Any] = []
         join = ""
         state_columns = (
-            "NULL AS state_status, NULL AS state_mastery, NULL AS state_confidence, NULL AS state_evidence_count, NULL AS state_latest_score"
+            "NULL AS state_status, NULL AS state_mastery, NULL AS state_evidence_count, NULL AS state_latest_score"
         )
         if student_id is not None:
             params.append(student_id)
@@ -364,17 +332,18 @@ class LearningRepository:
             )
             state_columns = (
                 "sts.status AS state_status, sts.mastery AS state_mastery, "
-                "sts.confidence AS state_confidence, sts.evidence_count AS state_evidence_count, sts.latest_score AS state_latest_score"
+                "sts.evidence_count AS state_evidence_count, sts.latest_score AS state_latest_score"
             )
         params.append(topic_id)
         with self._connect() as connection:
             row = connection.execute(
                 f"""
-                SELECT t.*, {state_columns}
+                SELECT t.*, ch.sort_order AS stage, ch.title AS stage_title, {state_columns}
                 FROM curriculum_topics t
+                JOIN course_chapters ch ON ch.id=t.chapter_id AND ch.course_id=t.course
                 JOIN courses owner_course ON owner_course.id=t.course AND owner_course.active=1
                 {join}
-                WHERE t.id = ? AND t.active = 1
+                WHERE t.id = ?
                 """,
                 tuple(params),
             ).fetchone()
@@ -401,9 +370,10 @@ class LearningRepository:
                     WHEN relation.topic_a_id=? THEN relation.topic_b_id
                     ELSE relation.topic_a_id END
                 JOIN courses c ON c.id=t.course
+                JOIN course_chapters ch ON ch.id=t.chapter_id AND ch.course_id=t.course
                 WHERE (relation.topic_a_id=? OR relation.topic_b_id=?)
-                    AND relation.relation_type='related' AND t.active=1 AND c.active=1
-                ORDER BY c.title,c.id,t.stage,t.order_index,t.id
+                    AND relation.relation_type='related' AND c.active=1
+                ORDER BY c.title,c.id,ch.sort_order,t.order_index,t.id
                 """,
                 (topic_id, topic_id, topic_id),
             ).fetchall()
@@ -484,7 +454,7 @@ class LearningRepository:
             threshold = owner["completion_threshold"]
             status = "mastered" if score > threshold else "learning"
             topic = connection.execute("""SELECT id FROM curriculum_topics
-                WHERE id=? AND course=? AND active=1 FOR KEY SHARE""", (topic_id, str(course))).fetchone()
+                WHERE id=? AND course=? FOR KEY SHARE""", (topic_id, str(course))).fetchone()
             if topic is None:
                 raise TopicNotFoundError()
             row = connection.execute("""INSERT INTO student_topic_states(
@@ -507,44 +477,3 @@ class LearningRepository:
                                   status, now, now, now if status == "mastered" else None, now)).fetchone()
         return {**dict(row), "completion_threshold": threshold}
 
-    def create_learning_session(
-        self,
-        *,
-        student_id: str,
-        course: Course | str,
-        topic_id: str | None,
-        state: str,
-    ) -> str:
-        self.require_student(student_id, touch=False)
-        course_value = (
-            course.value if isinstance(course, Course) else Course(course).value
-        )
-        if topic_id is not None:
-            topic = self.require_topic(topic_id)
-            if topic["course"] != course_value:
-                raise CourseTopicMismatchError()
-        normalized_state = str(state).strip()
-        if not normalized_state:
-            raise ValueError("learning session state 不能为空")
-        session_id = str(uuid.uuid4())
-        now = self._now()
-        with self._connect() as connection:
-            connection.execute(
-                """
-                INSERT INTO learning_sessions(
-                    id, student_id, course, topic_id, state, started_at,
-                    created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    session_id,
-                    student_id,
-                    course_value,
-                    topic_id,
-                    normalized_state,
-                    now,
-                    now,
-                    now,
-                ),
-            )
-        return session_id

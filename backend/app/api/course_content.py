@@ -24,23 +24,17 @@ def outline(
             "SELECT id,title,sort_order FROM course_chapters WHERE course_id=? ORDER BY sort_order,id",
             (course.value,),
         ).fetchall()
-        placements = [
-            dict(row)
+        topics = [
+            repository._topic_record(row)
             for row in connection.execute(
-                """SELECT p.*
-            FROM topic_placements p JOIN curriculum_topics t ON t.id=p.topic_id AND t.course=p.course_id
+                """SELECT t.*,ch.title AS chapter_title,ch.sort_order AS chapter_order
+            FROM curriculum_topics t
             JOIN course_chapters ch ON ch.id=t.chapter_id AND ch.course_id=t.course
-            WHERE p.course_id=? AND t.active=1 ORDER BY ch.sort_order,p.order_index,t.id""",
+            WHERE t.course=? ORDER BY ch.sort_order,t.order_index,t.id""",
                 (course.value,),
             )
         ]
-        topic_ids = [placement["topic_id"] for placement in placements]
-        topics = {
-            row["id"]: repository._topic_record(row)
-            for row in connection.execute(
-                "SELECT * FROM curriculum_topics WHERE id = ANY(?)", (topic_ids,)
-            )
-        }
+        topic_ids = [topic["id"] for topic in topics]
         states = {}
         if student_id:
             states = {
@@ -62,18 +56,17 @@ def outline(
         for index, chapter in enumerate(chapters)
     }
     recommended = None
-    for placement in placements:
-        topic_id = placement["topic_id"]
-        topic = topics[topic_id]
+    for topic in topics:
+        topic_id = topic["id"]
         state = states.get(topic_id)
-        group_id = placement["parent_group_id"]
         group = groups.setdefault(
-            group_id,
+            topic["chapter_id"],
             {
-                "id": group_id,
-                "title": placement["group_title"],
+                "id": topic["chapter_id"],
+                "title": topic["chapter_title"],
                 "parent_group_id": None,
-                "order_index": len(groups),
+                "order_index": topic["chapter_order"] - 1,
+                "sort_order": topic["chapter_order"],
                 "topics": [],
             },
         )
@@ -85,7 +78,7 @@ def outline(
                 "title": topic["title"],
                 "description": topic["description"],
                 "learning_objectives": topic["learning_objectives"],
-                "order_index": placement["order_index"],
+                "order_index": topic["order_index"],
                 "status": status,
                 "mastery": float(state["mastery"])
                 if state and state["evidence_count"]
@@ -97,6 +90,6 @@ def outline(
     return {
         "course": course.value,
         "title": course_record["title"],
-        "groups": list(groups.values()),
+        "groups": sorted(groups.values(), key=lambda group: (group["sort_order"], group["id"])),
         "recommended_topic_id": recommended,
     }

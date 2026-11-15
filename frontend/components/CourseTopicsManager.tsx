@@ -351,7 +351,7 @@ export default function CourseTopicsManager({
         >
           <p className="text-sm text-slate-700">
             确定永久删除知识点“{removing.title}
-            ”？关联关系、学习状态、历史练习和相关会话记录将一并删除，无法恢复。
+            ”？关联关系、学习状态和作答分数将一并删除，无法恢复。
           </p>
           <div className="mt-3 flex gap-3">
             <button
@@ -464,12 +464,7 @@ export default function CourseTopicsManager({
                     onClick={(event) =>
                       setRemovingGroup({
                         group,
-                        topics: [
-                          ...group.topics,
-                          ...outline!.removed_topics.filter(
-                            (topic) => topic.parent_group_id === group.id,
-                          ),
-                        ],
+                        topics: group.topics,
                         returnFocus: event.currentTarget,
                       })
                     }
@@ -552,34 +547,6 @@ export default function CourseTopicsManager({
           </section>
         ))}
       </div>
-      {!!outline?.removed_topics.length && (
-        <details className="mt-8 rounded-2xl border border-slate-200 bg-white p-5">
-          <summary className="cursor-pointer text-sm font-medium text-slate-600">
-            历史待清理知识点（{outline.removed_topics.length}）
-          </summary>
-          <ul className="mt-3 divide-y divide-slate-100">
-            {outline.removed_topics.map((t) => (
-              <li
-                key={t.id}
-                className="flex items-center justify-between gap-4 py-3 text-sm"
-              >
-                <span>
-                  {t.title}
-                  <span className="ml-2 text-slate-400">{t.stage_title}</span>
-                </span>
-                <button
-                  disabled={interactionBusy}
-                  aria-label={`永久删除${t.title}`}
-                  className={`${actionClass} text-rose-700`}
-                  onClick={() => setRemoving(t)}
-                >
-                  永久删除
-                </button>
-              </li>
-            ))}
-          </ul>
-        </details>
-      )}
     </section>
   );
 }

@@ -3,7 +3,6 @@
   "topics": [
     {
       "id": "math.functions",
-      "slug": "functions",
       "title": "函数",
       "stage": 1,
       "stage_title": "函数与极限",
@@ -12,12 +11,10 @@
       "learning_objectives": [
         "确定常见函数的定义域和值域",
         "分析函数的单调性、奇偶性、周期性和有界性"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "math.sequence_limits",
-      "slug": "sequence_limits",
       "title": "数列极限",
       "stage": 1,
       "stage_title": "函数与极限",
@@ -26,12 +23,10 @@
       "learning_objectives": [
         "用 ε-N 语言表述数列极限",
         "使用极限运算法则和夹逼准则计算极限"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "math.function_limits",
-      "slug": "function_limits",
       "title": "函数极限",
       "stage": 1,
       "stage_title": "函数与极限",
@@ -40,12 +35,10 @@
       "learning_objectives": [
         "区分单侧极限与双侧极限",
         "运用等价无穷小和两个重要极限"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "math.continuity",
-      "slug": "continuity",
       "title": "连续性",
       "stage": 1,
       "stage_title": "函数与极限",
@@ -54,12 +47,10 @@
       "learning_objectives": [
         "用极限判断函数在一点连续",
         "分类间断点并应用介值定理"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "math.derivative_definition",
-      "slug": "derivative_definition",
       "title": "导数定义",
       "stage": 2,
       "stage_title": "一元函数微分学",
@@ -68,12 +59,10 @@
       "learning_objectives": [
         "使用定义计算简单函数导数",
         "判断可导、连续及左右导数的关系"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "math.derivative_rules",
-      "slug": "derivative_rules",
       "title": "求导法则",
       "stage": 2,
       "stage_title": "一元函数微分学",
@@ -82,12 +71,10 @@
       "learning_objectives": [
         "正确使用乘积、商和链式法则",
         "完成隐函数及高阶导数计算"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "math.mean_value_theorem",
-      "slug": "mean_value_theorem",
       "title": "微分中值定理",
       "stage": 2,
       "stage_title": "一元函数微分学",
@@ -96,12 +83,10 @@
       "learning_objectives": [
         "核对并陈述各中值定理的适用条件",
         "构造辅助函数证明等式或不等式"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "math.taylor_formula",
-      "slug": "taylor_formula",
       "title": "泰勒公式",
       "stage": 2,
       "stage_title": "一元函数微分学",
@@ -110,12 +95,10 @@
       "learning_objectives": [
         "写出常见函数的泰勒展开",
         "利用余项估计近似误差或计算极限"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "math.derivative_applications",
-      "slug": "derivative_applications",
       "title": "导数应用",
       "stage": 2,
       "stage_title": "一元函数微分学",
@@ -124,12 +107,10 @@
       "learning_objectives": [
         "通过导数绘制函数性态",
         "建立并求解一元最优化模型"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "math.indefinite_integral",
-      "slug": "indefinite_integral",
       "title": "不定积分",
       "stage": 3,
       "stage_title": "一元函数积分学",
@@ -138,12 +119,10 @@
       "learning_objectives": [
         "判断原函数族并写出积分常数",
         "使用基本积分表计算不定积分"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "math.definite_integral",
-      "slug": "definite_integral",
       "title": "定积分",
       "stage": 3,
       "stage_title": "一元函数积分学",
@@ -152,12 +131,10 @@
       "learning_objectives": [
         "用分割求和描述定积分",
         "运用定积分的线性、区间可加性和估值性质"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "math.fundamental_theorem_of_calculus",
-      "slug": "fundamental_theorem_of_calculus",
       "title": "微积分基本定理",
       "stage": 3,
       "stage_title": "一元函数积分学",
@@ -166,12 +143,10 @@
       "learning_objectives": [
         "陈述定理条件并计算变上限积分导数",
         "用原函数计算定积分"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "math.integration_methods",
-      "slug": "integration_methods",
       "title": "积分方法",
       "stage": 3,
       "stage_title": "一元函数积分学",
@@ -180,12 +155,10 @@
       "learning_objectives": [
         "根据被积函数结构选择积分方法",
         "正确处理换元边界和分部积分"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "math.integral_applications",
-      "slug": "integral_applications",
       "title": "定积分应用",
       "stage": 3,
       "stage_title": "一元函数积分学",
@@ -194,12 +167,10 @@
       "learning_objectives": [
         "建立几何量的积分表达式",
         "根据问题选择直角坐标或参数表示"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "math.partial_derivatives",
-      "slug": "partial_derivatives",
       "title": "偏导数",
       "stage": 4,
       "stage_title": "多元函数微分学",
@@ -208,12 +179,10 @@
       "learning_objectives": [
         "计算一阶和二阶偏导数",
         "解释偏导数作为坐标方向变化率"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "math.total_differential",
-      "slug": "total_differential",
       "title": "全微分",
       "stage": 4,
       "stage_title": "多元函数微分学",
@@ -222,12 +191,10 @@
       "learning_objectives": [
         "判断偏导存在与可微之间的关系",
         "使用全微分进行误差估计和近似计算"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "math.multivariable_extrema",
-      "slug": "multivariable_extrema",
       "title": "多元函数极值",
       "stage": 4,
       "stage_title": "多元函数微分学",
@@ -236,12 +203,10 @@
       "learning_objectives": [
         "用驻点和 Hessian 判别二元函数极值",
         "建立并求解条件极值问题"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "math.double_integral",
-      "slug": "double_integral",
       "title": "二重积分",
       "stage": 5,
       "stage_title": "多重积分与微分方程基础",
@@ -250,12 +215,10 @@
       "learning_objectives": [
         "根据积分区域建立累次积分",
         "正确进行极坐标变换并包含雅可比因子"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "math.triple_integral",
-      "slug": "triple_integral",
       "title": "三重积分",
       "stage": 5,
       "stage_title": "多重积分与微分方程基础",
@@ -264,12 +227,10 @@
       "learning_objectives": [
         "描述空间区域并确定积分次序",
         "在柱面或球面坐标下建立积分"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "math.first_order_ode",
-      "slug": "first_order_ode",
       "title": "一阶微分方程",
       "stage": 5,
       "stage_title": "多重积分与微分方程基础",
@@ -278,8 +239,7 @@
       "learning_objectives": [
         "识别并求解可分离变量方程",
         "使用常数变易或积分因子求解一阶线性方程"
-      ],
-      "active": true
+      ]
     }
   ]
 }

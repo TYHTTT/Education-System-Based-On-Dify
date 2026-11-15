@@ -26,7 +26,7 @@ class KnowledgeGraph:
                 SELECT t.id,t.course,t.title,t.description,ch.sort_order AS stage,ch.title AS stage_title,t.order_index
                 FROM curriculum_topics t JOIN courses c ON c.id=t.course
                 JOIN course_chapters ch ON ch.id=t.chapter_id AND ch.course_id=t.course
-                WHERE t.active=1 AND {visible_course}
+                WHERE {visible_course}
                 ORDER BY c.title,c.id,ch.sort_order,t.order_index,t.id
             """).fetchall()
             ]

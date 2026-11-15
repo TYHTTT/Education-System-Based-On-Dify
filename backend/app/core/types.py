@@ -34,11 +34,3 @@ class Course(str, Enum):
             cls, core_schema.str_schema(pattern=rf"^{COURSE_ID_PATTERN}$")
         )
 
-    @property
-    def display_name(self) -> str:
-        return {
-            self.MACHINE_LEARNING: "机器学习",
-            self.ADVANCED_MATHEMATICS: "高等数学",
-            self.LINEAR_ALGEBRA: "线性代数",
-            self.PROBABILITY_STATISTICS: "概率论与统计基础",
-        }.get(self, self.value)

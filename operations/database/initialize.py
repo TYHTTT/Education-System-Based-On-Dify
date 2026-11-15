@@ -18,7 +18,7 @@ SCHEMA_FILE = Path(__file__).with_name("initialize_postgresql.sql")
 
 
 def initialize_database(database_url: str) -> None:
-    """Create all current application tables, indexes, functions, and triggers."""
+    """Create the current application tables and indexes."""
 
     schema = SCHEMA_FILE.read_text(encoding="utf-8")
     with PostgresDatabase(database_url).connect() as connection:

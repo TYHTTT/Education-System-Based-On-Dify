@@ -9,14 +9,12 @@ class TopicSeed(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     id: str = Field(min_length=3)
-    slug: str = Field(pattern=r"^[a-z0-9]+(?:_[a-z0-9]+)*$")
     title: str = Field(min_length=1)
     stage: int = Field(ge=1)
     stage_title: str = Field(min_length=1)
     order_index: int = Field(ge=1)
     description: str = Field(min_length=1)
     learning_objectives: list[str] = Field(min_length=1)
-    active: bool = True
 
     @model_validator(mode="after")
     def validate_unique_lists(self) -> TopicSeed:
@@ -44,9 +42,6 @@ class CurriculumSeed(BaseModel):
         ids = [topic.id for topic in self.topics]
         if len(ids) != len(set(ids)):
             raise ValueError(f"{self.course.value} 存在重复知识点 ID")
-        slugs = [topic.slug for topic in self.topics]
-        if len(slugs) != len(set(slugs)):
-            raise ValueError(f"{self.course.value} 存在重复 slug")
         orders = [topic.order_index for topic in self.topics]
         if len(orders) != len(set(orders)):
             raise ValueError(f"{self.course.value} 存在重复 order_index")

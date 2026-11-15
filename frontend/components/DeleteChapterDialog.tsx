@@ -25,7 +25,6 @@ export default function DeleteChapterDialog({
   const messageId = useId();
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
-  const legacyCount = topics.filter((topic) => !topic.active).length;
   useEffect(() => {
     const element = dialog.current;
     if (!element) return;
@@ -93,11 +92,6 @@ export default function DeleteChapterDialog({
           确定永久删除“{group.title}”章节及其中的{" "}
           <strong>{topics.length}</strong> 个知识点？
         </p>
-        {legacyCount > 0 && (
-          <p className="mt-2 text-xs text-slate-500">
-            包含 {legacyCount} 个历史待清理知识点。
-          </p>
-        )}
         <ul
           aria-label="将被删除的知识点"
           className="mt-4 max-h-48 list-disc space-y-1 overflow-y-auto rounded-xl bg-slate-50 py-3 pl-8 pr-4 text-sm text-slate-600"
@@ -105,14 +99,11 @@ export default function DeleteChapterDialog({
           {topics.map((topic) => (
             <li key={topic.id} className="break-words">
               {topic.title}
-              {!topic.active && (
-                <span className="ml-2 text-xs text-slate-400">历史待清理</span>
-              )}
             </li>
           ))}
         </ul>
         <p className="mt-4 rounded-xl bg-rose-50 p-3 text-sm leading-6 text-rose-700">
-          这些知识点的关联关系、学习状态、历史练习和相关会话记录将一并删除，无法恢复。
+          这些知识点的关联关系、学习状态和作答分数将一并删除，无法恢复。
         </p>
         {error && (
           <div role="alert" className="mt-4 text-sm text-rose-700">

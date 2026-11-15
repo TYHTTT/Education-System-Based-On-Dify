@@ -9,10 +9,6 @@ from app.services.learning_service import LearningService
 from app.services.dify import DifyClient
 
 
-def settings_from_request(request: Request) -> Settings:
-    return request.app.state.settings
-
-
 def runtime_dify_settings(request: Request, course=None) -> Settings:
     snapshot = getattr(request.state, "runtime_dify_settings", None)
     if snapshot is None:

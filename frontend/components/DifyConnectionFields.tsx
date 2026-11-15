@@ -35,7 +35,7 @@ export default function DifyConnectionFields({
           className="form-field mt-1.5"
         />
         <span className="mt-1.5 block text-xs font-normal text-slate-500">
-          {apiKeyConfigured ? "密钥已保存，只有填写新密钥才会替换。" : "尚未配置密钥。"}保存后不回显明文。
+          {apiKeyConfigured ? "密钥已保存，只有填写新密钥才会替换。" : "尚未配置密钥。"}保存后不明文显示。
         </span>
       </label>
     </>

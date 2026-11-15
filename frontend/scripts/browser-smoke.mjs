@@ -88,7 +88,6 @@ const topics = [
   order_index: index,
   status: "learning",
   mastery: null,
-  confidence: null,
   evidence_count: 0,
   required_dimensions: ["concept"],
   dimensions: [],

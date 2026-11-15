@@ -10,23 +10,18 @@ from app.core.types import Course
 TopicStatus = Literal[
     "not_started",
     "learning",
-    "practicing",
-    "needs_remediation",
-    "ready_for_checkpoint",
     "mastered",
 ]
 
 
 class TopicSummaryResponse(BaseModel):
     id: str
-    slug: str
     title: str
     order_index: int
     description: str
     status: TopicStatus | None = None
     mastery: float | None = None
     mastery_display: str | None = None
-    confidence: float | None = None
     latest_score: float | None = None
     evidence_count: int = 0
 
@@ -47,6 +42,5 @@ class TopicDetailResponse(TopicSummaryResponse):
     stage: int
     stage_title: str
     learning_objectives: list[str]
-    active: bool
     created_at: datetime
     updated_at: datetime

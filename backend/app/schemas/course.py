@@ -86,7 +86,6 @@ class CourseTopicResponse(BaseModel):
     title: str
     stage: int
     stage_title: str
-    active: bool
 
 
 class CourseDetailResponse(AdminCourseResponse):

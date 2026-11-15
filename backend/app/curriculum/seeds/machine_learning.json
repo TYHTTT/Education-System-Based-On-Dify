@@ -3,7 +3,6 @@
   "topics": [
     {
       "id": "ml.machine_learning_basics",
-      "slug": "machine_learning_basics",
       "title": "机器学习基础",
       "stage": 1,
       "stage_title": "机器学习基础",
@@ -12,12 +11,10 @@
       "learning_objectives": [
         "说明机器学习与规则程序的区别",
         "识别特征、标签、模型和训练等基本概念"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.supervised_unsupervised",
-      "slug": "supervised_unsupervised",
       "title": "监督学习与无监督学习",
       "stage": 1,
       "stage_title": "机器学习基础",
@@ -26,12 +23,10 @@
       "learning_objectives": [
         "根据标签信息区分学习范式",
         "为实际问题选择合适的学习范式"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.dataset_split",
-      "slug": "dataset_split",
       "title": "数据集划分",
       "stage": 1,
       "stage_title": "机器学习基础",
@@ -40,12 +35,10 @@
       "learning_objectives": [
         "解释三类数据集的用途",
         "避免测试信息进入模型选择过程"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.bias_variance",
-      "slug": "bias_variance",
       "title": "偏差与方差",
       "stage": 1,
       "stage_title": "机器学习基础",
@@ -54,12 +47,10 @@
       "learning_objectives": [
         "解释高偏差和高方差的表现",
         "根据误差特征提出改进方向"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.overfitting_underfitting",
-      "slug": "overfitting_underfitting",
       "title": "过拟合与欠拟合",
       "stage": 1,
       "stage_title": "机器学习基础",
@@ -68,12 +59,10 @@
       "learning_objectives": [
         "通过训练与验证表现诊断拟合问题",
         "选择合适的正则化或模型复杂度策略"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.linear_regression",
-      "slug": "linear_regression",
       "title": "线性回归",
       "stage": 2,
       "stage_title": "基础模型与训练",
@@ -82,12 +71,10 @@
       "learning_objectives": [
         "写出线性回归的模型形式",
         "解释系数和预测值的含义"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.loss_function",
-      "slug": "loss_function",
       "title": "损失函数",
       "stage": 2,
       "stage_title": "基础模型与训练",
@@ -96,12 +83,10 @@
       "learning_objectives": [
         "区分单样本损失与经验风险",
         "解释损失函数与模型训练的关系"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.gradient_descent",
-      "slug": "gradient_descent",
       "title": "梯度下降",
       "stage": 2,
       "stage_title": "基础模型与训练",
@@ -110,12 +95,10 @@
       "learning_objectives": [
         "根据梯度写出参数更新公式",
         "分析学习率过大或过小的影响"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.regularization",
-      "slug": "regularization",
       "title": "正则化",
       "stage": 2,
       "stage_title": "基础模型与训练",
@@ -124,12 +107,10 @@
       "learning_objectives": [
         "比较 L1 与 L2 正则化",
         "解释正则化强度对拟合的影响"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.logistic_regression",
-      "slug": "logistic_regression",
       "title": "逻辑回归",
       "stage": 3,
       "stage_title": "分类",
@@ -138,12 +119,10 @@
       "learning_objectives": [
         "解释逻辑回归为何用于分类",
         "从线性得分理解分类概率和决策边界"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.sigmoid",
-      "slug": "sigmoid",
       "title": "Sigmoid 函数",
       "stage": 3,
       "stage_title": "分类",
@@ -152,12 +131,10 @@
       "learning_objectives": [
         "计算 Sigmoid 值及导数",
         "解释其在二分类概率建模中的作用"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.cross_entropy",
-      "slug": "cross_entropy",
       "title": "交叉熵",
       "stage": 3,
       "stage_title": "分类",
@@ -166,12 +143,10 @@
       "learning_objectives": [
         "写出二分类交叉熵",
         "解释交叉熵与伯努利似然的等价关系"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.classification_metrics",
-      "slug": "classification_metrics",
       "title": "分类评价指标",
       "stage": 3,
       "stage_title": "分类",
@@ -180,12 +155,10 @@
       "learning_objectives": [
         "根据混淆矩阵计算常用指标",
         "根据业务代价选择评价指标"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.knn",
-      "slug": "knn",
       "title": "K 近邻",
       "stage": 4,
       "stage_title": "经典机器学习模型",
@@ -194,12 +167,10 @@
       "learning_objectives": [
         "描述 KNN 预测流程",
         "分析 K 值、距离度量和特征缩放的影响"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.decision_tree",
-      "slug": "decision_tree",
       "title": "决策树",
       "stage": 4,
       "stage_title": "经典机器学习模型",
@@ -208,12 +179,10 @@
       "learning_objectives": [
         "解释信息增益或基尼指数",
         "分析树深度与过拟合的关系"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.random_forest",
-      "slug": "random_forest",
       "title": "随机森林",
       "stage": 4,
       "stage_title": "经典机器学习模型",
@@ -222,12 +191,10 @@
       "learning_objectives": [
         "解释随机森林降低方差的机制",
         "说明袋外样本和特征重要性的用途"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.gbdt",
-      "slug": "gbdt",
       "title": "梯度提升决策树",
       "stage": 4,
       "stage_title": "经典机器学习模型",
@@ -236,12 +203,10 @@
       "learning_objectives": [
         "解释 GBDT 的逐轮训练过程",
         "理解负梯度与残差拟合的关系"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.xgboost",
-      "slug": "xgboost",
       "title": "XGBoost",
       "stage": 4,
       "stage_title": "经典机器学习模型",
@@ -250,12 +215,10 @@
       "learning_objectives": [
         "说明 XGBoost 相对 GBDT 的关键改进",
         "解释二阶近似和树复杂度正则项"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.margin",
-      "slug": "margin",
       "title": "分类间隔",
       "stage": 5,
       "stage_title": "支持向量机",
@@ -264,12 +227,10 @@
       "learning_objectives": [
         "计算点到超平面的几何间隔",
         "解释最大间隔与泛化的关系"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.svm",
-      "slug": "svm",
       "title": "支持向量机",
       "stage": 5,
       "stage_title": "支持向量机",
@@ -278,12 +239,10 @@
       "learning_objectives": [
         "写出最大间隔优化目标",
         "解释支持向量为何决定分类面"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.kernel",
-      "slug": "kernel",
       "title": "核方法",
       "stage": 5,
       "stage_title": "支持向量机",
@@ -292,12 +251,10 @@
       "learning_objectives": [
         "解释核技巧避免显式映射的原因",
         "识别常用核函数和参数影响"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.soft_margin",
-      "slug": "soft_margin",
       "title": "软间隔 SVM",
       "stage": 5,
       "stage_title": "支持向量机",
@@ -306,12 +263,10 @@
       "learning_objectives": [
         "写出软间隔优化目标",
         "解释 C 参数对间隔与误分类的权衡"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.kmeans",
-      "slug": "kmeans",
       "title": "K-Means 聚类",
       "stage": 6,
       "stage_title": "无监督学习",
@@ -320,12 +275,10 @@
       "learning_objectives": [
         "执行一次分配与更新步骤",
         "分析初始化、K 值和尺度的影响"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.pca",
-      "slug": "pca",
       "title": "主成分分析",
       "stage": 6,
       "stage_title": "无监督学习",
@@ -334,12 +287,10 @@
       "learning_objectives": [
         "解释主成分的方差最大化含义",
         "说明协方差矩阵特征分解与 PCA 的关系"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.clustering_evaluation",
-      "slug": "clustering_evaluation",
       "title": "聚类评价",
       "stage": 6,
       "stage_title": "无监督学习",
@@ -348,12 +299,10 @@
       "learning_objectives": [
         "区分轮廓系数等内部指标与外部指标",
         "解释评价指标可能产生的偏好"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.cross_validation",
-      "slug": "cross_validation",
       "title": "交叉验证",
       "stage": 7,
       "stage_title": "机器学习工程",
@@ -362,12 +311,10 @@
       "learning_objectives": [
         "描述 K 折交叉验证流程",
         "避免交叉验证中的数据泄漏"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.feature_engineering",
-      "slug": "feature_engineering",
       "title": "特征工程",
       "stage": 7,
       "stage_title": "机器学习工程",
@@ -376,12 +323,10 @@
       "learning_objectives": [
         "针对数据类型选择特征处理方式",
         "使用训练数据拟合预处理步骤"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.hyperparameter_tuning",
-      "slug": "hyperparameter_tuning",
       "title": "超参数调优",
       "stage": 7,
       "stage_title": "机器学习工程",
@@ -390,12 +335,10 @@
       "learning_objectives": [
         "区分参数与超参数",
         "设计不污染测试集的调参流程"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.data_leakage",
-      "slug": "data_leakage",
       "title": "数据泄漏",
       "stage": 7,
       "stage_title": "机器学习工程",
@@ -404,12 +347,10 @@
       "learning_objectives": [
         "判断常见数据泄漏场景",
         "通过切分顺序和管道设计避免泄漏"
-      ],
-      "active": true
+      ]
     },
     {
       "id": "ml.imbalanced_learning",
-      "slug": "imbalanced_learning",
       "title": "不平衡学习",
       "stage": 7,
       "stage_title": "机器学习工程",
@@ -418,8 +359,7 @@
       "learning_objectives": [
         "选择适合不平衡任务的评价指标",
         "比较重采样、类别权重和阈值调整"
-      ],
-      "active": true
+      ]
     }
   ]
 }

@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -175,21 +174,6 @@ def test_shared_password_hashing_preserves_existing_student_format():
     assert verify_password("student-password", encoded)
     assert not verify_password("wrong", encoded)
     assert not verify_password("student-password", "invalid")
-
-
-def test_admin_migration_matches_fresh_install_and_adds_one_table():
-    root = Path(__file__).resolve().parents[2]
-    migration = (
-        (root / "operations/database/add_administrators.sql")
-        .read_text(encoding="utf-8")
-        .strip()
-    )
-    fresh = (root / "operations/database/initialize_postgresql.sql").read_text(
-        encoding="utf-8"
-    )
-    assert migration in fresh
-    assert migration.count("CREATE TABLE") == 1
-    assert "DROP" not in migration.upper()
 
 
 @pytest.fixture

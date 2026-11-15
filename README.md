@@ -89,9 +89,11 @@ npm run build
 
 业务数据存储在 `DATABASE_URL` 指向的 PostgreSQL 数据库中，课程资料由 Dify 管理。
 
+当前保留 9 张表：学生、管理员、学生登录会话、课程、章节、知识点、知识点关联、学生学习状态和自由问答 Dify 配置。知识点通过 `chapter_id` 关联章节，章节名称及顺序不再重复存储在知识点中。删除知识点、章节或课程均为永久删除，关联关系和学习分数同步清理。
+
 学生提交答案后，后端读取 AI 的本次总分（满分 100），保存最新分数、最高分及作答次数，并按该课程的完成门限更新知识点状态。新课程默认门限 `80`，严格高于门限标记“已完成”，等于或低于门限标记“学习中”，后续低分会改回学习中。管理员修改门限时，已保存的最新评分也会重新判定状态。仅作答评价会记录分数；讲解、追问和自由问答不会改变成绩。后端在作答请求中追加一条简短的评分格式要求，隐藏回复末尾的评分标记；未返回有效分数时提示未评分并保留原状态。
 
-旧数据库运行 `./backend/.venv/Scripts/python.exe operations/database/enable_admin_ai_settings.py`，将原环境变量里的 Dify 地址、密钥及门限迁入每门现有课程，并为自由问答创建独立配置。迁移只导入一次，不覆盖之后的后台设置，不创建备份、不运行测试。新部署由初始化脚本直接创建这些字段与配置表。
+新部署由初始化脚本直接创建当前表结构。历史一次性迁移脚本已删除；部署现有数据时，导入当前数据库导出的结构与数据。
 
 配置加密密钥与数据库分开存放：默认自动生成 `backend/.runtime/settings.key`，已排除 Git 跟踪；部署时需保持该文件持久化、不可随意更换。多实例部署可通过同一个 `SETTINGS_ENCRYPTION_KEY` 提供固定 Fernet 主密钥。Dify 密钥修改后新的请求立即生效，更换应用时已有对话可能需要重新开始。
 
@@ -103,14 +105,14 @@ backend/app/
   core/            # 环境配置、异常、日志与课程枚举
   curriculum/      # 四门课程目录与幂等同步
   db/              # PostgreSQL 连接
-  schemas/         # 当前请求响应及历史进度类型
+  schemas/         # 当前请求响应与学习状态类型
   services/        # Dify、会话签名、账户与学习状态
 frontend/
   app/             # 自由问答、登录、课程学习、知识图谱、课程管理、设置
   components/      # 对话、目录、输入及会话状态
   lib/             # 统一 API、类型、存储、参考答案分离
   tests/           # 存储兼容、对话恢复、答案展示与图谱布局测试
-operations/database/ # 初始化、备份和恢复
+operations/database/ # 当前数据库初始化结构和入口
 ```
 
 ## 当前 API
@@ -138,5 +140,5 @@ operations/database/ # 初始化、备份和恢复
 | `POST /api/v1/admin/courses/{course_id}/topics/groups/order` | 调整章节顺序 |
 | `GET /api/v1/curriculum/topics`、`topics/{topic_id}` | 知识点列表与详情 |
 | `GET /api/v1/courses/{course}/outline` | 分组课程目录 |
-| `GET /api/v1/learning/dashboard` | 课程概览和历史成绩 |
+| `GET /api/v1/learning/dashboard` | 课程概览和学习进度 |
 | `POST /api/v1/learning/topics/{topic_id}/start` | 保存开始学习状态 |

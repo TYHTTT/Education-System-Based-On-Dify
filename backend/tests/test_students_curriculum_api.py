@@ -95,7 +95,7 @@ def test_learning_request_touches_last_active_at(
     )
 
 
-def test_curriculum_response_hides_unstarted_beta_prior(
+def test_curriculum_response_hides_unscored_progress(
     postgres_test_database_url,
 ) -> None:
     client, repository = _client(postgres_test_database_url)
@@ -121,7 +121,7 @@ def test_curriculum_response_hides_unstarted_beta_prior(
     assert "locked_reason" not in second and "prerequisites" not in second
 
 
-def test_topic_detail_exposes_objectives_and_empty_dimension_state(
+def test_topic_detail_exposes_objectives(
     postgres_test_database_url,
 ) -> None:
     client, repository = _client(postgres_test_database_url)
@@ -138,11 +138,3 @@ def test_topic_detail_exposes_objectives_and_empty_dimension_state(
     payload = response.json()
     assert payload["id"] == "ml.logistic_regression"
     assert payload["learning_objectives"]
-    assert payload["required_dimensions"] == [
-        "concept",
-        "mathematics",
-        "mechanism",
-        "engineering",
-        "application",
-    ]
-    assert all(item["mastery"] is None for item in payload["dimensions"])

@@ -19,7 +19,6 @@ export interface RelatedTopic {
   course_active: boolean;
   chapter_id: string;
   chapter_title: string;
-  available: boolean;
 }
 export interface RelatedTopicCandidates {
   items: RelatedTopic[];
@@ -31,8 +30,6 @@ export interface RelatedTopicCandidates {
 export interface ManagedTopic extends TopicValues {
   id: string;
   course: string;
-  active: boolean;
-  parent_group_id: string;
   stage: number;
   stage_title: string;
   related_topic_ids: string[];
@@ -64,7 +61,6 @@ export interface TopicGroup {
 export interface ManagedOutline {
   course: { id: string; title: string; active: boolean };
   groups: TopicGroup[];
-  removed_topics: ManagedTopic[];
 }
 export function manageTopics(
   token: string,

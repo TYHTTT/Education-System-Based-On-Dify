@@ -13,16 +13,9 @@ def delete_topics(connection, topic_ids):
     connection.execute(
         "DELETE FROM student_topic_states WHERE topic_id=ANY(?)", (topic_ids,)
     )
-    # Explicit deletion avoids leaving SET NULL sessions behind.
-    connection.execute(
-        "DELETE FROM learning_sessions WHERE topic_id=ANY(?)", (topic_ids,)
-    )
     connection.execute(
         "DELETE FROM topic_relations WHERE topic_a_id=ANY(?) OR topic_b_id=ANY(?)",
         (topic_ids, topic_ids),
-    )
-    connection.execute(
-        "DELETE FROM topic_placements WHERE topic_id=ANY(?)", (topic_ids,)
     )
     connection.execute("DELETE FROM curriculum_topics WHERE id=ANY(?)", (topic_ids,))
 
@@ -40,7 +33,5 @@ def delete_course(connection, course_id):
         "SELECT id FROM curriculum_topics WHERE course=? ORDER BY id", (course_id,)
     ).fetchall()
     delete_topics(connection, [topic["id"] for topic in topics])
-    connection.execute("DELETE FROM learning_sessions WHERE course=?", (course_id,))
-    connection.execute("DELETE FROM topic_placements WHERE course_id=?", (course_id,))
     connection.execute("DELETE FROM course_chapters WHERE course_id=?", (course_id,))
     connection.execute("DELETE FROM courses WHERE id=?", (course_id,))

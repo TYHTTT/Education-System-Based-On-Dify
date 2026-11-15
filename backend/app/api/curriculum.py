@@ -13,7 +13,6 @@ from app.schemas.curriculum import (
     TopicDetailResponse,
     TopicSummaryResponse,
 )
-from app.services.learning_repository import LearningRepository
 
 router = APIRouter(prefix="/api/v1/curriculum", tags=["curriculum"])
 
@@ -23,7 +22,6 @@ def _mastery_display(value: float | None) -> str | None:
 
 
 def _student_view(
-    repository: LearningRepository,
     topic: dict,
     student_id: str | None,
 ) -> dict:
@@ -32,7 +30,6 @@ def _student_view(
             "status": None,
             "mastery": None,
             "mastery_display": None,
-            "confidence": None,
             "latest_score": None,
             "evidence_count": 0,
         }
@@ -41,29 +38,25 @@ def _student_view(
     status = stored_status or "not_started"
     evidence_count = int(topic.get("state_evidence_count") or 0)
     mastery = topic.get("state_mastery") if evidence_count > 0 else None
-    confidence = topic.get("state_confidence") if evidence_count > 0 else None
     return {
         "status": status,
         "mastery": mastery,
         "mastery_display": _mastery_display(mastery),
-        "confidence": confidence,
         "latest_score": topic.get("state_latest_score"),
         "evidence_count": evidence_count,
     }
 
 
 def _summary(
-    repository: LearningRepository,
     topic: dict,
     student_id: str | None,
 ) -> TopicSummaryResponse:
     return TopicSummaryResponse(
         id=topic["id"],
-        slug=topic["slug"],
         title=topic["title"],
         order_index=topic["order_index"],
         description=topic["description"],
-        **_student_view(repository, topic, student_id),
+        **_student_view(topic, student_id),
     )
 
 
@@ -84,7 +77,7 @@ def list_topics(
                 stage=topic["stage"], title=topic["stage_title"], topics=[]
             ),
         )
-        stage.topics.append(_summary(repository, topic, student_id))
+        stage.topics.append(_summary(topic, student_id))
     return CurriculumResponse(course=course, stages=list(grouped.values()))
 
 
@@ -97,14 +90,13 @@ def topic_detail(
     repository = learning_repository_from_request(request)
     student_id = student_id_from_authorization(authorization, repository)
     topic = repository.require_topic(topic_id, student_id=student_id)
-    summary = _summary(repository, topic, student_id)
+    summary = _summary(topic, student_id)
     return TopicDetailResponse(
         **summary.model_dump(),
         course=topic["course"],
         stage=topic["stage"],
         stage_title=topic["stage_title"],
         learning_objectives=topic["learning_objectives"],
-        active=topic["active"],
         created_at=topic["created_at"],
         updated_at=topic["updated_at"],
     )

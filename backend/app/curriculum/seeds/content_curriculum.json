@@ -5,7 +5,6 @@
       "topics": [
         {
           "id": "la.vectors",
-          "slug": "vectors",
           "title": "标量、向量与矩阵",
           "stage": 1,
           "stage_title": "机器学习数学基础",
@@ -13,12 +12,10 @@
           "description": "能够区分标量、向量、矩阵并写出形状。",
           "learning_objectives": [
             "能够区分标量、向量、矩阵并写出形状。"
-          ],
-          "active": true
+          ]
         },
         {
           "id": "la.dot_product",
-          "slug": "dot_product",
           "title": "向量内积",
           "stage": 1,
           "stage_title": "机器学习数学基础",
@@ -26,12 +23,10 @@
           "description": "能够逐项计算内积并用于线性预测。",
           "learning_objectives": [
             "能够逐项计算内积并用于线性预测。"
-          ],
-          "active": true
+          ]
         },
         {
           "id": "la.norm_distance",
-          "slug": "norm_distance",
           "title": "向量范数与欧氏距离",
           "stage": 1,
           "stage_title": "机器学习数学基础",
@@ -39,12 +34,10 @@
           "description": "能够计算L1、L2范数与欧氏距离。",
           "learning_objectives": [
             "能够计算L1、L2范数与欧氏距离。"
-          ],
-          "active": true
+          ]
         },
         {
           "id": "la.matrix_multiplication",
-          "slug": "matrix_multiplication",
           "title": "矩阵乘法与维度",
           "stage": 1,
           "stage_title": "机器学习数学基础",
@@ -52,12 +45,10 @@
           "description": "能够判断Xw是否可乘并写出结果形状。",
           "learning_objectives": [
             "能够判断Xw是否可乘并写出结果形状。"
-          ],
-          "active": true
+          ]
         },
         {
           "id": "la.transpose",
-          "slug": "transpose",
           "title": "转置",
           "stage": 1,
           "stage_title": "机器学习数学基础",
@@ -65,12 +56,10 @@
           "description": "能够写出转置并核对行列变化。",
           "learning_objectives": [
             "能够写出转置并核对行列变化。"
-          ],
-          "active": true
+          ]
         },
         {
           "id": "la.linear_systems",
-          "slug": "linear_systems",
           "title": "线性方程组",
           "stage": 1,
           "stage_title": "机器学习数学基础",
@@ -78,12 +67,10 @@
           "description": "能够用消元解二元一次方程组。",
           "learning_objectives": [
             "能够用消元解二元一次方程组。"
-          ],
-          "active": true
+          ]
         },
         {
           "id": "la.rank",
-          "slug": "rank",
           "title": "线性组合、相关与秩",
           "stage": 1,
           "stage_title": "机器学习数学基础",
@@ -91,12 +78,10 @@
           "description": "能够判断简单向量组的线性相关性。",
           "learning_objectives": [
             "能够判断简单向量组的线性相关性。"
-          ],
-          "active": true
+          ]
         },
         {
           "id": "la.projection",
-          "slug": "projection",
           "title": "正交与投影",
           "stage": 1,
           "stage_title": "机器学习数学基础",
@@ -104,12 +89,10 @@
           "description": "能够计算向量在单位方向的投影。",
           "learning_objectives": [
             "能够计算向量在单位方向的投影。"
-          ],
-          "active": true
+          ]
         },
         {
           "id": "la.eigenvectors",
-          "slug": "eigenvectors",
           "title": "特征值与特征向量",
           "stage": 1,
           "stage_title": "机器学习数学基础",
@@ -117,12 +100,10 @@
           "description": "能够检查Av=λv并解释缩放方向。",
           "learning_objectives": [
             "能够检查Av=λv并解释缩放方向。"
-          ],
-          "active": true
+          ]
         },
         {
           "id": "la.svd",
-          "slug": "svd",
           "title": "奇异值分解",
           "stage": 1,
           "stage_title": "机器学习数学基础",
@@ -130,8 +111,7 @@
           "description": "能够核对UΣVᵀ维度并说明低秩近似。",
           "learning_objectives": [
             "能够核对UΣVᵀ维度并说明低秩近似。"
-          ],
-          "active": true
+          ]
         }
       ]
     },
@@ -140,7 +120,6 @@
       "topics": [
         {
           "id": "prob.basics",
-          "slug": "basics",
           "title": "概率基本概念",
           "stage": 1,
           "stage_title": "机器学习数学基础",
@@ -148,12 +127,10 @@
           "description": "能够识别样本空间、事件并检查概率范围。",
           "learning_objectives": [
             "能够识别样本空间、事件并检查概率范围。"
-          ],
-          "active": true
+          ]
         },
         {
           "id": "prob.conditional_probability",
-          "slug": "conditional_probability",
           "title": "条件概率",
           "stage": 1,
           "stage_title": "机器学习数学基础",
@@ -161,12 +138,10 @@
           "description": "能够由联合概率与条件事件概率计算条件概率。",
           "learning_objectives": [
             "能够由联合概率与条件事件概率计算条件概率。"
-          ],
-          "active": true
+          ]
         },
         {
           "id": "prob.bayes",
-          "slug": "bayes",
           "title": "贝叶斯公式",
           "stage": 1,
           "stage_title": "机器学习数学基础",
@@ -174,12 +149,10 @@
           "description": "能够由先验和似然计算后验。",
           "learning_objectives": [
             "能够由先验和似然计算后验。"
-          ],
-          "active": true
+          ]
         },
         {
           "id": "prob.independence",
-          "slug": "independence",
           "title": "独立性",
           "stage": 1,
           "stage_title": "机器学习数学基础",
@@ -187,12 +160,10 @@
           "description": "能够用联合概率检查事件独立性。",
           "learning_objectives": [
             "能够用联合概率检查事件独立性。"
-          ],
-          "active": true
+          ]
         },
         {
           "id": "prob.distributions",
-          "slug": "distributions",
           "title": "随机变量与概率分布",
           "stage": 1,
           "stage_title": "机器学习数学基础",
@@ -200,12 +171,10 @@
           "description": "能够检查离散分布概率之和为1。",
           "learning_objectives": [
             "能够检查离散分布概率之和为1。"
-          ],
-          "active": true
+          ]
         },
         {
           "id": "prob.expectation_variance",
-          "slug": "expectation_variance",
           "title": "期望与方差",
           "stage": 1,
           "stage_title": "机器学习数学基础",
@@ -213,12 +182,10 @@
           "description": "能够计算离散变量的期望与方差。",
           "learning_objectives": [
             "能够计算离散变量的期望与方差。"
-          ],
-          "active": true
+          ]
         },
         {
           "id": "prob.covariance",
-          "slug": "covariance",
           "title": "协方差",
           "stage": 1,
           "stage_title": "机器学习数学基础",
@@ -226,12 +193,10 @@
           "description": "能够计算联合样本的协方差并解释符号。",
           "learning_objectives": [
             "能够计算联合样本的协方差并解释符号。"
-          ],
-          "active": true
+          ]
         },
         {
           "id": "prob.bernoulli",
-          "slug": "bernoulli",
           "title": "伯努利分布",
           "stage": 1,
           "stage_title": "机器学习数学基础",
@@ -239,12 +204,10 @@
           "description": "能够写出二分类观测的伯努利概率。",
           "learning_objectives": [
             "能够写出二分类观测的伯努利概率。"
-          ],
-          "active": true
+          ]
         },
         {
           "id": "prob.normal",
-          "slug": "normal",
           "title": "正态分布",
           "stage": 1,
           "stage_title": "机器学习数学基础",
@@ -252,12 +215,10 @@
           "description": "能够解释均值、方差与标准化。",
           "learning_objectives": [
             "能够解释均值、方差与标准化。"
-          ],
-          "active": true
+          ]
         },
         {
           "id": "prob.likelihood",
-          "slug": "likelihood",
           "title": "似然与极大似然估计",
           "stage": 1,
           "stage_title": "机器学习数学基础",
@@ -265,12 +226,10 @@
           "description": "能够区分参数和观测并写出伯努利样本似然。",
           "learning_objectives": [
             "能够区分参数和观测并写出伯努利样本似然。"
-          ],
-          "active": true
+          ]
         },
         {
           "id": "prob.entropy_gini",
-          "slug": "entropy_gini",
           "title": "信息熵与基尼不纯度",
           "stage": 1,
           "stage_title": "机器学习数学基础",
@@ -278,8 +237,7 @@
           "description": "能够计算二分类节点的信息熵和基尼不纯度。",
           "learning_objectives": [
             "能够计算二分类节点的信息熵和基尼不纯度。"
-          ],
-          "active": true
+          ]
         }
       ]
     },
@@ -288,7 +246,6 @@
       "topics": [
         {
           "id": "math.exponential_logarithmic",
-          "slug": "exponential_logarithmic",
           "title": "指数函数与对数函数",
           "stage": 8,
           "stage_title": "机器学习数学基础",
@@ -296,12 +253,10 @@
           "description": "能够计算指数与自然对数并说明定义域。",
           "learning_objectives": [
             "能够计算指数与自然对数并说明定义域。"
-          ],
-          "active": true
+          ]
         },
         {
           "id": "math.chain_rule",
-          "slug": "chain_rule",
           "title": "链式法则",
           "stage": 8,
           "stage_title": "机器学习数学基础",
@@ -309,12 +264,10 @@
           "description": "能够识别内外函数并逐层求导。",
           "learning_objectives": [
             "能够识别内外函数并逐层求导。"
-          ],
-          "active": true
+          ]
         },
         {
           "id": "math.gradient",
-          "slug": "gradient",
           "title": "梯度与方向导数",
           "stage": 8,
           "stage_title": "机器学习数学基础",
@@ -322,8 +275,7 @@
           "description": "能够将偏导组成梯度并解释最陡上升方向。",
           "learning_objectives": [
             "能够将偏导组成梯度并解释最陡上升方向。"
-          ],
-          "active": true
+          ]
         }
       ]
     }

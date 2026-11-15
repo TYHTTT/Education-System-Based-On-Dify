@@ -20,24 +20,6 @@ export const TOPIC_STATUS_META: Record<
     badge: "border-indigo-200 bg-indigo-50 text-indigo-700",
     border: "border-indigo-200",
   },
-  practicing: {
-    label: "待练习",
-    symbol: "✎",
-    badge: "border-violet-200 bg-violet-50 text-violet-700",
-    border: "border-violet-200",
-  },
-  needs_remediation: {
-    label: "需要补救",
-    symbol: "!",
-    badge: "border-amber-200 bg-amber-50 text-amber-800",
-    border: "border-amber-200",
-  },
-  ready_for_checkpoint: {
-    label: "待测试",
-    symbol: "◆",
-    badge: "border-cyan-200 bg-cyan-50 text-cyan-800",
-    border: "border-cyan-200",
-  },
   mastered: {
     label: "已完成",
     symbol: "✓",
@@ -49,11 +31,6 @@ export const TOPIC_STATUS_META: Record<
 export const NEXT_ACTION_LABELS: Record<string, string> = {
   start_learning: "开始知识点学习",
   continue_learning: "继续当前知识点学习",
-  teach: "查看针对性讲解",
-  practice: "继续主动练习",
-  remediate: "进行薄弱点补救",
-  take_checkpoint: "完成知识点综合验收",
-  continue_to_next_topic: "进入下一个知识点",
   course_completed: "课程学习已完成",
 };
 
@@ -75,24 +52,10 @@ export function percent(value?: number | null): string {
   return `${Math.round(Math.min(1, Math.max(0, value)) * 100)}%`;
 }
 
-/** Keep the uninformative Beta(1,1) prior out of student-facing progress. */
+/** Only display progress backed by a saved AI evaluation. */
 export function hasValidTopicEvidence(
-  topic: Pick<
-    CurriculumTopicSummary,
-    "status" | "mastery" | "mastery_display" | "confidence" | "evidence_count"
-  >,
+  topic: Pick<CurriculumTopicSummary, "status" | "mastery" | "evidence_count">,
 ): boolean {
   if (topic.status === "not_started") return false;
-  if (typeof topic.evidence_count === "number") return topic.evidence_count > 0;
-  if (topic.mastery_display?.trim() === "尚未评估") return false;
-
-  if (
-    (topic.confidence === null ||
-      topic.confidence === undefined ||
-      topic.confidence <= 0) &&
-    (topic.mastery === null || Math.abs(topic.mastery - 0.5) < 1e-9)
-  ) {
-    return false;
-  }
-  return topic.mastery !== null && topic.mastery !== undefined;
+  return (topic.evidence_count ?? 0) > 0 && topic.mastery != null;
 }

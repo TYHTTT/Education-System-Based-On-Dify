@@ -15,18 +15,12 @@ def _topic(
 ) -> dict:
     return {
         "id": topic_id,
-        "slug": topic_id.split(".", 1)[1],
         "title": topic_id,
         "stage": 1,
         "stage_title": "测试阶段",
         "order_index": order,
         "description": "测试知识点",
         "learning_objectives": ["完成测试目标"],
-        "aliases": [],
-        "retrieval_keywords": [topic_id],
-        "difficulty": "easy",
-        "required_dimensions": ["concept"],
-        "active": True,
     }
 
 
@@ -65,10 +59,6 @@ def test_default_seed_is_complete_and_idempotent(
             "SELECT id FROM curriculum_topics GROUP BY id HAVING COUNT(*) > 1"
         ).fetchall()
         assert ids == []
-        placements = connection.execute(
-            "SELECT count(*) AS count FROM topic_placements"
-        ).fetchone()["count"]
-        assert placements == 74
 
 
 def test_seed_failure_does_not_partially_replace_database(

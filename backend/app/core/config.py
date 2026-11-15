@@ -28,8 +28,7 @@ class Settings(BaseSettings):
 
     frontend_origin: str = "http://localhost:3000"
 
-    # Legacy environment credentials are imported by enable_admin_ai_settings.py.
-    # Runtime requests override these values with administrator-managed records.
+    # Runtime requests populate these values from administrator-managed records.
     dify_api_base_url: str = "https://api.dify.ai/v1"
     dify_api_key: SecretStr = SecretStr("")
     dify_timeout_seconds: float = Field(default=120, gt=0, le=600)

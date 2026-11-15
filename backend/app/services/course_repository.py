@@ -23,7 +23,7 @@ COURSE_GRAPH_COLORS = (
 
 
 COURSE_SELECT = """SELECT c.*,
-    (SELECT count(*) FROM curriculum_topics t WHERE t.course=c.id AND t.active=1) AS topic_count,
+    (SELECT count(*) FROM curriculum_topics t WHERE t.course=c.id) AS topic_count,
     (SELECT count(*) FROM course_chapters ch WHERE ch.course_id=c.id) AS stage_count
     FROM courses c"""
 
@@ -74,7 +74,9 @@ class CourseRepository:
                 result["topics"] = [
                     dict(topic)
                     for topic in connection.execute(
-                        "SELECT id,title,stage,stage_title,active FROM curriculum_topics WHERE course=? ORDER BY stage,order_index",
+                        """SELECT t.id,t.title,ch.sort_order AS stage,ch.title AS stage_title
+                        FROM curriculum_topics t JOIN course_chapters ch ON ch.id=t.chapter_id AND ch.course_id=t.course
+                        WHERE t.course=? ORDER BY ch.sort_order,t.order_index,t.id""",
                         (str(course_id),),
                     )
                 ]

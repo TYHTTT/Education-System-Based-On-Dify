@@ -45,40 +45,8 @@ export interface CourseDetail extends AdminCourseRecord {
     title: string;
     stage: number;
     stage_title: string;
-    active: boolean;
   }[];
 }
-
-/** Display fallbacks for stored citations and course symbols, not the active catalog. */
-export const COURSE_META: Record<
-  Course,
-  { label: string; shortLabel: string; description: string; accent: string }
-> = {
-  machine_learning: {
-    label: "机器学习",
-    shortLabel: "ML",
-    description: "模型、算法与实践",
-    accent: "indigo",
-  },
-  advanced_mathematics: {
-    label: "高等数学",
-    shortLabel: "∫",
-    description: "极限、微积分与定理",
-    accent: "cyan",
-  },
-  linear_algebra: {
-    label: "线性代数",
-    shortLabel: "Ax",
-    description: "向量、矩阵与几何",
-    accent: "violet",
-  },
-  probability_statistics: {
-    label: "概率论与统计基础",
-    shortLabel: "P",
-    description: "概率、分布与统计",
-    accent: "amber",
-  },
-};
 
 export interface Source {
   source_course?: Course | null;
@@ -153,9 +121,6 @@ export interface StoredChatState {
 export const TOPIC_STATUSES = [
   "not_started",
   "learning",
-  "practicing",
-  "needs_remediation",
-  "ready_for_checkpoint",
   "mastered",
 ] as const;
 
@@ -163,13 +128,8 @@ export type TopicStatus = (typeof TOPIC_STATUSES)[number];
 
 export type NextAction =
   | "start_learning"
-  | "teach"
-  | "practice"
-  | "remediate"
-  | "take_checkpoint"
-  | "continue_to_next_topic"
-  | "course_completed"
-  | string;
+  | "continue_learning"
+  | "course_completed";
 
 export interface AuthenticatedStudent {
   student_id: string;
@@ -194,14 +154,12 @@ export interface AuthenticatedAdmin extends Administrator {
 
 export interface CurriculumTopicSummary {
   id: string;
-  slug?: string;
   title: string;
   order_index?: number;
   description?: string;
   status: TopicStatus;
   mastery: number | null;
   mastery_display?: string | null;
-  confidence: number | null;
   evidence_count?: number;
   attempt_count?: number;
   latest_score?: number | null;
@@ -212,7 +170,6 @@ export interface CurriculumTopic extends CurriculumTopicSummary {
   stage: number;
   stage_title: string;
   learning_objectives: string[];
-  active?: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -236,7 +193,6 @@ export interface DashboardTopic {
   order_index: number;
   status: TopicStatus;
   mastery: number | null;
-  confidence: number | null;
 }
 
 export interface DashboardStage {

@@ -82,13 +82,6 @@ async def chat(
                 topic,
                 repository.get_related_topics(payload.topic_id),
             )
-        if student_id is not None and payload.learning_mode != "free_qa":
-            repository.create_learning_session(
-                student_id=student_id,
-                course=payload.course,
-                topic_id=payload.topic_id,
-                state=payload.learning_mode,
-            )
     if payload.learning_mode == "topic_answer":
         question = evaluation_question(question)
     agent = agent_from_request(request)

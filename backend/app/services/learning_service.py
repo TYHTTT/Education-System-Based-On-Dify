@@ -14,19 +14,13 @@ class LearningService:
 
     def start_topic(self, *, student_id: str, topic_id: str) -> dict[str, Any]:
         self.repository.require_student(student_id)
-        topic = self.repository.require_topic(topic_id, student_id=student_id)
+        self.repository.require_topic(topic_id, student_id=student_id)
         state = self.repository.ensure_topic_state(student_id, topic_id)
         if state["status"] != "mastered":
             changes: dict[str, Any] = {"status": "learning"}
             if not state.get("started_at"):
                 changes["started_at"] = self.repository._now()
-            state = self.repository.update_topic_state(student_id, topic_id, **changes)
-        self.repository.create_learning_session(
-            student_id=student_id,
-            course=topic["course"],
-            topic_id=topic_id,
-            state="learning",
-        )
+            self.repository.update_topic_state(student_id, topic_id, **changes)
         return self.topic_detail(student_id=student_id, topic_id=topic_id)
 
     def topic_detail(self, *, student_id: str, topic_id: str) -> dict[str, Any]:
@@ -53,7 +47,6 @@ class LearningService:
                 if state is not None and int(state["evidence_count"]) > 0
                 else "尚未评估"
             ),
-            "confidence": float(state["confidence"]) if state else 0.0,
         }
 
     def dashboard(self, *, student_id: str, course: Course) -> dict[str, Any]:
@@ -65,7 +58,6 @@ class LearningService:
                 {
                     "status": topic["state_status"],
                     "mastery": topic["state_mastery"],
-                    "confidence": topic["state_confidence"],
                     "evidence_count": topic["state_evidence_count"],
                 }
                 if topic["state_status"] is not None
@@ -84,7 +76,6 @@ class LearningService:
                         if state is not None and int(state["evidence_count"]) > 0
                         else None
                     ),
-                    "confidence": float(state["confidence"]) if state else 0.0,
                 }
             )
         current = self._current_topic(views)
@@ -114,9 +105,6 @@ class LearningService:
             for status in (
                 "mastered",
                 "learning",
-                "practicing",
-                "needs_remediation",
-                "ready_for_checkpoint",
                 "not_started",
             )
         }
@@ -127,15 +115,7 @@ class LearningService:
             "course": course.value,
             "total_topics": len(views),
             "mastered_count": counts["mastered"],
-            "learning_count": sum(
-                counts[item]
-                for item in (
-                    "learning",
-                    "practicing",
-                    "needs_remediation",
-                    "ready_for_checkpoint",
-                )
-            ),
+            "learning_count": counts["learning"],
             "not_started_count": counts["not_started"],
             "current_topic": current,
             "recommended_topic_id": decision.get("recommended_topic_id"),
@@ -156,10 +136,7 @@ class LearningService:
     @staticmethod
     def _current_topic(views: list[dict[str, Any]]) -> dict[str, Any] | None:
         for wanted in (
-            "needs_remediation",
             "learning",
-            "practicing",
-            "ready_for_checkpoint",
             "not_started",
         ):
             match = next((item for item in views if item["status"] == wanted), None)

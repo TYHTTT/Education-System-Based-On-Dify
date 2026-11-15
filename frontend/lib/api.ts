@@ -304,8 +304,7 @@ function normalizeTopic(payload: unknown): CurriculumTopic {
   const body = asRecord(payload);
   return {
     id: String(body.id ?? ""),
-    course: String(body.course ?? "machine_learning") as Course,
-    slug: typeof body.slug === "string" ? body.slug : undefined,
+    course: String(body.course ?? "") as Course,
     title: String(body.title ?? ""),
     stage: Number(body.stage ?? 0),
     stage_title: String(body.stage_title ?? ""),
@@ -320,14 +319,12 @@ function normalizeTopic(payload: unknown): CurriculumTopic {
     mastery: typeof body.mastery === "number" ? body.mastery : null,
     mastery_display:
       typeof body.mastery_display === "string" ? body.mastery_display : null,
-    confidence: typeof body.confidence === "number" ? body.confidence : null,
     evidence_count:
       typeof body.evidence_count === "number" ? body.evidence_count : undefined,
     attempt_count:
       typeof body.attempt_count === "number" ? body.attempt_count : undefined,
     latest_score:
       typeof body.latest_score === "number" ? body.latest_score : null,
-    active: typeof body.active === "boolean" ? body.active : undefined,
     created_at:
       typeof body.created_at === "string" ? body.created_at : undefined,
     updated_at:
@@ -370,7 +367,9 @@ export async function getLearningDashboard(
         ? body.recommended_topic_id
         : null,
     next_action:
-      typeof body.next_action === "string"
+      body.next_action === "start_learning" ||
+      body.next_action === "continue_learning" ||
+      body.next_action === "course_completed"
         ? body.next_action
         : "start_learning",
     reasons: strings(body.reasons),

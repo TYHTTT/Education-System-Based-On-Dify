@@ -128,13 +128,12 @@ export default function RelatedTopicsPicker({
             return (
               <li
                 key={id}
-                className={`flex min-w-0 max-w-full items-center gap-1 rounded-lg px-2 py-1 text-xs ${topic?.available === false ? "bg-amber-50 text-amber-800" : "bg-indigo-50 text-indigo-700"}`}
+                className="flex min-w-0 max-w-full items-center gap-1 rounded-lg bg-indigo-50 px-2 py-1 text-xs text-indigo-700"
               >
                 <span className="min-w-0 break-words">
                   {topic?.course_title ? `${topic.course_title} / ` : ""}
                   {topic?.chapter_title ? `${topic.chapter_title} / ` : ""}
                   {topic?.title ?? id}
-                  {topic?.available === false ? "（已不可用）" : ""}
                 </span>
                 <button
                   type="button"

@@ -1,5 +1,9 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { BookIcon } from "@/components/Icons";
-import { COURSE_META, type Source } from "@/lib/types";
+import { getCourses } from "@/lib/api";
+import type { Source } from "@/lib/types";
 
 interface SourcePanelProps {
   sources: Source[];
@@ -26,6 +30,22 @@ export default function SourcePanel({
   retrievalCount,
   compact = false,
 }: SourcePanelProps) {
+  const [courseTitles, setCourseTitles] = useState<Record<string, string>>({});
+  const hasCourseSources = sources.some((source) => source.source_course);
+  useEffect(() => {
+    if (!hasCourseSources) return;
+    const controller = new AbortController();
+    getCourses(controller.signal)
+      .then((courses) => {
+        if (!controller.signal.aborted)
+          setCourseTitles(
+            Object.fromEntries(courses.map((course) => [course.id, course.title])),
+          );
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [hasCourseSources]);
+
   if (sources.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-5 text-center">
@@ -84,7 +104,7 @@ export default function SourcePanel({
           <p className="mt-2 text-xs text-slate-500">{location(source)}</p>
           {source.source_course && (
             <p className="mt-1 text-xs text-indigo-700">
-              {COURSE_META[source.source_course]?.label ?? source.source_course}
+              {courseTitles[source.source_course] ?? source.source_course}
               {source.topic_id ? ` · ${source.topic_id}` : ""}
             </p>
           )}
