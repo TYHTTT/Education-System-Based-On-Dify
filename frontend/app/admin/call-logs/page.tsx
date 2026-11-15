@@ -1,50 +1,42 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { useAdmin } from "@/components/AdminProvider";
 import { message } from "@/components/AdminCourseForms";
 import { getAdminDifyCallLogs } from "@/lib/api";
-import type { DifyCallLogList, DifyCallLogSummary } from "@/lib/types";
-
-const BUSINESS_LABELS: Record<DifyCallLogSummary["business_type"], string> = {
-  free_qa: "自由问答",
-  topic_teaching: "知识点教学",
-  topic_clarification: "知识点追问",
-  topic_practice: "练习出题",
-  topic_answer: "作答评价",
-  diagnosis: "学习诊断",
-};
-const STATUSES: Record<
-  DifyCallLogSummary["status"],
-  { label: string; style: string }
-> = {
-  in_progress: { label: "进行中", style: "bg-sky-50 text-sky-700" },
-  succeeded: { label: "成功", style: "bg-emerald-50 text-emerald-700" },
-  failed: { label: "失败", style: "bg-rose-50 text-rose-700" },
-  timeout: { label: "超时", style: "bg-amber-50 text-amber-800" },
-  cancelled: { label: "已取消", style: "bg-surface text-steel" },
-};
-const TIME_FORMAT = new Intl.DateTimeFormat("zh-CN", {
-  timeZone: "Asia/Shanghai",
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-  second: "2-digit",
-  hour12: false,
-});
-
-function tokens(value: number | null) {
-  return value === null ? "未知" : value.toLocaleString("zh-CN");
-}
+import {
+  BUSINESS_LABELS,
+  STATUSES,
+  callLogPage,
+  formatCallTime,
+  formatCallTokens,
+  formatCallDuration,
+} from "@/lib/dify-call-logs";
+import type { DifyCallLogList } from "@/lib/types";
 
 export default function AdminCallLogsPage() {
+  return (
+    <Suspense
+      fallback={
+        <p role="status" className="page-container text-sm text-steel">
+          正在加载调用日志…
+        </p>
+      }
+    >
+      <CallLogsContent />
+    </Suspense>
+  );
+}
+
+function CallLogsContent() {
   const { withAdmin, status } = useAdmin();
+  const router = useRouter();
+  const page = callLogPage(useSearchParams().get("page"));
   const [data, setData] = useState<DifyCallLogList | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [page, setPage] = useState(1);
   const [version, setVersion] = useState(0);
 
   useEffect(() => {
@@ -63,7 +55,9 @@ export default function AdminCallLogsPage() {
           Math.ceil(result.total / result.page_size),
         );
         if (page > lastPage) {
-          setPage(lastPage);
+          router.replace(`/admin/call-logs?page=${lastPage}`, {
+            scroll: false,
+          });
           return;
         }
         setData(result);
@@ -77,7 +71,7 @@ export default function AdminCallLogsPage() {
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [withAdmin, status, page, version]);
+  }, [withAdmin, status, page, version, router]);
 
   function refresh() {
     setLoading(true);
@@ -88,7 +82,7 @@ export default function AdminCallLogsPage() {
   function changePage(next: number) {
     setLoading(true);
     setError("");
-    setPage(next);
+    router.push(`/admin/call-logs?page=${next}`, { scroll: false });
   }
 
   const busy = loading || (!error && data !== null && data.page !== page);
@@ -181,15 +175,26 @@ export default function AdminCallLogsPage() {
                   return (
                     <tr key={log.id} className="align-top hover:bg-surface/50">
                       <td className="whitespace-nowrap px-4 py-5 tabular-nums">
-                        <time dateTime={log.started_at}>
-                          {TIME_FORMAT.format(new Date(log.started_at))}
-                        </time>
-                        <p
-                          title={log.id}
-                          className="mt-1 font-mono text-xs text-steel"
+                        <Link
+                          href={`/admin/call-logs/${encodeURIComponent(log.id)}?page=${data.page}`}
+                          aria-label={`查看调用 ${log.id} 的详情`}
+                          className="group block outline-offset-4"
                         >
-                          {log.id.slice(0, 8)}
-                        </p>
+                          <time
+                            dateTime={log.started_at}
+                            className="group-hover:text-link"
+                          >
+                            {formatCallTime(log.started_at)}
+                          </time>
+                          <p title={log.id} className="mt-1 text-xs text-link">
+                            <span className="font-mono">
+                              {log.id.slice(0, 8)}
+                            </span>
+                            <span className="ml-2 group-hover:underline">
+                              查看详情 →
+                            </span>
+                          </p>
+                        </Link>
                       </td>
                       <td className="max-w-40 px-4 py-5">
                         <p className="break-words">
@@ -231,10 +236,10 @@ export default function AdminCallLogsPage() {
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-4 py-5 text-xs tabular-nums leading-6">
-                        <p>输入：{tokens(log.prompt_tokens)}</p>
-                        <p>输出：{tokens(log.completion_tokens)}</p>
+                        <p>输入：{formatCallTokens(log.prompt_tokens)}</p>
+                        <p>输出：{formatCallTokens(log.completion_tokens)}</p>
                         <p className="text-steel">
-                          总量：{tokens(log.total_tokens)}
+                          总量：{formatCallTokens(log.total_tokens)}
                         </p>
                       </td>
                       <td className="max-w-48 break-all px-4 py-5 tabular-nums">
@@ -250,11 +255,7 @@ export default function AdminCallLogsPage() {
                         )}
                       </td>
                       <td className="whitespace-nowrap px-4 py-5 tabular-nums">
-                        {log.duration_ms === null
-                          ? "—"
-                          : log.duration_ms < 1000
-                            ? `${log.duration_ms} 毫秒`
-                            : `${(log.duration_ms / 1000).toFixed(2)} 秒`}
+                        {formatCallDuration(log.duration_ms)}
                       </td>
                       <td
                         className="px-4 py-5 font-mono text-xs text-steel"

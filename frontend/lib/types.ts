@@ -51,6 +51,18 @@ export interface DifyCallLogList {
   page_size: number;
 }
 
+export interface DifyCallLogDetail extends DifyCallLogSummary {
+  request_id: string;
+  finished_at: string | null;
+  http_status: number | null;
+  error_code: "unexpected_error" | "upstream_error" | "http_error" | "transport_error" | "invalid_response" | "incomplete_response" | "timeout" | "cancelled" | null;
+  error_summary: string | null;
+  conversation_id: string | null;
+  message_id: string | null;
+  task_id: string | null;
+  workflow_run_id: string | null;
+}
+
 export interface CourseInput {
   title: string;
   description: string;

@@ -6,6 +6,7 @@ import type {
   AdminCourseRecord,
   FreeQaDifySettings,
   DifyCallLogList,
+  DifyCallLogDetail,
   CourseInput,
   CourseDetail,
   CourseList,
@@ -285,6 +286,17 @@ export function getAdminDifyCallLogs(
     cache: "no-store",
     signal,
   });
+}
+
+export function getAdminDifyCallLog(
+  token: string,
+  id: string,
+  signal?: AbortSignal,
+): Promise<DifyCallLogDetail> {
+  return request<DifyCallLogDetail>(
+    `/api/v1/admin/dify/call-logs/${encodeURIComponent(id)}`,
+    { headers: studentHeaders(token), cache: "no-store", signal },
+  );
 }
 
 export function saveAdminDifySettings(

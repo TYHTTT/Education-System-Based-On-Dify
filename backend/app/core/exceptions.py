@@ -32,6 +32,12 @@ class CallLogUnavailableError(AppError):
     public_message = "调用记录服务暂时不可用，请稍后重试"
 
 
+class CallLogNotFoundError(AppError):
+    status_code = 404
+    code = "DIFY_CALL_LOG_NOT_FOUND"
+    public_message = "调用记录不存在"
+
+
 class StudentNotFoundError(AppError):
     status_code = 404
     code = "STUDENT_NOT_FOUND"

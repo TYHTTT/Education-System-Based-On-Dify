@@ -39,3 +39,27 @@ class DifyCallLogList(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+class DifyCallLogDetail(DifyCallLogSummary):
+    request_id: str
+    finished_at: datetime | None
+    http_status: int | None
+    error_code: (
+        Literal[
+            "unexpected_error",
+            "upstream_error",
+            "http_error",
+            "transport_error",
+            "invalid_response",
+            "incomplete_response",
+            "timeout",
+            "cancelled",
+        ]
+        | None
+    )
+    error_summary: str | None
+    conversation_id: str | None
+    message_id: str | None
+    task_id: str | None
+    workflow_run_id: str | None

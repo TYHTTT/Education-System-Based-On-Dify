@@ -5,7 +5,19 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from uuid import uuid4
 
+from app.core.exceptions import CallLogNotFoundError
 from app.db.database import PostgresDatabase
+
+ERROR_SUMMARIES = {
+    "unexpected_error": "调用发生未预期错误，请结合调用状态和上游标识核对。",
+    "upstream_error": "Dify 返回处理失败事件。",
+    "http_error": "Dify 返回 HTTP 错误，请结合 HTTP 状态码检查服务配置或稍后重试。",
+    "transport_error": "连接 Dify 失败或传输过程中断。",
+    "invalid_response": "Dify 响应格式无效，无法完整解析。",
+    "incomplete_response": "Dify 返回空回答或响应未完整结束。",
+    "timeout": "等待 Dify 响应超时，上游可能仍在执行。",
+    "cancelled": "本次调用已取消，已发生的用量仍需核对。",
+}
 
 
 @dataclass(frozen=True)
@@ -53,6 +65,28 @@ class DifyCallLogRepository:
                 (page_size, (page - 1) * page_size),
             ).fetchall()
         return {"items": items, "total": total, "page": page, "page_size": page_size}
+
+    def get(self, call_id: str) -> dict:
+        with self.database.connect() as connection:
+            row = connection.execute(
+                """SELECT l.id,l.credential_id,l.student_id,
+                coalesce(s.display_name,s.username) AS student_name,
+                l.course_id,c.title AS course_title,l.topic_id,t.title AS topic_title,
+                l.business_type,l.is_anonymous,l.started_at,l.duration_ms,l.status,
+                l.prompt_tokens,l.completion_tokens,l.total_tokens,l.total_price,l.currency,
+                l.request_id,l.finished_at,l.http_status,l.error_code,
+                l.conversation_id,l.message_id,l.task_id,l.workflow_run_id
+                FROM dify_call_logs l
+                LEFT JOIN students s ON s.id=l.student_id
+                LEFT JOIN courses c ON c.id=l.course_id
+                LEFT JOIN curriculum_topics t ON t.id=l.topic_id
+                WHERE l.id=?""",
+                (call_id,),
+            ).fetchone()
+        if row is None:
+            raise CallLogNotFoundError()
+        row["error_summary"] = ERROR_SUMMARIES.get(row["error_code"])
+        return row
 
     def start(self, context: DifyCallContext, credential_id: str | None) -> str:
         call_id = str(uuid4())

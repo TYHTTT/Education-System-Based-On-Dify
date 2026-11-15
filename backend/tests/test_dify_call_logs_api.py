@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import Mock
+from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -43,7 +44,10 @@ def api(postgres_test_database_url):
     "authorization",
     [None, "Basic admin-session", "Bearer student-session", "Bearer invalid"],
 )
-def test_unauthorized_requests_never_query_call_logs(authorization):
+@pytest.mark.parametrize(
+    "endpoint", [PATH, PATH + "/00000000-0000-4000-8000-000000000000"]
+)
+def test_unauthorized_requests_never_query_call_logs(authorization, endpoint):
     logs = Mock(spec=DifyCallLogRepository)
     app = create_app(
         Settings(_env_file=None, app_env="test"),
@@ -53,10 +57,11 @@ def test_unauthorized_requests_never_query_call_logs(authorization):
     )
     with TestClient(app) as client:
         response = client.get(
-            PATH, headers={"Authorization": authorization} if authorization else {}
+            endpoint, headers={"Authorization": authorization} if authorization else {}
         )
     assert response.status_code == 401
     logs.list.assert_not_called()
+    logs.get.assert_not_called()
 
 
 def test_actual_student_session_cannot_access_call_logs(api):
@@ -65,6 +70,11 @@ def test_actual_student_session_cannot_access_call_logs(api):
         PATH, headers={"Authorization": "Bearer " + student["access_token"]}
     )
     assert response.status_code == 401
+    detail = client.get(
+        PATH + "/" + str(uuid4()),
+        headers={"Authorization": "Bearer " + student["access_token"]},
+    )
+    assert detail.status_code == 401
 
 
 def test_empty_list_and_no_store_header(api):
@@ -221,3 +231,172 @@ def test_anonymous_unknown_zero_and_deleted_entities_remain_visible(api):
     assert by_id[deleted_id]["course_title"] is None
     assert by_id[deleted_id]["topic_id"] == "removed-topic"
     assert by_id[deleted_id]["topic_title"] is None
+
+
+def test_detail_contains_request_ids_times_and_exact_usage_without_credentials(api):
+    client, logs, headers, student = api
+    context = DifyCallContext(
+        student_id=student["id"],
+        course_id="machine_learning",
+        business_type="topic_teaching",
+    )
+    call_id = logs.start(context, None)
+    ids = {
+        "conversation_id": "conversation-one",
+        "message_id": "message-one",
+        "task_id": "task-one",
+        "workflow_run_id": "workflow-one",
+    }
+    logs.finish(
+        call_id,
+        DifyCallOutcome(
+            status="succeeded",
+            error_code=None,
+            http_status=200,
+            identifiers=ids,
+            usage={
+                "prompt_tokens": 0,
+                "completion_tokens": 12,
+                "total_tokens": 12,
+                "total_price": Decimal("0.000123456789012345678901"),
+                "currency": "USD",
+            },
+        ),
+        42,
+        secret="app-secret",
+    )
+    response = client.get(f"{PATH}/{call_id}", headers=headers)
+    assert response.status_code == 200
+    assert response.headers["Cache-Control"] == "no-store"
+    item = response.json()
+    assert item["id"] == call_id
+    assert item["request_id"] == context.request_id
+    assert item["student_name"] == "测试学生"
+    assert item["student_id"] == student["id"]
+    assert item["course_title"] == "机器学习"
+    assert item["prompt_tokens"] == 0
+    assert item["completion_tokens"] == 12
+    assert item["total_price"] == "0.000123456789012345678901"
+    assert item["currency"] == "USD"
+    assert item["http_status"] == 200
+    assert item["error_code"] is None
+    assert item["error_summary"] is None
+    assert datetime.fromisoformat(item["finished_at"]) >= datetime.fromisoformat(
+        item["started_at"]
+    )
+    for name, value in ids.items():
+        assert item[name] == value
+    assert set(item) == {
+        "id",
+        "credential_id",
+        "student_id",
+        "student_name",
+        "course_id",
+        "course_title",
+        "topic_id",
+        "topic_title",
+        "business_type",
+        "is_anonymous",
+        "started_at",
+        "duration_ms",
+        "status",
+        "prompt_tokens",
+        "completion_tokens",
+        "total_tokens",
+        "total_price",
+        "currency",
+        "request_id",
+        "finished_at",
+        "http_status",
+        "error_code",
+        "error_summary",
+        "conversation_id",
+        "message_id",
+        "task_id",
+        "workflow_run_id",
+    }
+    for forbidden in (
+        "api_key",
+        "key_fingerprint",
+        "prompt",
+        "answer",
+        "headers",
+        "error_body",
+    ):
+        assert forbidden not in item
+
+
+@pytest.mark.parametrize(
+    "code,status,http_status,summary_part",
+    [
+        ("unexpected_error", "failed", None, "未预期错误"),
+        ("upstream_error", "failed", 200, "处理失败"),
+        ("http_error", "failed", 401, "HTTP 错误"),
+        ("transport_error", "failed", None, "传输过程中断"),
+        ("invalid_response", "failed", 200, "格式无效"),
+        ("incomplete_response", "failed", 200, "未完整结束"),
+        ("timeout", "timeout", 200, "上游可能仍在执行"),
+        ("cancelled", "cancelled", None, "已取消"),
+    ],
+)
+def test_detail_generates_safe_error_summaries(
+    api, code, status, http_status, summary_part
+):
+    client, logs, headers, _ = api
+    secret = "app-never-display-secret"
+    call_id = logs.start(DifyCallContext(), None)
+    logs.finish(
+        call_id,
+        DifyCallOutcome(
+            status=status,
+            error_code=code,
+            http_status=http_status,
+            identifiers={"message_id": secret, "task_id": "valid-task"},
+        ),
+        10,
+        secret=secret,
+    )
+    response = client.get(f"{PATH}/{call_id}", headers=headers)
+    assert response.status_code == 200
+    item = response.json()
+    assert item["status"] == status
+    assert item["error_code"] == code
+    assert item["http_status"] == http_status
+    assert summary_part in item["error_summary"]
+    assert item["total_price"] is None
+    assert item["total_tokens"] is None
+    assert item["message_id"] is None
+    assert item["task_id"] == "valid-task"
+    assert secret not in response.text
+
+
+def test_pending_and_historical_detail_remain_readable(api):
+    client, logs, headers, student = api
+    call_id = logs.start(
+        DifyCallContext(
+            student_id=student["id"],
+            course_id="removed-course",
+            topic_id="removed-topic",
+        ),
+        None,
+    )
+    with logs.database.connect() as connection:
+        connection.execute("DELETE FROM students WHERE id=?", (student["id"],))
+    item = client.get(f"{PATH}/{call_id}", headers=headers).json()
+    assert item["status"] == "in_progress"
+    assert item["finished_at"] is None
+    assert item["duration_ms"] is None
+    assert item["total_tokens"] is None
+    assert item["error_summary"] is None
+    assert item["student_name"] is None
+    assert item["student_id"] == student["id"]
+    assert item["course_id"] == "removed-course"
+    assert item["topic_id"] == "removed-topic"
+
+
+def test_unknown_and_invalid_call_id_are_handled(api):
+    client, _, headers, _ = api
+    response = client.get(f"{PATH}/{uuid4()}", headers=headers)
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "DIFY_CALL_LOG_NOT_FOUND"
+    assert client.get(f"{PATH}/not-a-uuid", headers=headers).status_code == 422

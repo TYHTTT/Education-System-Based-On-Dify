@@ -1,7 +1,9 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, Query, Request, Response
 
 from app.api.admins import require_admin
-from app.schemas.dify_call_logs import DifyCallLogList
+from app.schemas.dify_call_logs import DifyCallLogDetail, DifyCallLogList
 
 router = APIRouter(
     prefix="/api/v1/admin/dify/call-logs",
@@ -21,3 +23,9 @@ def list_call_logs(
     return request.app.state.dify_call_log_repository.list(
         page=page, page_size=page_size
     )
+
+
+@router.get("/{call_id}", response_model=DifyCallLogDetail)
+def call_log_detail(call_id: UUID, request: Request, response: Response):
+    response.headers["Cache-Control"] = "no-store"
+    return request.app.state.dify_call_log_repository.get(str(call_id))
