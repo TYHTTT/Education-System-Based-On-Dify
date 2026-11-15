@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import GraphNodeCallout from "@/components/GraphNodeCallout";
 import {
   graphNeighbors,
   layoutGraph,
@@ -144,6 +145,7 @@ export default function KnowledgeGraphView({
     for (const node of [...positions].sort(
       (a, b) => priority(b) - priority(a),
     )) {
+      if (node.id === detail?.id) continue;
       const important =
         node.id === activeId || related?.has(node.id) || matchIds.has(node.id);
       if (!important && (!labels || view.scale < 0.42)) continue;
@@ -188,7 +190,7 @@ export default function KnowledgeGraphView({
       }
     }
     return visible;
-  }, [positions, activeId, related, matchIds, labels, view, size]);
+  }, [positions, activeId, detail?.id, related, matchIds, labels, view, size]);
 
   useEffect(() => {
     simulation.current = {
@@ -627,9 +629,16 @@ export default function KnowledgeGraphView({
       </div>
 
       {detail ? (
-        <aside
-          aria-label="知识点详情"
-          className="graph-panel absolute bottom-5 left-4 z-10 max-h-[min(380px,55%)] w-[min(310px,calc(100%-88px))] overflow-y-auto rounded-xl p-4 sm:bottom-6 sm:left-6"
+        <GraphNodeCallout
+          key={detail.id}
+          anchor={{ x: detail.x * view.scale + view.x, y: detail.y * view.scale + view.y }}
+          radius={Math.max(detail.radius * view.scale, 3.5) + 2}
+          viewport={size}
+          nodes={positions.filter((node) => node.id !== detail.id).map((node) => ({
+            x: node.x * view.scale + view.x,
+            y: node.y * view.scale + view.y,
+            radius: Math.max(node.radius * view.scale, 3.5),
+          }))}
         >
           <div className="flex items-start justify-between gap-2">
             <p
@@ -686,7 +695,7 @@ export default function KnowledgeGraphView({
             {admin ? "查看课程" : "学习此知识点"}
             <span aria-hidden="true">↗</span>
           </Link>
-        </aside>
+        </GraphNodeCallout>
       ) : (
         <div className="absolute bottom-5 left-4 z-10 max-w-[calc(100%-85px)] sm:bottom-6 sm:left-6">
           {!data.edges.length && (

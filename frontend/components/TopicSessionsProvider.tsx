@@ -18,6 +18,7 @@ import {
   saveTopicSessions,
   topicChatKey,
   type TopicChatState,
+  type TopicSessions,
 } from "@/lib/topic-chat-storage";
 import type { Course } from "@/lib/types";
 
@@ -30,6 +31,7 @@ type SessionContext = {
   begin: (key: string) => AbortController | null;
   finish: (key: string, controller: AbortController) => void;
   stop: (key: string) => void;
+  clear: (key: string) => void;
   rememberPath: (path: string) => void;
 };
 const Context = createContext<SessionContext | null>(null);
@@ -42,11 +44,18 @@ function SessionStore({
   children: ReactNode;
 }) {
   const [sessions, setSessions] = useState(() => loadTopicSessions(studentId));
+  const currentSessions = useRef(sessions);
   const [storageError, setStorageError] = useState(false);
   const controllers = useRef(new Map<string, AbortController>());
+  const updateSessions = useCallback((updater: (current: TopicSessions) => TopicSessions) => {
+    const next = updater(currentSessions.current);
+    currentSessions.current = next;
+    setSessions(next);
+    return next;
+  }, []);
   useEffect(() => {
     const timer = window.setTimeout(
-      () => setStorageError(!saveTopicSessions(studentId, sessions)),
+      () => setStorageError(!saveTopicSessions(studentId, currentSessions.current)),
       0,
     );
     return () => window.clearTimeout(timer);
@@ -59,14 +68,14 @@ function SessionStore({
     };
   }, []);
   const update = useCallback((key: string, updater: Update) => {
-    setSessions((current) => ({
+    updateSessions((current) => ({
       ...current,
       chats: {
         ...current.chats,
         [key]: updater(current.chats[key] ?? emptyTopicChat()),
       },
     }));
-  }, []);
+  }, [updateSessions]);
   const begin = useCallback((key: string) => {
     if (controllers.current.has(key)) return null;
     const controller = new AbortController();
@@ -88,12 +97,23 @@ function SessionStore({
   const stop = useCallback((key: string) => {
     controllers.current.get(key)?.abort();
   }, []);
+  const clear = useCallback((key: string) => {
+    controllers.current.get(key)?.abort();
+    controllers.current.delete(key);
+    const next = updateSessions((current) => {
+      const chats = { ...current.chats };
+      delete chats[key];
+      return { ...current, chats };
+    });
+    // Persist before returning so an immediate reload cannot restore deleted content.
+    setStorageError(!saveTopicSessions(studentId, next));
+  }, [studentId, updateSessions]);
   const rememberPath = useCallback((path: string) => {
     if (isLearningPath(path))
-      setSessions((current) =>
+      updateSessions((current) =>
         current.lastPath === path ? current : { ...current, lastPath: path },
       );
-  }, []);
+  }, [updateSessions]);
   const context = useMemo(
     () => ({
       chats: sessions.chats,
@@ -103,9 +123,10 @@ function SessionStore({
       begin,
       finish,
       stop,
+      clear,
       rememberPath,
     }),
-    [sessions, storageError, update, begin, finish, stop, rememberPath],
+    [sessions, storageError, update, begin, finish, stop, clear, rememberPath],
   );
   return <Context.Provider value={context}>{children}</Context.Provider>;
 }
@@ -135,6 +156,7 @@ export function useTopicConversation(course: Course, topicId: string) {
     begin: beginSession,
     finish: finishSession,
     stop: stopSession,
+    clear: clearSession,
   } = context;
   const key = topicChatKey(course, topicId);
   const update = useCallback(
@@ -147,12 +169,14 @@ export function useTopicConversation(course: Course, topicId: string) {
     [finishSession, key],
   );
   const stop = useCallback(() => stopSession(key), [stopSession, key]);
+  const clear = useCallback(() => clearSession(key), [clearSession, key]);
   return {
     state: context.chats[key] ?? emptyTopicChat(),
     update,
     begin,
     finish,
     stop,
+    clear,
     rememberPath: context.rememberPath,
     storageError: context.storageError,
   };

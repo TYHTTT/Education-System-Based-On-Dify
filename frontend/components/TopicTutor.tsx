@@ -233,10 +233,6 @@ export default function TopicTutor({
                       )}
                     </p>
                   )}
-                  <p className="mb-5 flex items-center gap-2 text-xs font-semibold text-indigo-600">
-                    <SparklesIcon className="size-4" />
-                    Course Coach
-                  </p>
                   <MarkdownRenderer
                     content={practice?.question ?? turn.response.answer}
                   />

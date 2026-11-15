@@ -6,11 +6,12 @@ import { useCallback, useEffect, useState } from "react";
 import { useCourseOutline } from "@/components/CourseLayout";
 import { LoadingBlock, TopicStatusBadge } from "@/components/LearningWidgets";
 import TopicTutor from "@/components/TopicTutor";
-import { ArrowLeftIcon, ArrowRightIcon } from "@/components/Icons";
+import { ArrowLeftIcon, ArrowRightIcon, TrashIcon } from "@/components/Icons";
 import { useStudent } from "@/components/StudentProvider";
 import { getTopic, startTopic } from "@/lib/api";
 import type { Course, CurriculumTopic } from "@/lib/types";
 import { useCourseCatalog } from "@/components/CourseCatalogProvider";
+import { useTopicConversation } from "@/components/TopicSessionsProvider";
 
 export default function TopicLearningPage() {
   const params = useParams<{ course: string; topicId: string }>();
@@ -34,6 +35,11 @@ function TopicContent({
   const catalog = useCourseCatalog();
   const courseRecord = catalog.courses.find((item) => item.id === courseId);
   const { outline, topicHref, refresh } = useCourseOutline();
+  const { state: conversation, clear } = useTopicConversation(courseId, topicId);
+  const hasConversation = Boolean(
+    conversation.turns.length || conversation.pending || conversation.failure ||
+    conversation.drafts.answer || conversation.drafts.clarification,
+  );
   const [topic, setTopic] = useState<CurriculumTopic | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -142,6 +148,18 @@ function TopicContent({
           aria-label="知识点导航"
           className="flex shrink-0 items-center gap-1"
         >
+          <button
+            type="button"
+            aria-label="清空当前知识点聊天"
+            disabled={!hasConversation}
+            onClick={() => {
+              if (window.confirm(`确定清空“${topic.title}”的本地聊天记录和未提交草稿吗？其他知识点的记录不受影响。`)) clear();
+            }}
+            className="btn-danger gap-1.5 px-2.5 py-1.5 text-xs sm:px-3 sm:text-sm"
+          >
+            <TrashIcon className="size-4" />
+            清空聊天
+          </button>
           {previous && (
             <Link
               href={topicHref(previous)}

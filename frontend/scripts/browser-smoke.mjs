@@ -185,8 +185,10 @@ await page.route("**/api/v1/**", async (route) => {
         conversation_token:
           body.conversation_token || "browser-free-conversation",
       });
-    if (body.learning_mode === "topic_practice" && practiceGate)
+    if (body.learning_mode === "topic_practice" && practiceGate) {
       await practiceGate;
+      if (request.failure()) return;
+    }
     return chatFailure
       ? json(
           route,
@@ -515,6 +517,80 @@ try {
   await page.screenshot({
     path: path.join(artifacts, "topic-learning-mobile.png"),
   });
+  const clearTopic = page.getByRole("button", { name: "清空当前知识点聊天", exact: true });
+  await page.getByRole("button", { name: "没看懂", exact: true }).click();
+  await questionForm.getByRole("textbox").fill("清空时也应删除的草稿");
+  const preserved = await page.evaluate(() => {
+    const sessions = JSON.parse(localStorage.getItem("course-coach:topic-sessions:v1:browser-student"));
+    const otherStudent = JSON.stringify({ chats: {}, lastPath: null, marker: "保留其他学生数据" });
+    localStorage.setItem("course-coach:topic-sessions:v1:other-student", otherStudent);
+    return {
+      topic: sessions.chats["machine_learning:ml.machine_learning_basics"],
+      freeChat: localStorage.getItem("course-coach:chat-state:v1"),
+      otherStudent,
+    };
+  });
+  page.once("dialog", async (dialog) => {
+    assert.equal(dialog.type(), "confirm");
+    assert.match(dialog.message(), /本地聊天记录和未提交草稿/);
+    await dialog.dismiss();
+  });
+  await clearTopic.click();
+  assert.equal(await questionForm.getByRole("textbox").inputValue(), "清空时也应删除的草稿");
+  assert.equal(await page.getByRole("article", { name: "知识点讲解", exact: true }).count(), 1);
+  page.once("dialog", (dialog) => dialog.accept());
+  await clearTopic.click();
+  await start.waitFor();
+  assert.equal(await clearTopic.isDisabled(), true);
+  const cleared = await page.evaluate(() => {
+    const sessions = JSON.parse(localStorage.getItem("course-coach:topic-sessions:v1:browser-student"));
+    return {
+      removed: sessions.chats["machine_learning:ml.supervised_learning"],
+      topic: sessions.chats["machine_learning:ml.machine_learning_basics"],
+      freeChat: localStorage.getItem("course-coach:chat-state:v1"),
+      otherStudent: localStorage.getItem("course-coach:topic-sessions:v1:other-student"),
+    };
+  });
+  assert.equal(cleared.removed, undefined);
+  assert.deepEqual(cleared.topic, preserved.topic);
+  assert.equal(cleared.freeChat, preserved.freeChat);
+  assert.equal(cleared.otherStudent, preserved.otherStudent);
+  await page.reload();
+  await start.waitFor();
+  assert.equal(await page.getByRole("article", { name: "知识点讲解", exact: true }).count(), 0);
+  assert.equal(await clearTopic.isDisabled(), true);
+  await start.click();
+  await page.getByRole("article", { name: "知识点讲解", exact: true }).waitFor();
+  const restarted = requests.filter((item) => item.endpoint.endsWith("/chat")).at(-1).body;
+  assert.equal(restarted.topic_id, topics[1].id);
+  assert.equal(restarted.conversation_token, undefined);
+  assert.deepEqual(restarted.history, []);
+  await page.getByRole("button", { name: "没看懂", exact: true }).click();
+  assert.equal(await questionForm.getByRole("textbox").inputValue(), "");
+  await questionForm.getByRole("button", { name: "收起", exact: true }).click();
+
+  // Clear while an answer is in flight; aborting must not recreate the removed chat.
+  practiceGate = new Promise((resolve) => { releasePractice = resolve; });
+  await page.getByRole("button", { name: "做练习", exact: true }).click();
+  await pendingStatus.waitFor();
+  const abortedPractice = page.waitForEvent("requestfailed", {
+    predicate: (request) => request.url().includes("/api/v1/chat") && request.postDataJSON()?.learning_mode === "topic_practice",
+  });
+  page.once("dialog", (dialog) => dialog.accept());
+  await clearTopic.click();
+  await abortedPractice;
+  await start.waitFor();
+  releasePractice();
+  practiceGate = null;
+  await page.reload();
+  await start.waitFor();
+  assert.equal(await page.getByRole("article", { name: "练习题", exact: true }).count(), 0);
+  assert.equal(await clearTopic.isDisabled(), true);
+  await start.click();
+  await page.getByRole("article", { name: "知识点讲解", exact: true }).waitFor();
+  assert.equal(requests.filter((item) => item.endpoint.endsWith("/chat")).at(-1).body.conversation_token, undefined);
+  await page.goto(`${baseUrl}/learn/machine_learning/${topics[0].id}`);
+  await page.getByRole("article", { name: "作答反馈", exact: true }).waitFor();
   assert.deepEqual(problems, []);
   await page.goto(`${baseUrl}/?view=chat`);
   await page.getByRole("button", { name: "打开对话历史", exact: true }).click();
@@ -597,7 +673,7 @@ try {
     0,
   );
   process.stdout.write(
-    "PASS course navigation opens the list in one click from chat, graph and settings on desktop/mobile despite a stale saved path; lecture and drafts survive course-list navigation; practice, retry, topic scope and mobile layout. All API calls mocked.\n",
+    "PASS course-list navigation; topic chat clear/cancel, drafts and token reset, immediate persistence, pending-request abort, other topics/students/free chats preserved; practice, retry and mobile layout. All API calls mocked.\n",
   );
 } finally {
   await browser.close();
