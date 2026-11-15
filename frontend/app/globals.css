@@ -156,20 +156,10 @@ select {
     @apply text-[11px] font-semibold uppercase leading-[1.4] tracking-[1px] text-steel;
   }
 
-  /* ---------- Deep navy hero band with sticky-note dots ---------- */
+  /* ---------- Solid deep navy hero band ---------- */
   .hero-band {
     @apply relative isolate overflow-hidden bg-navy text-white;
   }
-}
-
-/* Decorative sticky-note dots scattered around hero content. */
-.hero-dot {
-  position: absolute;
-  z-index: -1;
-  pointer-events: none;
-  border-radius: 4px;
-  transform: rotate(var(--r, 0deg));
-  box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
 }
 
 .app-grid-bg {

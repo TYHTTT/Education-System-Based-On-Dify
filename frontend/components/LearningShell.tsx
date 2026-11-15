@@ -4,8 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useStudent } from "@/components/StudentProvider";
-import BrandMark from "@/components/BrandMark";
-import { useTopicSessions } from "@/components/TopicSessionsProvider";
 import MobileNavigation from "@/components/MobileNavigation";
 
 const NAV_ITEMS = [
@@ -18,7 +16,6 @@ const NAV_ITEMS = [
 export default function LearningShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { student, logout } = useStudent();
-  const { lastPath } = useTopicSessions();
   const navigation = NAV_ITEMS.map((item) => ({
     ...item,
     active: item.href.startsWith("/?")
@@ -26,16 +23,12 @@ export default function LearningShell({ children }: { children: ReactNode }) {
       : item.href === "/learn"
         ? pathname.startsWith("/learn")
         : pathname === item.href,
-    href: item.href === "/learn" && !pathname.startsWith("/learn") && lastPath
-      ? lastPath
-      : item.href,
   }));
 
   return (
     <main className="min-h-svh bg-canvas">
       <header className="app-header sticky top-0 z-30 h-[65px] border-b border-hairline backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-container items-center gap-4 px-4 sm:gap-8 sm:px-8">
-          <BrandMark />
           <nav
             className="hidden h-full min-w-0 items-stretch gap-5 lg:flex"
             aria-label="主导航"

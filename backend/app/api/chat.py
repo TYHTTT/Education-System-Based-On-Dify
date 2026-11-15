@@ -7,6 +7,7 @@ from app.services.conversation_tokens import (
     read_conversation_token,
 )
 from app.schemas.chat import ChatRequest, ChatResponse
+from app.services.topic_prompts import teaching_question
 
 
 router = APIRouter(prefix="/api/v1", tags=["chat"])
@@ -62,6 +63,7 @@ async def chat(
                 status_code=403,
                 detail="对话已过期或不属于当前学习范围，请重新开始学习或新建对话。",
             ) from None
+    question = payload.message
     if payload.topic_id is not None:
         topic = repository.require_topic(payload.topic_id)
         if topic["course"] != payload.course.value:
@@ -70,6 +72,10 @@ async def chat(
                     f"topic {payload.topic_id} belongs to {topic['course']}, "
                     f"not {payload.course.value}"
                 )
+            )
+        if payload.learning_mode == "topic_teaching":
+            question = teaching_question(
+                question, topic, repository.get_related_topics(payload.topic_id),
             )
         if student_id is not None and payload.learning_mode != "free_qa":
             repository.create_learning_session(
@@ -81,7 +87,7 @@ async def chat(
     agent = agent_from_request(request)
     result = await agent.answer(
         course=payload.course,
-        question=payload.message,
+        question=question,
         history=history,
         topic_id=payload.topic_id,
         user=student_id,

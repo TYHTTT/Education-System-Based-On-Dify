@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     default: "Course Coach · 课程问答助手",
     template: "%s · Course Coach",
   },
-  description: "由 Dify Agent 提供支持的中文课程辅导助手",
+  description: "课程学习、知识点问答与学习进度管理",
 };
 
 export const viewport: Viewport = {

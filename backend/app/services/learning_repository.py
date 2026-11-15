@@ -336,6 +336,25 @@ class LearningRepository:
             raise TopicNotFoundError()
         return topic
 
+    def get_related_topics(self, topic_id: str) -> list[dict[str, Any]]:
+        """Read both directions of saved relations, limited to student-visible topics."""
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT t.id,t.title,t.course,c.title AS course_title
+                FROM topic_relations relation
+                JOIN curriculum_topics t ON t.id=CASE
+                    WHEN relation.topic_a_id=? THEN relation.topic_b_id
+                    ELSE relation.topic_a_id END
+                JOIN courses c ON c.id=t.course
+                WHERE (relation.topic_a_id=? OR relation.topic_b_id=?)
+                    AND relation.relation_type='related' AND t.active=1 AND c.active=1
+                ORDER BY c.title,c.id,t.stage,t.order_index,t.id
+                """,
+                (topic_id, topic_id, topic_id),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
 
 
 

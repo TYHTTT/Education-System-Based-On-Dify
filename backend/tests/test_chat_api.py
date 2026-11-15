@@ -7,12 +7,19 @@ from tests.mocks import MockLLMClient
 
 
 class Repository:
-    def __init__(self): self.sessions = []
+    def __init__(self):
+        self.sessions = []
+        self.objectives = []
+        self.related = []
     def require_course(self, course):
         return {"id": course.value}
     def require_topic(self, topic_id):
         if topic_id != "ml.machine_learning_basics": raise TopicNotFoundError()
-        return {"id":topic_id,"course":"machine_learning","title":"机器学习基本概念"}
+        return {"id":topic_id,"course":"machine_learning","title":"机器学习基本概念",
+                "learning_objectives": self.objectives}
+    def get_related_topics(self, topic_id):
+        assert topic_id == "ml.machine_learning_basics"
+        return self.related
     def student_from_token(self, token, **kwargs):
         if token != "valid": raise StudentNotFoundError()
         return {"id":"student-one"}
@@ -68,12 +75,27 @@ def test_topic_chat_preserves_authentication_course_check_and_session(api):
     assert llm.calls == [[{"role":"user","content":"当前课程是机器学习，我要开始学习机器学习基本概念"}]]
 
 
-def test_start_learning_forwards_only_plain_sentence_to_dify(api):
+@pytest.mark.parametrize("objectives,related,extra", [
+    ([], [], ""),
+    (None, [], ""),
+    ([" ", "\n"], [], ""),
+    ([" 理解训练数据与模型的关系 ", "区分分类与回归任务"], [],
+     "\n\n学习目标：\n1. 理解训练数据与模型的关系\n2. 区分分类与回归任务"),
+    ([], [{"course_title": "高等数学", "title": "方向导数、梯度"}],
+     "\n\n相关知识点：\n- 高等数学：方向导数、梯度"),
+    (["理解模型训练"], [
+        {"course_title": "机器学习", "title": "监督学习三要素"},
+        {"course_title": "高等数学", "title": "方向导数、梯度"},
+    ], "\n\n相关知识点：\n- 机器学习：监督学习三要素\n- 高等数学：方向导数、梯度\n\n学习目标：\n1. 理解模型训练"),
+])
+def test_start_learning_sends_saved_related_topics_and_nonempty_objectives_to_dify(api, objectives, related, extra):
     import json
     import httpx
     from app.services.dify import DifyClient
 
     client, _, repository = api
+    repository.objectives = objectives
+    repository.related = related
     requests = []
 
     def handler(request):
@@ -92,9 +114,23 @@ def test_start_learning_forwards_only_plain_sentence_to_dify(api):
     assert response.status_code == 200
     assert response.json()["answer"] == "知识点讲解正文"
     assert len(requests) == 1
-    assert requests[0]["query"] == message
+    assert requests[0]["query"] == message + extra
     assert requests[0]["inputs"] == {"course": "machine_learning", "topic_id": "ml.machine_learning_basics"}
     assert repository.sessions[0]["state"] == "topic_teaching"
+
+
+@pytest.mark.parametrize("mode", ["free_qa", "topic_clarification", "topic_practice", "topic_answer"])
+def test_teaching_metadata_is_not_appended_to_other_chat_actions(api, mode):
+    client, agent, repository = api
+    repository.objectives = ["不应附加到本次消息的目标"]
+    repository.related = [{"course_title": "高等数学", "title": "不应附加到本次消息的知识点"}]
+    message = "学生本次消息"
+    response = client.post("/api/v1/chat", headers={"Authorization": "Bearer valid"}, json={
+        "course": "machine_learning", "topic_id": "ml.machine_learning_basics",
+        "learning_mode": mode, "message": message, "history": [],
+    })
+    assert response.status_code == 200
+    assert agent.calls == [[{"role": "user", "content": message}]]
 
 
 def test_clarification_sends_actual_dialogue_without_local_teaching_prompt(api):

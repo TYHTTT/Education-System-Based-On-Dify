@@ -123,7 +123,7 @@ export default function CourseDashboardPage() {
     );
   }
 
-  const meta = { label: courseRecord?.title ?? course, shortLabel: (courseRecord?.title ?? course).slice(0, 2) };
+  const courseTitle = courseRecord?.title ?? course;
   const recommended = currentDashboard
     ? currentCurriculum?.stages
         .flatMap((stage) => stage.topics)
@@ -138,15 +138,7 @@ export default function CourseDashboardPage() {
             <Link href="/learn" className="inline-flex items-center gap-1.5 text-sm font-medium text-steel transition hover:text-ink">
               <ArrowLeftIcon className="size-3.5" /> 切换课程
             </Link>
-            <div className="mt-5 flex items-center gap-4">
-              <span className={`grid size-12 place-items-center rounded-lg text-lg font-semibold text-white ${course === "machine_learning" ? "bg-primary" : "bg-link"}`}>
-                {meta.shortLabel}
-              </span>
-              <div>
-                <p className="eyebrow">Learning Dashboard</p>
-                <h1 className="mt-1 text-heading-3 text-ink sm:text-heading-2">{meta.label}学习路径</h1>
-              </div>
-            </div>
+            <h1 className="mt-5 text-heading-3 text-ink sm:text-heading-2">{courseTitle}学习路径</h1>
           </div>
           <Link href="/?view=chat" className="btn-secondary w-fit">
             自由问答 <ArrowRightIcon className="size-4" />
@@ -216,8 +208,7 @@ export default function CourseDashboardPage() {
               <div className="space-y-6">
                 <div className="flex items-end justify-between gap-4">
                   <div>
-                    <p className="eyebrow">Curriculum</p>
-                    <h2 className="mt-1 text-heading-3 text-ink">课程阶段与知识点</h2>
+                    <h2 className="text-heading-3 text-ink">课程阶段与知识点</h2>
                   </div>
                   <span className="text-[13px] text-stone">学习状态</span>
                 </div>

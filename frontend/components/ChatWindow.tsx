@@ -63,17 +63,10 @@ export default function ChatWindow({
     return (
       <div className="flex min-h-full items-center justify-center px-5 py-10 sm:px-8 sm:py-section">
         <div className="w-full max-w-3xl animate-fade-up text-center">
-          <span className="badge-purple">
-            <SparklesIcon className="mr-1.5 size-3.5" />
-            Course Coach
-          </span>
-          <h2 className="mt-5 text-balance text-heading-3 text-ink sm:text-heading-1">
-            有什么想聊的？
+          <h2 className="text-heading-5 text-ink">
+            示例问题
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-subtitle text-steel">
-            从一个问题开始，一起理解概念、拆解难题、探索思路。
-          </p>
-          <div className="mt-10 grid gap-4 text-left sm:grid-cols-2">
+          <div className="mt-5 grid gap-4 text-left sm:grid-cols-2">
             {examples.map(({ title, question }, index) => (
               <button
                 key={question}

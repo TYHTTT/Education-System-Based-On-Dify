@@ -32,6 +32,12 @@ await context.addInitScript(() => {
     "course-coach:assessment:browser-student:ml.machine_learning_basics",
     JSON.stringify({ id: "old-checkpoint", answers: {} }),
   );
+  if (!localStorage.getItem("course-coach:topic-sessions:v1:browser-student")) {
+    localStorage.setItem(
+      "course-coach:topic-sessions:v1:browser-student",
+      JSON.stringify({ chats: {}, lastPath: "/learn/deleted_course/deleted_course.old_topic" }),
+    );
+  }
   if (!localStorage.getItem("course-coach:chat-state:v1")) {
     const conversation = (id, course, title) => ({
       id,
@@ -116,6 +122,8 @@ await page.route("**/api/v1/**", async (route) => {
   const body = request.postDataJSON() || {};
   requests.push({ endpoint, body });
   if (request.method() === "OPTIONS") return json(route, {});
+  if (endpoint === "/api/v1/knowledge-graph")
+    return json(route, { courses: [], nodes: [], edges: [] });
   if (endpoint === "/api/v1/courses")
     return json(route, [
       {
@@ -144,6 +152,23 @@ await page.route("**/api/v1/**", async (route) => {
           topics,
         },
       ],
+    });
+  if (endpoint === "/api/v1/curriculum/topics")
+    return json(route, {
+      course: "machine_learning",
+      stages: [{ stage: 1, title: "机器学习基础", topics }],
+    });
+  if (endpoint === "/api/v1/learning/dashboard")
+    return json(route, {
+      course: "machine_learning",
+      total_topics: topics.length,
+      mastered_count: 0,
+      learning_count: topics.length,
+      not_started_count: 0,
+      current_topic: topics[0],
+      recommended_topic_id: topics[0].id,
+      next_action: "continue_learning",
+      reasons: [],
     });
   if (endpoint.includes("/curriculum/topics/"))
     return json(
@@ -193,7 +218,32 @@ await page.route("**/api/v1/**", async (route) => {
 });
 
 const start = page.getByRole("button", { name: "开始学习", exact: true });
+async function openCourseList() {
+  if (page.viewportSize().width < 1024)
+    await page.getByRole("button", { name: "展开导航", exact: true }).click();
+  const link = page.getByRole("navigation", { name: "主导航" })
+    .getByRole("link", { name: "课程学习", exact: true });
+  assert.equal(await link.getAttribute("href"), "/learn");
+  await link.click();
+  await page.getByRole("heading", { name: "全部课程", exact: true }).waitFor();
+  assert.equal(new URL(page.url()).pathname, "/learn");
+  assert.equal(await page.getByRole("heading", { name: "课程地址无效", exact: true }).count(), 0);
+}
+async function openListedTopic(topic) {
+  await openCourseList();
+  await page.getByRole("link", { name: /查看学习路径/ }).click();
+  await page.getByRole("complementary", { name: "课程知识点目录", exact: true })
+    .getByRole("link", { name: new RegExp(`^${topic.title}`) }).click();
+}
 try {
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 1000 });
+    for (const from of ["/?view=chat", "/knowledge-graph", "/settings"]) {
+      await page.goto(`${baseUrl}${from}`);
+      await openCourseList();
+    }
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto(`${baseUrl}/learn/machine_learning/${topics[0].id}`);
   await start.waitFor();
   assert.equal(
@@ -224,10 +274,7 @@ try {
     .getByRole("link", { name: "自由问答", exact: true })
     .click();
   await page.getByRole("region", { name: "自由问答", exact: true }).waitFor();
-  await page
-    .getByRole("navigation", { name: "主导航" })
-    .getByRole("link", { name: "课程学习", exact: true })
-    .click();
+  await openListedTopic(topics[0]);
   await page
     .getByRole("article", { name: "知识点讲解", exact: true })
     .waitFor();
@@ -358,10 +405,7 @@ try {
     .getByRole("link", { name: "自由问答", exact: true })
     .click();
   await page.getByRole("region", { name: "自由问答", exact: true }).waitFor();
-  await page
-    .getByRole("navigation", { name: "主导航" })
-    .getByRole("link", { name: "课程学习", exact: true })
-    .click();
+  await openListedTopic(topics[0]);
   await exerciseForm.waitFor();
   assert.equal(
     await exerciseForm.getByRole("textbox").inputValue(),
@@ -484,7 +528,7 @@ try {
     .getByRole("button", { name: "新建对话", exact: true })
     .click();
   await page
-    .getByRole("heading", { name: "有什么想聊的？", exact: true })
+    .getByRole("heading", { name: "示例问题", exact: true })
     .waitFor();
   await page
     .getByRole("textbox", { name: "你的问题", exact: true })
@@ -553,7 +597,7 @@ try {
     0,
   );
   process.stdout.write(
-    "PASS removed tools, no background test restoration, real clicks, visible practice loading after long lecture, inline questions and answers, retry, draft preservation, topic scope and mobile layout. All API calls mocked.\n",
+    "PASS course navigation opens the list in one click from chat, graph and settings on desktop/mobile despite a stale saved path; lecture and drafts survive course-list navigation; practice, retry, topic scope and mobile layout. All API calls mocked.\n",
   );
 } finally {
   await browser.close();

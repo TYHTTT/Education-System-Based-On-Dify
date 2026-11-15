@@ -9,11 +9,7 @@ export default function SettingsPage() {
     <LearningShell>
       <section className="mx-auto max-w-3xl px-4 py-section sm:px-8">
         <div className="border-b border-hairline pb-8">
-          <p className="eyebrow">Preferences</p>
-          <h1 className="mt-2 text-heading-2 text-ink">设置</h1>
-          <p className="mt-3 text-base text-steel">
-            调整 Course Coach 的显示偏好。
-          </p>
+          <h1 className="text-heading-2 text-ink">设置</h1>
         </div>
 
         <div className="card mt-8">
@@ -45,9 +41,6 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <p className="mt-6 rounded-lg bg-surface px-4 py-3 text-sm text-steel">
-          AI 辅导由 Dify Agent 提供，课程资料由 Dify 统一管理。
-        </p>
       </section>
     </LearningShell>
   );

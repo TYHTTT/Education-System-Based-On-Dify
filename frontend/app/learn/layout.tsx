@@ -6,7 +6,7 @@ import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "课程学习",
-  description: "围绕知识点讲解、练习、评价与掌握度更新的学习闭环",
+  description: "课程列表、章节目录与知识点学习",
 };
 
 export default function LearnLayout({
