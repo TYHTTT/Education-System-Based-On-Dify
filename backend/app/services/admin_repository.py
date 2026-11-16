@@ -86,6 +86,19 @@ class AdminRepository:
                 (hash_session_token(token),),
             )
 
+    def update_profile(self, *, token: str, username: str, display_name: str) -> dict:
+        now = datetime.now(UTC).isoformat()
+        with self.database.connect() as connection:
+            account = connection.execute(
+                f"""UPDATE administrators SET username=?,display_name=? WHERE
+                    session_token_hash=? AND session_expires_at>? AND active=1
+                    RETURNING {PUBLIC_COLUMNS}""",
+                (username, display_name, hash_session_token(token), now),
+            ).fetchone()
+        if account is None:
+            raise AdminUnauthorizedError()
+        return dict(account)
+
     def delete_current(self, *, token: str, password: str) -> bool:
         now = datetime.now(UTC).isoformat()
         with self.database.connect() as connection:

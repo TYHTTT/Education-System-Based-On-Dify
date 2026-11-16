@@ -129,9 +129,13 @@ class LearningRepository:
             password, student["password_hash"] or ""
         ):
             return None
-        return self._issue_session(student["id"])
+        return self._issue_session(
+            student["id"], expected_password_hash=student["password_hash"]
+        )
 
-    def _issue_session(self, student_id: str) -> dict[str, Any]:
+    def _issue_session(
+        self, student_id: str, *, expected_password_hash: str | None = None
+    ) -> dict[str, Any] | None:
         token, session_id, now = (
             secrets.token_urlsafe(32),
             str(uuid.uuid4()),
@@ -139,6 +143,19 @@ class LearningRepository:
         )
         expires_at = (datetime.now(UTC) + timedelta(days=30)).isoformat()
         with self._connect() as connection:
+            student = connection.execute(
+                "SELECT id,username,display_name,created_at,password_hash,active FROM students WHERE id=? FOR UPDATE",
+                (student_id,),
+            ).fetchone()
+            if student is None or not student["active"]:
+                if expected_password_hash is not None:
+                    return None
+                raise StudentNotFoundError()
+            if (
+                expected_password_hash is not None
+                and student["password_hash"] != expected_password_hash
+            ):
+                return None
             connection.execute(
                 """INSERT INTO student_sessions(id, student_id, token_hash, expires_at, created_at, last_used_at)
                    VALUES (?, ?, ?, ?, ?, ?)""",
@@ -151,11 +168,51 @@ class LearningRepository:
                     now,
                 ),
             )
-            student = connection.execute(
-                "SELECT id, username, display_name, created_at FROM students WHERE id = ?",
-                (student_id,),
+        return {
+            **{
+                key: student[key]
+                for key in ("id", "username", "display_name", "created_at")
+            },
+            "access_token": token,
+        }
+
+    def _student_for_account_update(self, connection, token: str):
+        student = connection.execute(
+            """SELECT s.id,s.password_hash FROM students s JOIN student_sessions ss ON ss.student_id=s.id
+               WHERE ss.token_hash=? AND ss.expires_at>? AND s.active=1 FOR UPDATE OF s""",
+            (hash_session_token(token), self._now()),
+        ).fetchone()
+        if student is None:
+            raise StudentNotFoundError()
+        return student
+
+    def update_student_profile(
+        self, *, token: str, username: str, display_name: str
+    ) -> dict:
+        with self._connect() as connection:
+            student = self._student_for_account_update(connection, token)
+            row = connection.execute(
+                """UPDATE students SET username=?,display_name=? WHERE id=?
+                   RETURNING id,username,display_name,created_at""",
+                (username, display_name, student["id"]),
             ).fetchone()
-        return {**dict(student), "access_token": token}
+        return dict(row)
+
+    def change_student_password(
+        self, *, token: str, current_password: str, new_password: str
+    ) -> bool:
+        with self._connect() as connection:
+            student = self._student_for_account_update(connection, token)
+            if not verify_password(current_password, student["password_hash"] or ""):
+                return False
+            connection.execute(
+                "UPDATE students SET password_hash=? WHERE id=?",
+                (hash_password(new_password), student["id"]),
+            )
+            connection.execute(
+                "DELETE FROM student_sessions WHERE student_id=?", (student["id"],)
+            )
+        return True
 
     def student_from_token(self, token: str, *, touch: bool = True) -> dict[str, Any]:
         if token.startswith(ADMIN_PREVIEW_PREFIX):

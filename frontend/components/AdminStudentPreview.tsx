@@ -74,6 +74,12 @@ export default function AdminStudentPreview({
       completeLogin: () => {
         /* Preview uses the administrator session. */
       },
+      updateProfile: () => {
+        throw new Error("请前往管理员账号信息页面修改资料。");
+      },
+      changePassword: async () => {
+        throw new Error("请前往管理员账号信息页面修改密码。");
+      },
       logout,
     }),
     [student, withStudent, logout],

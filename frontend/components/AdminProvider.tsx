@@ -28,6 +28,7 @@ interface AdminContextValue {
   status: Status;
   error: string;
   completeLogin: (account: AuthenticatedAdmin) => void;
+  updateProfile: (profile: Administrator) => void;
   logout: () => Promise<void>;
   deleteAccount: (password: string) => Promise<void>;
   changePassword: (
@@ -205,12 +206,17 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     const timer = window.setTimeout(endPreview, 0);
     return () => window.clearTimeout(timer);
   }, [previewing, pathname, endPreview]);
+  const updateProfile = useCallback(
+    (profile: Administrator) => setAdmin(profile),
+    [],
+  );
   const value = useMemo(
     () => ({
       admin,
       status,
       error,
       completeLogin,
+      updateProfile,
       logout,
       deleteAccount,
       changePassword,
@@ -225,6 +231,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       status,
       error,
       completeLogin,
+      updateProfile,
       logout,
       deleteAccount,
       changePassword,

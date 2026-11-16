@@ -4,8 +4,6 @@ import Link from "next/link";
 import { useAdmin } from "@/components/AdminProvider";
 import HeroBand from "@/components/HeroBand";
 import { ArrowRightIcon } from "@/components/Icons";
-import DeleteAdminAccount from "@/components/DeleteAdminAccount";
-import ChangeAdminPassword from "@/components/ChangeAdminPassword";
 
 const QUICK_LINKS = [
   {
@@ -79,12 +77,13 @@ export default function AdminHomePage() {
         <div className="card-feature">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <span
-                aria-hidden="true"
+              <Link
+                href="/admin/account"
+                aria-label="编辑管理员账号信息"
                 className="grid size-10 place-items-center rounded-full bg-tint-lavender font-semibold text-brand-purple-800"
               >
                 {admin.display_name.slice(0, 1)}
-              </span>
+              </Link>
               <h2 className="text-heading-4 text-ink">{admin.display_name}</h2>
             </div>
             <span className="tag-purple">管理员</span>
@@ -116,8 +115,9 @@ export default function AdminHomePage() {
             </div>
           </dl>
           <div className="mt-8 flex flex-wrap gap-3 border-t border-hairline pt-6">
-            <ChangeAdminPassword />
-            <DeleteAdminAccount />
+            <Link href="/admin/account" className="btn-secondary">
+              编辑账号信息
+            </Link>
           </div>
         </div>
 

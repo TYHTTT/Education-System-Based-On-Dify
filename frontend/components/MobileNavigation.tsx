@@ -17,7 +17,7 @@ export default function MobileNavigation({
   const trigger = useRef<HTMLButtonElement>(null);
   return (
     <div
-      className="relative ml-auto lg:hidden"
+      className="relative lg:hidden"
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
       }}

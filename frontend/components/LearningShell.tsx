@@ -58,7 +58,11 @@ export default function LearningShell({ children }: { children: ReactNode }) {
             >
               {isAdminPreview ? "返回管理后台" : "管理后台"}
             </Link>
-            <span
+            <Link
+              href={isAdminPreview ? "/admin/account" : "/account"}
+              aria-label={
+                isAdminPreview ? "编辑管理员账号信息" : "编辑学生账号信息"
+              }
               className="flex max-w-36 items-center gap-2 truncate px-2 text-sm font-medium text-charcoal"
               title={isAdminPreview ? "管理员预览" : student?.username}
             >
@@ -69,7 +73,7 @@ export default function LearningShell({ children }: { children: ReactNode }) {
                 {student?.display_name?.slice(0, 1) ?? "?"}
               </span>
               <span className="truncate">{student?.display_name}</span>
-            </span>
+            </Link>
             <button
               type="button"
               onClick={() => void logout()}
@@ -78,10 +82,33 @@ export default function LearningShell({ children }: { children: ReactNode }) {
               {isAdminPreview ? "退出预览" : "退出"}
             </button>
           </div>
+          <Link
+            href={isAdminPreview ? "/admin/account" : "/account"}
+            aria-label={
+              isAdminPreview ? "编辑管理员账号信息" : "编辑学生账号信息"
+            }
+            className="ml-auto grid size-9 shrink-0 place-items-center rounded-full bg-tint-lavender text-xs font-semibold text-brand-purple-800 lg:hidden"
+          >
+            {student?.display_name?.slice(0, 1) ?? "?"}
+          </Link>
           <MobileNavigation key={pathname} label="主导航" items={navigation}>
-            <p className="w-full truncate px-3 pb-1 text-sm font-medium text-charcoal">
-              {student?.display_name}
-            </p>
+            <Link
+              href={isAdminPreview ? "/admin/account" : "/account"}
+              aria-label={
+                isAdminPreview ? "编辑管理员账号信息" : "编辑学生账号信息"
+              }
+              className="flex w-full items-center gap-2 rounded-lg p-2 text-sm text-ink"
+            >
+              <span
+                aria-hidden="true"
+                className="grid size-9 shrink-0 place-items-center rounded-full bg-tint-lavender text-xs font-semibold text-brand-purple-800"
+              >
+                {student?.display_name?.slice(0, 1) ?? "?"}
+              </span>
+              <span className="truncate">
+                {student?.display_name} · 账号信息
+              </span>
+            </Link>
             <Link
               href="/admin"
               onClick={isAdminPreview ? endPreview : undefined}

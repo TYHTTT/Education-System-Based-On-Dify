@@ -10,7 +10,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { isStudentNotFound, logoutStudent } from "@/lib/api";
+import {
+  changeCurrentStudentPassword,
+  isStudentNotFound,
+  logoutStudent,
+} from "@/lib/api";
 import type { AuthenticatedStudent } from "@/lib/types";
 
 export const STUDENT_STORAGE_KEY = "course_coach_access_token";
@@ -29,6 +33,11 @@ export interface StudentContextValue {
   error: string | null;
   withStudent: <T>(request: (studentId: string) => Promise<T>) => Promise<T>;
   completeLogin: (student: AuthenticatedStudent) => void;
+  updateProfile: (profile: NonNullable<StudentContextValue["student"]>) => void;
+  changePassword: (
+    currentPassword: string,
+    newPassword: string,
+  ) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -159,6 +168,36 @@ export function StudentProvider({ children }: { children: ReactNode }) {
     setStatus("unauthenticated");
   }, [clearSession]);
 
+  const updateProfile = useCallback(
+    (profile: NonNullable<StudentContextValue["student"]>) => {
+      const saved = {
+        student_id: profile.student_id,
+        username: profile.username,
+        display_name: profile.display_name,
+      };
+      setStudent(saved);
+      try {
+        window.localStorage.setItem(
+          STUDENT_PROFILE_STORAGE_KEY,
+          JSON.stringify(saved),
+        );
+      } catch {
+        /* Profile remains available in memory. */
+      }
+    },
+    [],
+  );
+  const changePassword = useCallback(
+    async (currentPassword: string, newPassword: string) => {
+      await withStudent((token) =>
+        changeCurrentStudentPassword(token, currentPassword, newPassword),
+      );
+      clearSession();
+      setError(null);
+      setStatus("unauthenticated");
+    },
+    [withStudent, clearSession],
+  );
   const value = useMemo<StudentContextValue>(
     () => ({
       studentId,
@@ -167,9 +206,21 @@ export function StudentProvider({ children }: { children: ReactNode }) {
       error,
       withStudent,
       completeLogin,
+      updateProfile,
+      changePassword,
       logout,
     }),
-    [completeLogin, error, logout, status, student, studentId, withStudent],
+    [
+      completeLogin,
+      updateProfile,
+      changePassword,
+      error,
+      logout,
+      status,
+      student,
+      studentId,
+      withStudent,
+    ],
   );
 
   return (

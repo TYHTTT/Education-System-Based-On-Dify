@@ -7,7 +7,7 @@ import { useAdmin } from "@/components/AdminProvider";
 import MobileNavigation from "@/components/MobileNavigation";
 
 export default function AdminShell({ children }: { children: ReactNode }) {
-  const { logout } = useAdmin();
+  const { admin, logout } = useAdmin();
   const pathname = usePathname();
   const [leaving, setLeaving] = useState(false);
   const navigation = [
@@ -42,7 +42,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
           <span className="tag-purple shrink-0">管理后台</span>
           <nav
             aria-label="后台导航"
-            className="hidden h-full items-stretch gap-5 lg:flex"
+            className="hidden h-full items-stretch gap-3 lg:flex xl:gap-5"
           >
             {navigation.map((item) => {
               return (
@@ -59,6 +59,14 @@ export default function AdminShell({ children }: { children: ReactNode }) {
           </nav>
           <div className="ml-auto hidden h-16 items-center gap-2 text-sm lg:flex">
             <Link
+              href="/admin/account"
+              aria-label="编辑管理员账号信息"
+              title="账号信息"
+              className="grid size-9 shrink-0 place-items-center rounded-full bg-tint-lavender font-semibold text-brand-purple-800 hover:ring-2 hover:ring-brand-purple-800/20"
+            >
+              {admin?.display_name.slice(0, 1) ?? "管"}
+            </Link>
+            <Link
               href="/admin/preview"
               className="btn-ghost text-steel hover:text-ink"
             >
@@ -73,7 +81,27 @@ export default function AdminShell({ children }: { children: ReactNode }) {
               {leaving ? "正在退出…" : "退出管理后台"}
             </button>
           </div>
+          <Link
+            href="/admin/account"
+            aria-label="编辑管理员账号信息"
+            className="ml-auto grid size-9 shrink-0 place-items-center rounded-full bg-tint-lavender font-semibold text-brand-purple-800 lg:hidden"
+          >
+            {admin?.display_name.slice(0, 1) ?? "管"}
+          </Link>
           <MobileNavigation key={pathname} label="后台导航" items={navigation}>
+            <Link
+              href="/admin/account"
+              aria-label="编辑管理员账号信息"
+              className="flex w-full items-center gap-2 rounded-lg p-2 text-sm text-ink"
+            >
+              <span
+                aria-hidden="true"
+                className="grid size-9 shrink-0 place-items-center rounded-full bg-tint-lavender font-semibold text-brand-purple-800"
+              >
+                {admin?.display_name.slice(0, 1) ?? "管"}
+              </span>
+              <span>{admin?.display_name} · 账号信息</span>
+            </Link>
             <Link href="/admin/preview" className="btn-ghost">
               学生端预览
             </Link>

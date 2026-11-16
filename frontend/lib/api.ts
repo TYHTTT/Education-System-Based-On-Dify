@@ -175,6 +175,35 @@ export function logoutStudent(accessToken: string): Promise<void> {
   });
 }
 
+export function updateStudentProfile(
+  token: string,
+  profile: { username: string; display_name: string },
+) {
+  return request<Omit<AuthenticatedStudent, "access_token">>(
+    "/api/v1/students/me",
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...studentHeaders(token) },
+      body: JSON.stringify(profile),
+    },
+  );
+}
+
+export function changeCurrentStudentPassword(
+  token: string,
+  currentPassword: string,
+  newPassword: string,
+) {
+  return request<void>("/api/v1/students/me/password", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...studentHeaders(token) },
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+  });
+}
+
 export function registerAdmin(payload: {
   username: string;
   password: string;
@@ -213,6 +242,17 @@ export function logoutAdmin(token: string): Promise<void> {
   return request<void>("/api/v1/admins/logout", {
     method: "POST",
     headers: studentHeaders(token),
+  });
+}
+
+export function updateAdminProfile(
+  token: string,
+  profile: { username: string; display_name: string },
+) {
+  return request<Administrator>("/api/v1/admins/me", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...studentHeaders(token) },
+    body: JSON.stringify(profile),
   });
 }
 

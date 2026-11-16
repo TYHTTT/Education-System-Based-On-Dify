@@ -94,6 +94,10 @@ npm run dev
 
 然后访问 `http://localhost:3000`。
 
+学生点击头像进入“账号信息”（`/account`），可修改姓名、用户名和密码。基本信息保存后同步更新头像和姓名；用户名须保持唯一。修改密码需验证当前密码并输入两次新密码（8–128 个字符），成功后该学生的全部登录会话失效，需重新登录。
+
+管理员点击头像进入管理员“账号信息”（`/admin/account`），也可通过首页“编辑账号信息”进入。修改姓名、用户名、密码和删除管理员账号均集中在此页面，首页不再直接显示修改密码或删除账号按钮。管理员在学生端预览时点击头像，也会进入管理员账号信息页，不能修改预览身份或已有学生资料。
+
 ## 测试和构建
 
 ```powershell
@@ -142,8 +146,11 @@ operations/database/ # 当前数据库初始化结构和入口
 | `POST /api/v1/students/register` | 管理员创建并分配学生账号（需要管理员登录） |
 | `POST /api/v1/students/login`、`logout` | 学生登录和退出 |
 | `GET /api/v1/students/me` | 当前学生 |
+| `PATCH /api/v1/students/me` | 学生修改自己的 `username`、`display_name`，用户名冲突返回 409；管理员预览不可调用 |
+| `PUT /api/v1/students/me/password` | 学生提交 `current_password`、`new_password` 修改密码，成功后撤销该学生全部登录会话；当前密码错误返回 403 |
 | `POST /api/v1/admins/register`、`login`、`logout` | 管理员创建、登录和退出 |
 | `GET /api/v1/admins/me` | 验证当前管理员 |
+| `PATCH /api/v1/admins/me` | 管理员修改自己的 `username`、`display_name`，用户名冲突返回 409 |
 | `DELETE /api/v1/admins/me` | 删除当前登录的管理员账号，请求体 `{"password":"当前管理员密码"}`；密码错误返回 403，成功返回 204 并使当前登录凭据失效 |
 | `PUT /api/v1/admins/me/password` | 修改当前管理员密码，请求体包含 `current_password` 和 `new_password`；当前密码错误返回 403，成功返回 204 并使当前登录凭据失效 |
 | `GET /api/v1/admin/students` | 管理员按姓名或用户名搜索学生账号；`q` 为关键词，`page` 默认 1，`page_size` 默认 20、最大 50 |

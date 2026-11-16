@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from psycopg.errors import UniqueViolation
 
 from app.api.admins import require_admin
 from app.schemas.student import (
@@ -10,6 +11,11 @@ from app.schemas.student import (
     RegisterStudentRequest,
 )
 from app.services.learning_repository import LearningRepository
+from app.schemas.account import (
+    ChangeAccountPasswordRequest,
+    UpdateAccountProfileRequest,
+)
+from app.core.admin_preview import ADMIN_PREVIEW_PREFIX
 
 router = APIRouter(prefix="/api/v1/students", tags=["students"])
 
@@ -91,3 +97,46 @@ def logout_student(
     learning_repository_from_request(request).revoke_session(
         _bearer_token(authorization)
     )
+
+
+def _editable_student_token(authorization: str) -> str:
+    token = _bearer_token(authorization)
+    if token.startswith(ADMIN_PREVIEW_PREFIX):
+        raise HTTPException(
+            status_code=403, detail="管理员预览模式下请前往管理员账号信息页面修改资料"
+        )
+    return token
+
+
+@router.patch("/me", response_model=CurrentStudentResponse)
+def update_current_student(
+    payload: UpdateAccountProfileRequest,
+    request: Request,
+    authorization: str = Header(..., alias="Authorization"),
+):
+    token = _editable_student_token(authorization)
+    try:
+        student = learning_repository_from_request(request).update_student_profile(
+            token=token, **payload.model_dump()
+        )
+    except UniqueViolation:
+        raise HTTPException(status_code=409, detail="用户名已被使用") from None
+    return CurrentStudentResponse(
+        student_id=student["id"],
+        **{key: student[key] for key in ("username", "display_name", "created_at")},
+    )
+
+
+@router.put("/me/password", status_code=204)
+def change_current_student_password(
+    payload: ChangeAccountPasswordRequest,
+    request: Request,
+    authorization: str = Header(..., alias="Authorization"),
+):
+    token = _editable_student_token(authorization)
+    if not learning_repository_from_request(request).change_student_password(
+        token=token,
+        current_password=payload.current_password.get_secret_value(),
+        new_password=payload.new_password.get_secret_value(),
+    ):
+        raise HTTPException(status_code=403, detail="当前密码不正确")

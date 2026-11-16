@@ -13,6 +13,7 @@ from app.schemas.admin import (
     RegisterAdminRequest,
 )
 from app.services.admin_repository import AdminRepository
+from app.schemas.account import UpdateAccountProfileRequest
 
 router = APIRouter(prefix="/api/v1/admins", tags=["administrators"])
 
@@ -96,6 +97,25 @@ def logout_admin(
     repository: AdminRepository = Depends(admin_repository_from_request),
 ):
     repository.logout(_token(authorization))
+
+
+@router.patch("/me", response_model=CurrentAdminResponse)
+def update_current_admin(
+    payload: UpdateAccountProfileRequest,
+    authorization: str | None = Header(default=None),
+    admin: dict = Depends(require_admin),
+    repository: AdminRepository = Depends(admin_repository_from_request),
+):
+    try:
+        return CurrentAdminResponse(
+            **_public(
+                repository.update_profile(
+                    token=_token(authorization), **payload.model_dump()
+                )
+            )
+        )
+    except UniqueViolation:
+        raise HTTPException(status_code=409, detail="管理员用户名已被使用") from None
 
 
 @router.delete("/me", status_code=204)
