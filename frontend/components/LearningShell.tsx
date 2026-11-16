@@ -63,7 +63,7 @@ export default function LearningShell({ children }: { children: ReactNode }) {
               aria-label={
                 isAdminPreview ? "编辑管理员账号信息" : "编辑学生账号信息"
               }
-              className="flex max-w-36 items-center gap-2 truncate px-2 text-sm font-medium text-charcoal"
+              className="flex shrink-0 items-center justify-center p-2"
               title={isAdminPreview ? "管理员预览" : student?.username}
             >
               <span
@@ -72,7 +72,6 @@ export default function LearningShell({ children }: { children: ReactNode }) {
               >
                 {student?.display_name?.slice(0, 1) ?? "?"}
               </span>
-              <span className="truncate">{student?.display_name}</span>
             </Link>
             <button
               type="button"
@@ -97,16 +96,13 @@ export default function LearningShell({ children }: { children: ReactNode }) {
               aria-label={
                 isAdminPreview ? "编辑管理员账号信息" : "编辑学生账号信息"
               }
-              className="flex w-full items-center gap-2 rounded-lg p-2 text-sm text-ink"
+              className="inline-flex rounded-lg p-2"
             >
               <span
                 aria-hidden="true"
                 className="grid size-9 shrink-0 place-items-center rounded-full bg-tint-lavender text-xs font-semibold text-brand-purple-800"
               >
                 {student?.display_name?.slice(0, 1) ?? "?"}
-              </span>
-              <span className="truncate">
-                {student?.display_name} · 账号信息
               </span>
             </Link>
             <Link

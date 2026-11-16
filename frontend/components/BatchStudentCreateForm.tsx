@@ -86,7 +86,7 @@ export default function BatchStudentCreateForm({
   const unprocessed = progress.total - results.length;
 
   return (
-    <div className="card min-w-0">
+    <div className="card flex min-w-0 flex-col">
       <h2 className="text-heading-4 text-ink">批量创建学生账号</h2>
       <p
         id="batch-student-format"
@@ -101,10 +101,10 @@ export default function BatchStudentCreateForm({
         aria-label="批量创建学生账号"
         aria-busy={submitting}
         onSubmit={submit}
-        className="mt-6 space-y-5"
+        className="mt-6 flex flex-1 flex-col gap-5"
       >
-        <fieldset disabled={busy} className="space-y-5">
-          <label className="block text-sm font-medium text-ink">
+        <fieldset disabled={busy} className="flex min-h-0 flex-1 flex-col">
+          <label className="flex min-h-0 flex-1 flex-col text-sm font-medium text-ink">
             学生信息（每行一名）
             <textarea
               name="students"
@@ -116,16 +116,11 @@ export default function BatchStudentCreateForm({
               spellCheck={false}
               aria-describedby="batch-student-format batch-student-rules"
               placeholder={
-                "张三,student_001,InitialPass123\n李四,student_002,InitialPass456"
+                "张三,student_001,InitialPass123\n李四,student_002,InitialPass456\n姓名 1–64 个字符；用户名 3–32位，可使用英文字母、数字、下划线、点或连字符；密码 8–128个字符。字段中不要包含英文逗号。空行会自动忽略。"
               }
-              className="text-input mt-1.5 min-h-64 resize-y font-mono text-sm leading-6"
+              className="text-input mt-1.5 h-64 shrink-0 resize-none overflow-y-auto font-mono text-sm leading-6 lg:h-0 lg:min-h-64 lg:flex-1"
             />
           </label>
-          <p id="batch-student-rules" className="text-xs leading-6 text-steel">
-            姓名 1–64 个字符；用户名 3–32
-            位，可使用英文字母、数字、下划线、点或连字符；密码 8–128
-            个字符。字段中不要包含英文逗号。空行会自动忽略。
-          </p>
         </fieldset>
         {errors.length > 0 && (
           <div
@@ -174,7 +169,7 @@ export default function BatchStudentCreateForm({
         <button
           type="submit"
           disabled={busy}
-          className="btn-primary w-full sm:w-auto"
+          className="btn-primary mt-auto w-full self-start sm:w-auto"
         >
           {submitting ? "正在批量创建…" : "批量创建账号"}
         </button>

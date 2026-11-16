@@ -92,7 +92,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
             <Link
               href="/admin/account"
               aria-label="编辑管理员账号信息"
-              className="flex w-full items-center gap-2 rounded-lg p-2 text-sm text-ink"
+              className="inline-flex rounded-lg p-2"
             >
               <span
                 aria-hidden="true"
@@ -100,7 +100,6 @@ export default function AdminShell({ children }: { children: ReactNode }) {
               >
                 {admin?.display_name.slice(0, 1) ?? "管"}
               </span>
-              <span>{admin?.display_name} · 账号信息</span>
             </Link>
             <Link href="/admin/preview" className="btn-ghost">
               学生端预览

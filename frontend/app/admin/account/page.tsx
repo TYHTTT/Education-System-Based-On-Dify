@@ -21,29 +21,31 @@ export default function AdminAccountPage() {
       <p className="mt-3 text-sm text-steel">
         管理当前管理员的基本信息、密码和账号。
       </p>
-      <div className="mt-8 grid items-start gap-6 lg:grid-cols-2">
-        <section className="card min-w-0">
-          <h2 className="text-heading-4 text-ink">基本信息</h2>
-          <p className="mt-3 text-xs text-steel">
-            管理员 · 创建于{" "}
-            {new Date(admin.created_at).toLocaleString("zh-CN", {
-              timeZone: "Asia/Shanghai",
-            })}
-          </p>
-          <AccountProfileForm profile={admin} onSave={save} />
-        </section>
+      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+        <div className="flex min-w-0 flex-col gap-6">
+          <section className="card min-w-0 flex-1">
+            <h2 className="text-heading-4 text-ink">基本信息</h2>
+            <p className="mt-3 text-xs text-steel">
+              管理员 · 创建于{" "}
+              {new Date(admin.created_at).toLocaleString("zh-CN", {
+                timeZone: "Asia/Shanghai",
+              })}
+            </p>
+            <AccountProfileForm profile={admin} onSave={save} />
+          </section>
+          <section className="card border-rose-200">
+            <h2 className="text-heading-4 text-ink">删除账号</h2>
+            <p className="mb-5 mt-3 text-sm leading-6 text-steel">
+              永久删除当前管理员账号并退出登录，此操作无法恢复。
+            </p>
+            <DeleteAdminAccount />
+          </section>
+        </div>
         <section className="card min-w-0">
           <h2 className="text-heading-4 text-ink">修改密码</h2>
           <ChangeAdminPassword />
         </section>
       </div>
-      <section className="card mt-6 border-rose-200">
-        <h2 className="text-heading-4 text-ink">删除账号</h2>
-        <p className="mb-5 mt-3 text-sm leading-6 text-steel">
-          永久删除当前管理员账号并退出登录，此操作无法恢复。
-        </p>
-        <DeleteAdminAccount />
-      </section>
     </section>
   );
 }

@@ -63,7 +63,6 @@ export default function AdminStudentsPage() {
   return (
     <section className="page-container">
       <div className="border-b border-hairline pb-8">
-        <p className="eyebrow">Students</p>
         <h1 className="mt-2 text-heading-3 text-ink sm:text-heading-2">
           学生管理
         </h1>
@@ -71,8 +70,8 @@ export default function AdminStudentsPage() {
           学生账号由管理员统一创建，创建后将用户名和初始密码分配给学生。
         </p>
       </div>
-      <div className="mt-8 grid items-start gap-6 lg:grid-cols-2">
-        <div className="card min-w-0">
+      <div className="mt-8 grid items-stretch gap-6 lg:grid-cols-2">
+        <div className="card flex min-w-0 flex-col">
           <h2 className="text-heading-4 text-ink">创建学生账号</h2>
           {created && (
             <div
@@ -93,9 +92,9 @@ export default function AdminStudentsPage() {
             aria-label="创建学生账号"
             aria-busy={submitting}
             onSubmit={submit}
-            className="mt-6 space-y-5"
+            className="mt-6 flex flex-1 flex-col gap-5"
           >
-            <fieldset disabled={busy} className="space-y-5">
+            <fieldset disabled={busy} className="flex flex-1 flex-col gap-5">
               <label className="block text-sm font-medium text-ink">
                 学生姓名
                 <input
@@ -146,7 +145,7 @@ export default function AdminStudentsPage() {
                   8–128 位，请在创建前记下初始密码，供学生登录使用。
                 </span>
               </label>
-              <label className="block text-sm font-medium text-ink">
+              <label className="mt-auto block text-sm font-medium text-ink">
                 确认初始密码
                 <input
                   required
@@ -155,7 +154,7 @@ export default function AdminStudentsPage() {
                   minLength={8}
                   maxLength={128}
                   autoComplete="new-password"
-                  className="text-input mt-1.5"
+                  className="text-input mt-1.5 block"
                 />
               </label>
             </fieldset>
@@ -170,7 +169,7 @@ export default function AdminStudentsPage() {
             <button
               type="submit"
               disabled={busy}
-              className="btn-primary w-full sm:w-auto"
+              className="btn-primary mt-auto w-full self-start sm:w-auto"
             >
               {submitting ? "正在创建…" : "创建学生账号"}
             </button>

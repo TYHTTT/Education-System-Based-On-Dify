@@ -110,7 +110,6 @@ function KeysContent() {
     <section className="page-container">
       <div className="flex flex-wrap items-end justify-between gap-5 border-b border-hairline pb-8">
         <div>
-          <p className="eyebrow">Dify keys</p>
           <h1 className="mt-2 text-heading-3 text-ink sm:text-heading-2">
             密钥管理
           </h1>

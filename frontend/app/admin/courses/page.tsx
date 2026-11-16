@@ -53,7 +53,6 @@ export default function AdminCoursesPage() {
     <section className="page-container">
       <div className="flex flex-wrap items-end justify-between gap-5 border-b border-hairline pb-8">
         <div>
-          <p className="eyebrow">Course management</p>
           <h1 className="mt-2 text-heading-3 text-ink sm:text-heading-2">
             课程管理
           </h1>

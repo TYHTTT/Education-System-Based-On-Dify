@@ -53,7 +53,6 @@ export default function AdminHomePage() {
       <HeroBand
         size="sm"
         align="left"
-        eyebrow="Admin Console"
         title="管理后台"
         subtitle={`欢迎回来，${admin.display_name}。在这里维护课程内容与知识结构。`}
         actions={
