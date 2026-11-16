@@ -115,7 +115,7 @@ function KeysContent() {
             密钥管理
           </h1>
           <p className="mt-3 text-sm leading-6 text-steel">
-            查看每个 Key 自启用日志以来的累计用量，管理新调用的启停。
+            点击密钥 ID，展开查看关联课程、自由问答、累计用量和费用。
           </p>
         </div>
         <button
@@ -168,125 +168,178 @@ function KeysContent() {
                 个凭据，包含尚未调用和已不再关联配置的历史凭据。未知用量不代表零消耗；不同币种分别统计。
               </p>
               {data.items.length ? (
-                <div className="grid gap-5 xl:grid-cols-2">
+                <div className="space-y-3">
                   {data.items.map((item) => (
-                    <article
+                    <details
                       key={item.id}
                       aria-label={`凭据 ${item.id}`}
-                      className="card min-w-0"
+                      className="group min-w-0 rounded-xl border border-hairline bg-canvas"
                     >
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <h2 className="break-words text-heading-4 text-ink">
-                            {[
-                              ...item.course_titles,
-                              ...(item.free_qa ? ["自由问答"] : []),
-                            ].join(" · ") || "历史凭据（当前无配置关联）"}
-                          </h2>
-                          <p className="mt-2 break-all font-mono text-xs text-steel">
-                            {item.id}
+                      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-xl p-5 text-ink hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-purple-700 [&::-webkit-details-marker]:hidden">
+                        <span className="min-w-0 break-all font-mono text-sm">
+                          {item.id}
+                        </span>
+                        <svg
+                          aria-hidden="true"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          className="size-4 shrink-0 text-steel transition-transform group-open:rotate-180"
+                        >
+                          <path
+                            d="m6 9 6 6 6-6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </summary>
+                      <div className="border-t border-hairline p-5 sm:p-6">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <h2 className="text-heading-4 text-ink">使用情况</h2>
+                          <span
+                            className={`shrink-0 rounded-md px-2 py-1 text-xs font-medium ${item.enabled ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}
+                          >
+                            {item.enabled ? "已启用" : "已停用"}
+                          </span>
+                        </div>
+                        <dl className="mt-4 space-y-3 text-sm">
+                          <div className="flex flex-wrap gap-x-4 gap-y-2">
+                            <dt className="w-20 shrink-0 text-steel">
+                              关联课程
+                            </dt>
+                            <dd className="min-w-0 flex-1">
+                              {item.course_titles.length ? (
+                                <ul className="flex flex-wrap gap-2">
+                                  {item.course_titles.map((title, index) => (
+                                    <li
+                                      key={`${index}:${title}`}
+                                      className="break-words rounded-md bg-surface px-2.5 py-1 text-ink"
+                                    >
+                                      {title}
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <span className="text-steel">未关联课程</span>
+                              )}
+                            </dd>
+                          </div>
+                          <div className="flex flex-wrap gap-x-4 gap-y-2">
+                            <dt className="w-20 shrink-0 text-steel">
+                              自由问答
+                            </dt>
+                            <dd
+                              className={
+                                item.free_qa ? "text-ink" : "text-steel"
+                              }
+                            >
+                              {item.free_qa ? "正在使用" : "未使用"}
+                            </dd>
+                          </div>
+                        </dl>
+                        {!item.course_titles.length && !item.free_qa && (
+                          <p className="mt-3 text-xs text-steel">
+                            当前无配置关联，保留历史用量记录。
+                          </p>
+                        )}
+                        <p className="mt-3 text-xs text-steel">
+                          创建于 {formatCallTime(item.created_at)}（北京时间）
+                        </p>
+                        <dl className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                          {[
+                            [
+                              "调用次数",
+                              item.total_calls.toLocaleString("zh-CN"),
+                              `${item.in_progress_calls} 次进行中`,
+                            ],
+                            [
+                              "输入 Token",
+                              formatCallTokens(item.prompt_tokens),
+                              `${item.unknown_prompt_calls} 次未知`,
+                            ],
+                            [
+                              "输出 Token",
+                              formatCallTokens(item.completion_tokens),
+                              `${item.unknown_completion_calls} 次未知`,
+                            ],
+                            [
+                              "总 Token",
+                              formatCallTokens(item.total_tokens),
+                              `${item.unknown_total_token_calls} 次未知`,
+                            ],
+                          ].map(([label, value, note]) => (
+                            <div key={label} className="min-w-0">
+                              <dt className="text-xs text-steel">{label}</dt>
+                              <dd className="mt-2 break-all text-lg tabular-nums text-ink">
+                                {value}
+                              </dd>
+                              <dd className="mt-1 text-xs text-steel">
+                                {note}
+                              </dd>
+                            </div>
+                          ))}
+                        </dl>
+                        <div className="mt-5 border-t border-hairline pt-4 text-sm">
+                          <h3 className="font-medium text-ink">已报告费用</h3>
+                          {item.currencies.length ? (
+                            <ul className="mt-3 space-y-3">
+                              {item.currencies.map((currency) => (
+                                <li
+                                  key={currency.currency ?? "unknown"}
+                                  className="flex flex-wrap items-start justify-between gap-2"
+                                >
+                                  <span className="text-steel">
+                                    {currency.currency ?? "币种未知"} ·{" "}
+                                    {currency.known_price_calls}/
+                                    {currency.call_count} 次费用已报告
+                                  </span>
+                                  <div className="max-w-full text-ink">
+                                    <DifyCallCost log={currency} compact />
+                                  </div>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="mt-3 text-steel">暂无费用记录</p>
+                          )}
+                          <p className="mt-3 text-xs leading-5 text-steel">
+                            {item.unknown_usage_calls} 次 Token 信息不完整 ·{" "}
+                            {item.unknown_cost_calls}{" "}
+                            次费用或币种未知。人民币金额为参考估算。
                           </p>
                         </div>
-                        <span
-                          className={`shrink-0 rounded-md px-2 py-1 text-xs font-medium ${item.enabled ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}
-                        >
-                          {item.enabled ? "已启用" : "已停用"}
-                        </span>
-                      </div>
-                      <p className="mt-3 text-xs text-steel">
-                        创建于 {formatCallTime(item.created_at)}（北京时间）
-                      </p>
-                      <dl className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                        {[
-                          [
-                            "调用次数",
-                            item.total_calls.toLocaleString("zh-CN"),
-                            `${item.in_progress_calls} 次进行中`,
-                          ],
-                          [
-                            "输入 Token",
-                            formatCallTokens(item.prompt_tokens),
-                            `${item.unknown_prompt_calls} 次未知`,
-                          ],
-                          [
-                            "输出 Token",
-                            formatCallTokens(item.completion_tokens),
-                            `${item.unknown_completion_calls} 次未知`,
-                          ],
-                          [
-                            "总 Token",
-                            formatCallTokens(item.total_tokens),
-                            `${item.unknown_total_token_calls} 次未知`,
-                          ],
-                        ].map(([label, value, note]) => (
-                          <div key={label} className="min-w-0">
-                            <dt className="text-xs text-steel">{label}</dt>
-                            <dd className="mt-2 break-all text-lg tabular-nums text-ink">
-                              {value}
-                            </dd>
-                            <dd className="mt-1 text-xs text-steel">{note}</dd>
+                        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-hairline pt-4">
+                          <div className="flex flex-wrap gap-4 text-sm">
+                            <Link
+                              className="text-brand-purple-700 underline"
+                              href={`/admin/dashboard?credential_id=${encodeURIComponent(item.id)}#call-logs`}
+                            >
+                              查看调用日志
+                            </Link>
+                            <Link
+                              className="text-brand-purple-700 underline"
+                              href={`/admin/dashboard?credential_id=${encodeURIComponent(item.id)}#overview`}
+                            >
+                              筛选用量
+                            </Link>
                           </div>
-                        ))}
-                      </dl>
-                      <div className="mt-5 border-t border-hairline pt-4 text-sm">
-                        <h3 className="font-medium text-ink">已报告费用</h3>
-                        {item.currencies.length ? (
-                          <ul className="mt-3 space-y-3">
-                            {item.currencies.map((currency) => (
-                              <li
-                                key={currency.currency ?? "unknown"}
-                                className="flex flex-wrap items-start justify-between gap-2"
-                              >
-                                <span className="text-steel">
-                                  {currency.currency ?? "币种未知"} ·{" "}
-                                  {currency.known_price_calls}/
-                                  {currency.call_count} 次费用已报告
-                                </span>
-                                <div className="max-w-full text-ink">
-                                  <DifyCallCost log={currency} compact />
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="mt-3 text-steel">暂无费用记录</p>
-                        )}
-                        <p className="mt-3 text-xs leading-5 text-steel">
-                          {item.unknown_usage_calls} 次 Token 信息不完整 ·{" "}
-                          {item.unknown_cost_calls}{" "}
-                          次费用或币种未知。人民币金额为参考估算。
-                        </p>
-                      </div>
-                      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-hairline pt-4">
-                        <div className="flex flex-wrap gap-4 text-sm">
-                          <Link
-                            className="text-brand-purple-700 underline"
-                            href={`/admin/dashboard?credential_id=${encodeURIComponent(item.id)}#call-logs`}
+                          <button
+                            type="button"
+                            className="btn-secondary"
+                            disabled={pending !== null}
+                            aria-label={`${item.enabled ? "停用" : "启用"}凭据 ${item.id}`}
+                            onClick={() => void toggle(item.id, !item.enabled)}
                           >
-                            查看调用日志
-                          </Link>
-                          <Link
-                            className="text-brand-purple-700 underline"
-                            href={`/admin/dashboard?credential_id=${encodeURIComponent(item.id)}#overview`}
-                          >
-                            筛选用量
-                          </Link>
+                            {pending === item.id
+                              ? "正在保存…"
+                              : item.enabled
+                                ? "停用"
+                                : "启用"}
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          className="btn-secondary"
-                          disabled={pending !== null}
-                          aria-label={`${item.enabled ? "停用" : "启用"}凭据 ${item.id}`}
-                          onClick={() => void toggle(item.id, !item.enabled)}
-                        >
-                          {pending === item.id
-                            ? "正在保存…"
-                            : item.enabled
-                              ? "停用"
-                              : "启用"}
-                        </button>
                       </div>
-                    </article>
+                    </details>
                   ))}
                 </div>
               ) : (
