@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useAdmin } from "@/components/AdminProvider";
 import BatchStudentCreateForm from "@/components/BatchStudentCreateForm";
+import AdminStudentAccounts from "@/components/AdminStudentAccounts";
 import { createStudentAccount } from "@/lib/api";
 import type { AuthenticatedStudent } from "@/lib/types";
 
@@ -10,7 +11,9 @@ export default function AdminStudentsPage() {
   const { withAdmin } = useAdmin();
   const [submitting, setSubmitting] = useState(false);
   const [batchSubmitting, setBatchSubmitting] = useState(false);
-  const busy = submitting || batchSubmitting;
+  const [deleting, setDeleting] = useState(false);
+  const [accountVersion, setAccountVersion] = useState(0);
+  const busy = submitting || batchSubmitting || deleting;
   const [error, setError] = useState("");
   const [created, setCreated] = useState<Pick<
     AuthenticatedStudent,
@@ -47,6 +50,7 @@ export default function AdminStudentsPage() {
         display_name: student.display_name,
       });
       form.reset();
+      setAccountVersion((value) => value + 1);
     } catch (cause) {
       setError(
         cause instanceof Error ? cause.message : "创建失败，请稍后重试。",
@@ -173,10 +177,16 @@ export default function AdminStudentsPage() {
           </form>
         </div>
         <BatchStudentCreateForm
-          disabled={submitting}
+          disabled={submitting || deleting}
           onSubmittingChange={setBatchSubmitting}
+          onCreated={() => setAccountVersion((value) => value + 1)}
         />
       </div>
+      <AdminStudentAccounts
+        version={accountVersion}
+        disabled={busy}
+        onDeletingChange={setDeleting}
+      />
     </section>
   );
 }

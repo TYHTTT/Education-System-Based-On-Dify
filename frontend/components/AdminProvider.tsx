@@ -10,7 +10,13 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { ApiError, getCurrentAdmin, logoutAdmin } from "@/lib/api";
+import {
+  ApiError,
+  changeCurrentAdminPassword,
+  deleteCurrentAdmin,
+  getCurrentAdmin,
+  logoutAdmin,
+} from "@/lib/api";
 import type { Administrator, AuthenticatedAdmin } from "@/lib/types";
 
 const STORAGE_KEY = "course_coach_admin_access_token";
@@ -21,6 +27,11 @@ interface AdminContextValue {
   error: string;
   completeLogin: (account: AuthenticatedAdmin) => void;
   logout: () => Promise<void>;
+  deleteAccount: (password: string) => Promise<void>;
+  changePassword: (
+    currentPassword: string,
+    newPassword: string,
+  ) => Promise<void>;
   retry: () => void;
   withAdmin: <T>(action: (token: string) => Promise<T>) => Promise<T>;
 }
@@ -129,9 +140,47 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     },
     [clear],
   );
+  const deleteAccount = useCallback(
+    async (password: string) => {
+      await withAdmin((token) => deleteCurrentAdmin(token, password));
+      clear();
+      setError("");
+    },
+    [withAdmin, clear],
+  );
+  const changePassword = useCallback(
+    async (currentPassword: string, newPassword: string) => {
+      await withAdmin((token) =>
+        changeCurrentAdminPassword(token, currentPassword, newPassword),
+      );
+      clear();
+      setError("");
+    },
+    [withAdmin, clear],
+  );
   const value = useMemo(
-    () => ({ admin, status, error, completeLogin, logout, retry, withAdmin }),
-    [admin, status, error, completeLogin, logout, retry, withAdmin],
+    () => ({
+      admin,
+      status,
+      error,
+      completeLogin,
+      logout,
+      deleteAccount,
+      changePassword,
+      retry,
+      withAdmin,
+    }),
+    [
+      admin,
+      status,
+      error,
+      completeLogin,
+      logout,
+      deleteAccount,
+      changePassword,
+      retry,
+      withAdmin,
+    ],
   );
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }

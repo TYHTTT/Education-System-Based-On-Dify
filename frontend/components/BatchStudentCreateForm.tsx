@@ -15,9 +15,11 @@ interface RowResult {
 export default function BatchStudentCreateForm({
   disabled,
   onSubmittingChange,
+  onCreated,
 }: {
   disabled: boolean;
   onSubmittingChange: (pending: boolean) => void;
+  onCreated?: () => void;
 }) {
   const { withAdmin } = useAdmin();
   const [input, setInput] = useState("");
@@ -72,6 +74,7 @@ export default function BatchStudentCreateForm({
       }
       setResults(completed);
       setInput([...remaining].map((row) => row.source).join("\n"));
+      if (completed.some((row) => row.success)) onCreated?.();
     } finally {
       setSubmitting(false);
       onSubmittingChange(false);

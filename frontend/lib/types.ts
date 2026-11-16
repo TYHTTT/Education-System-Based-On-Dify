@@ -299,6 +299,22 @@ export interface Administrator {
   last_active_at: string;
 }
 
+export interface StudentAccount {
+  student_id: string;
+  username: string | null;
+  display_name: string | null;
+  active: boolean;
+  created_at: string;
+  last_active_at: string;
+}
+
+export interface StudentAccountList {
+  items: StudentAccount[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
 export interface AuthenticatedAdmin extends Administrator {
   access_token: string;
 }

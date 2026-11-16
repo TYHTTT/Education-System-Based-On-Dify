@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useAdmin } from "@/components/AdminProvider";
 import HeroBand from "@/components/HeroBand";
 import { ArrowRightIcon } from "@/components/Icons";
+import DeleteAdminAccount from "@/components/DeleteAdminAccount";
+import ChangeAdminPassword from "@/components/ChangeAdminPassword";
 
 const QUICK_LINKS = [
   {
@@ -113,14 +115,18 @@ export default function AdminHomePage() {
               </dd>
             </div>
           </dl>
+          <div className="mt-8 flex flex-wrap gap-3 border-t border-hairline pt-6">
+            <ChangeAdminPassword />
+            <DeleteAdminAccount />
+          </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          {QUICK_LINKS.map((item, index) => (
+        <div className="grid auto-rows-fr gap-4 sm:grid-cols-2">
+          {QUICK_LINKS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`card-tint group flex flex-col p-6 transition-shadow hover:shadow-card ${item.tint} ${index === 0 ? "sm:col-span-2" : ""}`}
+              className={`card-tint group flex flex-col p-6 transition-shadow hover:shadow-card ${item.tint}`}
             >
               <h3 className="text-heading-5 text-ink">{item.title}</h3>
               <p className="mt-2 text-sm leading-6 text-charcoal">

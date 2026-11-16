@@ -81,6 +81,38 @@ class LearningRepository:
             )
         return self._issue_session(student_id)
 
+    def list_students(self, *, query: str = "", page: int = 1, page_size: int = 20) -> dict:
+        term = query.strip().lower()
+        condition = "strpos(lower(coalesce(username,'')), ?) > 0 OR strpos(lower(coalesce(display_name,'')), ?) > 0"
+        with self._connect() as connection:
+            connection.execute(
+                "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY"
+            )
+            total = connection.execute(
+                f"SELECT count(*) AS total FROM students WHERE {condition}",
+                (term, term),
+            ).fetchone()["total"]
+            items = connection.execute(
+                f"""SELECT id AS student_id, username, display_name, active=1 AS active,
+                    created_at, last_active_at FROM students WHERE {condition}
+                    ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?""",
+                (term, term, page_size, (page - 1) * page_size),
+            ).fetchall()
+        return {
+            "items": [dict(row) for row in items],
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+        }
+
+    def delete_student(self, student_id: str) -> bool:
+        # Foreign keys remove sessions and learning states; accounting logs survive.
+        with self._connect() as connection:
+            row = connection.execute(
+                "DELETE FROM students WHERE id = ? RETURNING id", (student_id,)
+            ).fetchone()
+        return row is not None
+
     def authenticate_student(
         self, *, username: str, password: str
     ) -> dict[str, Any] | None:

@@ -9,7 +9,7 @@ from app.core.config import Settings
 from app.core.exceptions import AdminUnauthorizedError
 from app.core.security import hash_password, verify_password
 from app.main import create_app
-from app.schemas.admin import RegisterAdminRequest
+from app.schemas.admin import ChangeAdminPasswordRequest, RegisterAdminRequest
 from tests.mocks import MockLLMClient
 
 AUTHCODE = "test-admin-authorization-secret"
@@ -33,6 +33,10 @@ class FakeAdmins:
             "access_token": "admin-session",
         }
         self.valid = True
+        self.deleted = False
+        self.delete_calls = []
+        self.change_calls = []
+        self.password = "test-password"
 
     def register(self, **kwargs):
         self.register_calls.append(kwargs)
@@ -43,7 +47,9 @@ class FakeAdmins:
     def login(self, *, username, password):
         return (
             self.account
-            if username == "admin_test" and password == "test-password"
+            if username == "admin_test"
+            and password == self.password
+            and not self.deleted
             else None
         )
 
@@ -54,6 +60,30 @@ class FakeAdmins:
 
     def logout(self, token):
         self.valid = False
+
+    def delete_current(self, *, token, password):
+        self.delete_calls.append({"token": token, "password": password})
+        self.from_token(token)
+        if password != self.password:
+            return False
+        self.deleted = True
+        self.valid = False
+        return True
+
+    def change_password(self, *, token, current_password, new_password):
+        self.change_calls.append(
+            {
+                "token": token,
+                "current_password": current_password,
+                "new_password": new_password,
+            }
+        )
+        self.from_token(token)
+        if current_password != self.password:
+            return False
+        self.password = new_password
+        self.valid = False
+        return True
 
 
 @pytest.fixture
@@ -173,7 +203,9 @@ def test_admin_can_allocate_student_account_and_duplicate_is_rejected(api):
             "created_at": "2026-11-16T08:00:00+00:00",
         }
 
-    client.app.state.learning_repository = SimpleNamespace(register_student=register_student)
+    client.app.state.learning_repository = SimpleNamespace(
+        register_student=register_student
+    )
     headers = {"Authorization": "Bearer admin-session"}
     created = client.post("/api/v1/students/register", json=payload, headers=headers)
     assert created.status_code == 201
@@ -231,6 +263,195 @@ def test_shared_password_hashing_preserves_existing_student_format():
     assert verify_password("student-password", encoded)
     assert not verify_password("wrong", encoded)
     assert not verify_password("student-password", "invalid")
+
+
+@pytest.mark.parametrize(
+    "authorization",
+    [None, "Basic admin-session", "Bearer student-session", "Bearer invalid"],
+)
+def test_delete_current_admin_requires_admin_session(api, authorization):
+    client, repository = api
+    headers = {"Authorization": authorization} if authorization else {}
+    response = client.request(
+        "DELETE",
+        "/api/v1/admins/me",
+        json={"password": "test-password"},
+        headers=headers,
+    )
+    assert response.status_code == 401
+    assert repository.delete_calls == []
+    assert not repository.deleted
+
+
+def test_delete_current_admin_verifies_password_and_revokes_access(api):
+    client, repository = api
+    headers = {"Authorization": "Bearer admin-session"}
+    wrong = client.request(
+        "DELETE",
+        "/api/v1/admins/me",
+        json={"password": "wrong-password"},
+        headers=headers,
+    )
+    assert wrong.status_code == 403
+    assert "wrong-password" not in wrong.text
+    assert not repository.deleted
+    assert client.get("/api/v1/admins/me", headers=headers).status_code == 200
+    deleted = client.request(
+        "DELETE",
+        "/api/v1/admins/me",
+        json={"password": "test-password"},
+        headers=headers,
+    )
+    assert deleted.status_code == 204 and deleted.content == b""
+    assert repository.deleted
+    assert repository.delete_calls[-1] == {
+        "token": "admin-session",
+        "password": "test-password",
+    }
+    assert client.get("/api/v1/admins/me", headers=headers).status_code == 401
+    assert (
+        client.request(
+            "DELETE",
+            "/api/v1/admins/me",
+            json={"password": "test-password"},
+            headers=headers,
+        ).status_code
+        == 401
+    )
+    assert (
+        client.post(
+            "/api/v1/admins/login",
+            json={"username": "admin_test", "password": "test-password"},
+        ).status_code
+        == 401
+    )
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {},
+        {"password": ""},
+        {"password": "p" * 129},
+        {"password": "test-password", "admin_id": "another-admin"},
+    ],
+)
+def test_delete_current_admin_rejects_invalid_or_targeted_payload(api, payload):
+    client, repository = api
+    assert (
+        client.request(
+            "DELETE",
+            "/api/v1/admins/me",
+            json=payload,
+            headers={"Authorization": "Bearer admin-session"},
+        ).status_code
+        == 422
+    )
+    assert repository.delete_calls == []
+    assert not repository.deleted
+
+
+@pytest.mark.parametrize(
+    "authorization",
+    [None, "Basic admin-session", "Bearer student-session", "Bearer invalid"],
+)
+def test_change_password_requires_admin(api, authorization):
+    client, repository = api
+    headers = {"Authorization": authorization} if authorization else {}
+    response = client.put(
+        "/api/v1/admins/me/password",
+        json={"current_password": "test-password", "new_password": "new-password"},
+        headers=headers,
+    )
+    assert response.status_code == 401
+    assert repository.change_calls == []
+
+
+def test_change_password_verifies_current_password_and_revokes_session(api):
+    client, repository = api
+    headers = {"Authorization": "Bearer admin-session"}
+    wrong = client.put(
+        "/api/v1/admins/me/password",
+        json={"current_password": "wrong-password", "new_password": "new-password"},
+        headers=headers,
+    )
+    assert wrong.status_code == 403
+    assert repository.password == "test-password"
+    assert client.get("/api/v1/admins/me", headers=headers).status_code == 200
+    changed = client.put(
+        "/api/v1/admins/me/password",
+        json={"current_password": "test-password", "new_password": "new-password"},
+        headers=headers,
+    )
+    assert changed.status_code == 204 and changed.content == b""
+    assert repository.password == "new-password"
+    assert not repository.deleted
+    assert repository.change_calls[-1]["token"] == "admin-session"
+    assert client.get("/api/v1/admins/me", headers=headers).status_code == 401
+    assert (
+        client.post(
+            "/api/v1/admins/login",
+            json={"username": "admin_test", "password": "test-password"},
+        ).status_code
+        == 401
+    )
+    assert (
+        client.post(
+            "/api/v1/admins/login",
+            json={"username": "admin_test", "password": "new-password"},
+        ).status_code
+        == 200
+    )
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {},
+        {"current_password": "test-password"},
+        {"current_password": "", "new_password": "new-password"},
+        {"current_password": "p" * 129, "new_password": "new-password"},
+        {"current_password": "test-password", "new_password": "short"},
+        {"current_password": "test-password", "new_password": "p" * 129},
+        {
+            "current_password": "test-password",
+            "new_password": "new-password",
+            "admin_id": "other",
+        },
+    ],
+)
+def test_change_password_rejects_invalid_or_targeted_payload(api, payload):
+    client, repository = api
+    assert (
+        client.put(
+            "/api/v1/admins/me/password",
+            json=payload,
+            headers={"Authorization": "Bearer admin-session"},
+        ).status_code
+        == 422
+    )
+    assert repository.change_calls == []
+
+
+def test_change_password_secrets_are_not_exposed(api, caplog):
+    payload = {
+        "current_password": "unique-current-secret",
+        "new_password": "unique-new-secret",
+    }
+    parsed = ChangeAdminPasswordRequest.model_validate(payload)
+    assert all(secret not in repr(parsed) for secret in payload.values())
+    client, _ = api
+    with caplog.at_level(logging.INFO):
+        response = client.put(
+            "/api/v1/admins/me/password",
+            json={**payload, "new_password": payload["new_password"] * 30},
+            headers={"Authorization": "Bearer admin-session"},
+        )
+    assert response.status_code == 422
+    assert all(
+        secret not in response.text and secret not in caplog.text
+        for secret in payload.values()
+    )
 
 
 @pytest.fixture
@@ -321,3 +542,104 @@ def test_database_login_rotation_expiry_disable_and_revocation(database_api):
         connection.execute("UPDATE administrators SET active=1")
     assert client.post("/api/v1/admins/logout", headers=headers).status_code == 204
     assert client.get("/api/v1/admins/me", headers=headers).status_code == 401
+
+
+def test_database_delete_current_admin_preserves_other_accounts_and_courses(
+    database_api,
+):
+    client, admins, students = database_api
+    first = client.post("/api/v1/admins/register", json=PAYLOAD).json()
+    second = admins.register(
+        username="other_admin", password="other-password", display_name="其他管理员"
+    )
+    student = students.register_student(
+        username="admin_test", password="student-password", display_name="同名学生"
+    )
+    headers = {"Authorization": "Bearer " + first["access_token"]}
+    with admins.database.connect() as connection:
+        courses = connection.execute("SELECT * FROM courses ORDER BY id").fetchall()
+    assert (
+        client.request(
+            "DELETE",
+            "/api/v1/admins/me",
+            json={"password": "wrong-password"},
+            headers=headers,
+        ).status_code
+        == 403
+    )
+    assert admins.from_token(first["access_token"])["id"] == first["admin_id"]
+    assert (
+        client.request(
+            "DELETE",
+            "/api/v1/admins/me",
+            json={"password": PAYLOAD["password"]},
+            headers=headers,
+        ).status_code
+        == 204
+    )
+    with pytest.raises(AdminUnauthorizedError):
+        admins.from_token(first["access_token"])
+    assert admins.login(username="admin_test", password=PAYLOAD["password"]) is None
+    assert admins.from_token(second["access_token"])["id"] == second["id"]
+    assert students.student_from_token(student["access_token"])["id"] == student["id"]
+    with admins.database.connect() as connection:
+        assert (
+            connection.execute("SELECT * FROM courses ORDER BY id").fetchall()
+            == courses
+        )
+        assert (
+            connection.execute(
+                "SELECT id FROM administrators WHERE id=?", (first["admin_id"],)
+            ).fetchone()
+            is None
+        )
+
+
+def test_database_password_change_hashes_password_and_revokes_only_current_admin(
+    database_api,
+):
+    client, admins, students = database_api
+    account = client.post("/api/v1/admins/register", json=PAYLOAD).json()
+    other = admins.register(
+        username="other_admin", password="other-password", display_name="其他管理员"
+    )
+    student = students.register_student(
+        username="admin_test", password="student-password", display_name="同名学生"
+    )
+    headers = {"Authorization": "Bearer " + account["access_token"]}
+    payload = {
+        "current_password": PAYLOAD["password"],
+        "new_password": "new-test-password",
+    }
+    assert (
+        client.put(
+            "/api/v1/admins/me/password",
+            json={**payload, "current_password": "wrong"},
+            headers=headers,
+        ).status_code
+        == 403
+    )
+    assert admins.login(username="admin_test", password=payload["new_password"]) is None
+    assert (
+        client.put(
+            "/api/v1/admins/me/password", json=payload, headers=headers
+        ).status_code
+        == 204
+    )
+    with pytest.raises(AdminUnauthorizedError):
+        admins.from_token(account["access_token"])
+    assert admins.login(username="admin_test", password=PAYLOAD["password"]) is None
+    with admins.database.connect() as connection:
+        row = connection.execute(
+            "SELECT password_hash,session_token_hash,session_expires_at FROM administrators WHERE id=?",
+            (account["admin_id"],),
+        ).fetchone()
+        assert row["password_hash"] != payload["new_password"]
+        assert verify_password(payload["new_password"], row["password_hash"])
+        assert row["session_token_hash"] is None and row["session_expires_at"] is None
+    assert (
+        admins.login(username="admin_test", password=payload["new_password"])["id"]
+        == account["admin_id"]
+    )
+    assert admins.from_token(other["access_token"])["id"] == other["id"]
+    assert students.student_from_token(student["access_token"])["id"] == student["id"]

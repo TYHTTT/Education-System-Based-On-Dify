@@ -29,3 +29,17 @@ class CurrentStudentResponse(BaseModel):
     username: str
     display_name: str
     created_at: datetime
+
+
+class StudentAccountResponse(CurrentStudentResponse):
+    username: str | None
+    display_name: str | None
+    active: bool
+    last_active_at: datetime
+
+
+class StudentAccountListResponse(BaseModel):
+    items: list[StudentAccountResponse]
+    total: int
+    page: int
+    page_size: int

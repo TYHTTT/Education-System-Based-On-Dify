@@ -6,7 +6,9 @@ from psycopg.errors import UniqueViolation
 from app.core.exceptions import AdminUnauthorizedError, ConfigurationError
 from app.schemas.admin import (
     AuthenticatedAdminResponse,
+    ChangeAdminPasswordRequest,
     CurrentAdminResponse,
+    DeleteAdminRequest,
     LoginAdminRequest,
     RegisterAdminRequest,
 )
@@ -94,3 +96,31 @@ def logout_admin(
     repository: AdminRepository = Depends(admin_repository_from_request),
 ):
     repository.logout(_token(authorization))
+
+
+@router.delete("/me", status_code=204)
+def delete_current_admin(
+    payload: DeleteAdminRequest,
+    authorization: str | None = Header(default=None),
+    admin: dict = Depends(require_admin),
+    repository: AdminRepository = Depends(admin_repository_from_request),
+):
+    if not repository.delete_current(
+        token=_token(authorization), password=payload.password.get_secret_value()
+    ):
+        raise HTTPException(status_code=403, detail="管理员密码不正确，无法删除账号")
+
+
+@router.put("/me/password", status_code=204)
+def change_current_admin_password(
+    payload: ChangeAdminPasswordRequest,
+    authorization: str | None = Header(default=None),
+    admin: dict = Depends(require_admin),
+    repository: AdminRepository = Depends(admin_repository_from_request),
+):
+    if not repository.change_password(
+        token=_token(authorization),
+        current_password=payload.current_password.get_secret_value(),
+        new_password=payload.new_password.get_secret_value(),
+    ):
+        raise HTTPException(status_code=403, detail="当前管理员密码不正确")

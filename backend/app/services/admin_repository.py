@@ -60,8 +60,8 @@ class AdminRepository:
         with self.database.connect() as connection:
             account = connection.execute(
                 f"""UPDATE administrators SET session_token_hash=?,session_expires_at=?,last_active_at=?
-                    WHERE id=? AND active=1 RETURNING {PUBLIC_COLUMNS}""",
-                (token_hash, expires, now, row["id"]),
+                    WHERE id=? AND active=1 AND password_hash=? RETURNING {PUBLIC_COLUMNS}""",
+                (token_hash, expires, now, row["id"], row["password_hash"]),
             ).fetchone()
         return {**dict(account), "access_token": token} if account else None
 
@@ -84,3 +84,41 @@ class AdminRepository:
                 "UPDATE administrators SET session_token_hash=NULL,session_expires_at=NULL WHERE session_token_hash=?",
                 (hash_session_token(token),),
             )
+
+    def delete_current(self, *, token: str, password: str) -> bool:
+        now = datetime.now(UTC).isoformat()
+        with self.database.connect() as connection:
+            account = connection.execute(
+                """SELECT id,password_hash FROM administrators
+                    WHERE session_token_hash=? AND session_expires_at>? AND active=1
+                    FOR UPDATE""",
+                (hash_session_token(token), now),
+            ).fetchone()
+            if account is None:
+                raise AdminUnauthorizedError()
+            if not verify_password(password, account["password_hash"]):
+                return False
+            connection.execute(
+                "DELETE FROM administrators WHERE id=?", (account["id"],)
+            )
+        return True
+
+    def change_password(self, *, token: str, current_password: str, new_password: str) -> bool:
+        now = datetime.now(UTC).isoformat()
+        with self.database.connect() as connection:
+            account = connection.execute(
+                """SELECT id,password_hash FROM administrators
+                    WHERE session_token_hash=? AND session_expires_at>? AND active=1
+                    FOR UPDATE""",
+                (hash_session_token(token), now),
+            ).fetchone()
+            if account is None:
+                raise AdminUnauthorizedError()
+            if not verify_password(current_password, account["password_hash"]):
+                return False
+            connection.execute(
+                """UPDATE administrators SET password_hash=?,session_token_hash=NULL,
+                    session_expires_at=NULL WHERE id=?""",
+                (hash_password(new_password), account["id"]),
+            )
+        return True

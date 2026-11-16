@@ -1,5 +1,6 @@
 import type {
   AuthenticatedStudent,
+  StudentAccountList,
   Administrator,
   AuthenticatedAdmin,
   CourseRecord,
@@ -205,6 +206,32 @@ export function logoutAdmin(token: string): Promise<void> {
   });
 }
 
+export function changeCurrentAdminPassword(
+  token: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<void> {
+  return request<void>("/api/v1/admins/me/password", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...studentHeaders(token) },
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+  });
+}
+
+export function deleteCurrentAdmin(
+  token: string,
+  password: string,
+): Promise<void> {
+  return request<void>("/api/v1/admins/me", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json", ...studentHeaders(token) },
+    body: JSON.stringify({ password }),
+  });
+}
+
 export function createStudentAccount(
   token: string,
   payload: { username: string; password: string; display_name: string },
@@ -213,6 +240,29 @@ export function createStudentAccount(
     method: "POST",
     headers: { "Content-Type": "application/json", ...studentHeaders(token) },
     body: JSON.stringify(payload),
+  });
+}
+
+export function getStudentAccounts(
+  token: string,
+  filters: { q: string; page: number },
+  signal?: AbortSignal,
+): Promise<StudentAccountList> {
+  const params = new URLSearchParams({
+    q: filters.q,
+    page: String(filters.page),
+    page_size: "20",
+  });
+  return request<StudentAccountList>(`/api/v1/admin/students?${params}`, {
+    headers: studentHeaders(token),
+    signal,
+  });
+}
+
+export function deleteStudentAccount(token: string, id: string): Promise<void> {
+  return request<void>(`/api/v1/admin/students/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: studentHeaders(token),
   });
 }
 

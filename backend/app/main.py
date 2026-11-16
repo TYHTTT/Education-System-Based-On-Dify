@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app import __version__
+from app.api.admin_students import router as admin_students_router
 from app.api.admins import router as admins_router
 from app.api.chat import router as chat_router
 from app.api.course_content import router as course_content_router
@@ -163,6 +164,7 @@ def create_app(
     app.include_router(health_router)
     app.include_router(chat_router)
     app.include_router(students_router)
+    app.include_router(admin_students_router)
     app.include_router(admins_router)
     app.include_router(courses_router)
     app.include_router(admin_courses_router)

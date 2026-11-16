@@ -100,6 +100,12 @@ npm run dev
 
 页面调用 `POST /api/v1/students/register`，携带管理员 Bearer Token，并提交 `username`、`password` 和 `display_name`；该接口不接受学生或未登录用户自行注册。
 
+下方“学生账号列表”支持按姓名或用户名搜索和分页查看。点击对应账号的“删除”，在弹窗中确认后永久删除该学生账号、全部登录会话和学习进度；历史 Dify 调用日志与用量记录保留。删除后的账号无法再登录，此操作无法恢复。单个或批量创建成功后，列表会自动刷新。
+
+管理员可在后台概览的个人账户卡片中点击“删除管理员账号”，输入当前管理员密码并确认后永久删除自己的账号。删除成功后自动清除管理员登录状态，返回管理员登录界面；其他管理员、课程、学生账号和历史调用记录保留。此操作无法恢复，需要新管理员账号时仍须使用管理员创建授权码。
+
+同一账户卡片中的“修改密码”支持输入当前密码、新密码及确认新密码（8–128 个字符）。修改成功后当前管理员登录凭据立即失效，页面返回管理员登录界面，需使用新密码重新登录；其他账号不受影响。
+
 ## 测试和构建
 
 ```powershell
@@ -150,6 +156,10 @@ operations/database/ # 当前数据库初始化结构和入口
 | `GET /api/v1/students/me` | 当前学生 |
 | `POST /api/v1/admins/register`、`login`、`logout` | 管理员创建、登录和退出 |
 | `GET /api/v1/admins/me` | 验证当前管理员 |
+| `DELETE /api/v1/admins/me` | 删除当前登录的管理员账号，请求体 `{"password":"当前管理员密码"}`；密码错误返回 403，成功返回 204 并使当前登录凭据失效 |
+| `PUT /api/v1/admins/me/password` | 修改当前管理员密码，请求体包含 `current_password` 和 `new_password`；当前密码错误返回 403，成功返回 204 并使当前登录凭据失效 |
+| `GET /api/v1/admin/students` | 管理员按姓名或用户名搜索学生账号；`q` 为关键词，`page` 默认 1，`page_size` 默认 20、最大 50 |
+| `DELETE /api/v1/admin/students/{student_id}` | 管理员永久删除学生账号、登录会话及学习进度，保留历史调用日志；成功返回 204，不存在返回 404 |
 | `GET /api/v1/admin/dify/call-logs` | 管理员组合筛选调用日志；支持 `credential_id`、`student`、`course`、`topic`、`student_type`、`business_type`、`status`、`started_from`、`started_before`；`page` 默认 1，`page_size` 默认 20、最大 50 |
 | `GET /api/v1/admin/dify/call-logs/filter-options` | 管理员读取有调用记录的凭据选项及关联标签，不返回密钥或指纹 |
 | `GET /api/v1/admin/dify/call-logs/{call_id}` | 管理员查看单次调用详情；`call_id` 为 UUID，记录不存在时返回 404 |

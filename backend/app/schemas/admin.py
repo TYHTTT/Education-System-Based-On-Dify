@@ -33,3 +33,14 @@ class CurrentAdminResponse(BaseModel):
 
 class AuthenticatedAdminResponse(CurrentAdminResponse):
     access_token: str
+
+
+class DeleteAdminRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    password: SecretStr = Field(min_length=1, max_length=128)
+
+
+class ChangeAdminPasswordRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    current_password: SecretStr = Field(min_length=1, max_length=128)
+    new_password: SecretStr = Field(min_length=8, max_length=128)
