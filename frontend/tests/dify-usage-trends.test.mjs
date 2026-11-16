@@ -5,10 +5,10 @@ import { chartNumber, trendFilters, trendValue } from "../lib/dify-usage-trends.
 test("default thirty-day window crosses Beijing midnight independently of browser timezone", () => {
   const before = trendFilters({}, new Date("2026-11-15T15:59:59Z"));
   const after = trendFilters({}, new Date("2026-11-15T16:00:00Z"));
-  assert.equal(before.started_before, "2026-11-15T16:00:00.000Z");
-  assert.equal(after.started_before, "2026-11-16T16:00:00.000Z");
+  assert.equal(before.started_before, "2026-11-15T15:59:59.000Z");
+  assert.equal(after.started_before, "2026-11-16T15:59:59.000Z");
   assert.equal(after.started_from, "2026-10-17T16:00:00.000Z");
-  assert.equal((Date.parse(after.started_before) - Date.parse(after.started_from)) / 86400000, 30);
+  assert.equal(Date.parse(after.started_before) - Date.parse(after.started_from), 30 * 86400000 - 1000);
 });
 
 test("explicit partial boundaries and other filter scopes are retained", () => {

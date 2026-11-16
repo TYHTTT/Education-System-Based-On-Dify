@@ -14,10 +14,10 @@ import {
   formatCallTime,
   formatCallTokens,
   formatCallDuration,
-  callLogQuery,
   readCallLogFilters,
 } from "@/lib/dify-call-logs";
 import type { DifyCallLogDetail } from "@/lib/types";
+import { dashboardQuery } from "@/lib/dify-dashboard";
 
 function Field({
   label,
@@ -57,10 +57,12 @@ export default function AdminCallLogDetailPage() {
 function CallLogDetailContent() {
   const { callId } = useParams<{ callId: string }>();
   const searchParams = useSearchParams();
-  const returnQuery = callLogQuery(
-    readCallLogFilters(searchParams),
-    callLogPage(searchParams.get("page")),
-  );
+  const returnQuery = dashboardQuery(readCallLogFilters(searchParams), {
+    page: callLogPage(searchParams.get("page")),
+    group_by:
+      searchParams.get("group_by") === "course" ? "course" : "credential",
+    group_page: callLogPage(searchParams.get("group_page")),
+  });
   const { withAdmin, status } = useAdmin();
   const [data, setData] = useState<DifyCallLogDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -116,8 +118,11 @@ function CallLogDetailContent() {
 
   return (
     <section className="page-container">
-      <Link href={`/admin/call-logs?${returnQuery}`} className="link text-sm">
-        ← 返回调用日志
+      <Link
+        href={`/admin/dashboard?${returnQuery}#call-logs`}
+        className="link text-sm"
+      >
+        ← 返回用量仪表盘
       </Link>
       <div className="mt-6 flex flex-wrap items-end justify-between gap-5 border-b border-hairline pb-8">
         <div>

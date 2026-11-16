@@ -261,13 +261,13 @@ function KeysContent() {
                         <div className="flex flex-wrap gap-4 text-sm">
                           <Link
                             className="text-brand-purple-700 underline"
-                            href={`/admin/call-logs?page=1&credential_id=${encodeURIComponent(item.id)}`}
+                            href={`/admin/dashboard?credential_id=${encodeURIComponent(item.id)}#call-logs`}
                           >
                             查看调用日志
                           </Link>
                           <Link
                             className="text-brand-purple-700 underline"
-                            href={`/admin/usage?credential_id=${encodeURIComponent(item.id)}`}
+                            href={`/admin/dashboard?credential_id=${encodeURIComponent(item.id)}#overview`}
                           >
                             筛选用量
                           </Link>

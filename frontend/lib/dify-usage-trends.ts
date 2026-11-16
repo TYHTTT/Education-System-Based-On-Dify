@@ -24,7 +24,7 @@ export function trendFilters(
       new Date(midnight.getTime() - 29 * 86400000).toISOString(),
     started_before:
       filters.started_before ||
-      new Date(midnight.getTime() + 86400000).toISOString(),
+      new Date(midnight.getTime() + 86400000 - 1000).toISOString(),
   };
 }
 

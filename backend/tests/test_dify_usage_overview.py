@@ -2,8 +2,8 @@ from datetime import datetime
 from decimal import Decimal
 
 import pytest
-
 from app.services.dify_call_logs import DifyCallContext, DifyCallOutcome
+
 from tests.test_dify_call_log_filters import filtered_api as _filtered_api
 from tests.test_dify_call_logs_api import PATH
 from tests.test_dify_call_logs_api import api as _api
@@ -179,7 +179,7 @@ def test_overview_sums_all_matching_pages_with_exact_decimal_prices(api):
                 "started_from": "2026-11-16T00:00:00+08:00",
                 "started_before": "2026-11-16T01:00:00+08:00",
             },
-            2,
+            3,
         ),
         ({"student": "does-not-exist"}, 0),
     ],

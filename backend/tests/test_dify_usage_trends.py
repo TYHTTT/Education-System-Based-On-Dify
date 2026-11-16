@@ -67,7 +67,7 @@ def test_default_window_is_thirty_beijing_days_and_empty_dates_are_filled(api):
     )
 
 
-def test_beijing_midnight_boundaries_and_exclusive_end_match_logs(api):
+def test_beijing_midnight_boundaries_and_inclusive_end_match_logs(api):
     client, logs, headers, _ = api
     for at in [
         "2026-11-15T23:59:59+08:00",  # outside
@@ -76,7 +76,8 @@ def test_beijing_midnight_boundaries_and_exclusive_end_match_logs(api):
         "2026-11-16T15:59:59+00:00",
         "2026-11-16T16:00:00+00:00",
         "2026-11-17T15:59:59+00:00",
-        "2026-11-18T16:00:00+00:00",  # exact exclusive end
+        "2026-11-18T16:00:00+00:00",  # exact inclusive end
+        "2026-11-18T16:00:00.000001+00:00",  # one microsecond outside
     ]:
         record(logs, at=at)
     result = trends(client, headers)
@@ -84,11 +85,12 @@ def test_beijing_midnight_boundaries_and_exclusive_end_match_logs(api):
         ("2026-11-16", 3),
         ("2026-11-17", 2),
         ("2026-11-18", 0),
+        ("2026-11-19", 1),
     ]
     listed = client.get(PATH, headers=headers, params=WINDOW).json()
-    assert result["totals"]["total_calls"] == listed["total"] == 5
+    assert result["totals"]["total_calls"] == listed["total"] == 6
     assert result["daily"][0]["total_tokens"] is None
-    assert result["daily"][-1]["total_tokens"] == 0
+    assert result["daily"][2]["total_tokens"] == 0
 
 
 def test_partial_boundary_days_and_equivalent_foreign_timezones(api):
@@ -102,7 +104,52 @@ def test_partial_boundary_days_and_equivalent_foreign_timezones(api):
         started_from="2026-11-15T23:00:00-05:00",
         started_before="2026-11-17T12:00:00+08:00",
     )
-    assert [day["total_calls"] for day in result["daily"]] == [1, 0]
+    assert [day["total_calls"] for day in result["daily"]] == [1, 1]
+
+
+@pytest.mark.parametrize(
+    "start,expected,price",
+    [
+        ("2026-11-16T23:59:59+08:00", 2, "0.3"),
+        ("2026-11-17T00:00:00+08:00", 1, "0.2"),
+    ],
+)
+def test_cutoff_includes_exact_instant_and_excludes_next_microsecond_across_all_statistics(
+    api, start, expected, price
+):
+    client, logs, headers, _ = api
+    for at, amount in [
+        ("2026-11-16T23:59:59.999999+08:00", "0.1"),
+        ("2026-11-17T00:00:00+08:00", "0.2"),
+        ("2026-11-17T00:00:00.000001+08:00", "0.3"),
+    ]:
+        record(
+            logs,
+            at=at,
+            usage={
+                "prompt_tokens": 1,
+                "completion_tokens": 2,
+                "total_tokens": 3,
+                "total_price": Decimal(amount),
+                "currency": "CNY",
+            },
+        )
+    query = {"started_from": start, "started_before": "2026-11-16T16:00:00Z"}
+    trend = trends(client, headers, **query)
+    overview = client.get(PATH + "/overview", headers=headers, params=query).json()
+    listed = client.get(PATH, headers=headers, params=query).json()
+    assert (
+        trend["totals"]["total_calls"]
+        == overview["total_calls"]
+        == listed["total"]
+        == expected
+    )
+    assert sum(day["total_calls"] for day in trend["daily"]) == expected
+    for item in (trend["totals"], overview):
+        assert item["total_tokens"] == 3 * expected
+        assert Decimal(item["currencies"][0]["total_price"]) == Decimal(price)
+    assert trend["daily"][-1]["day"] == "2026-11-17"
+    assert trend["daily"][-1]["total_calls"] == 1
 
 
 def test_daily_totals_and_groups_match_overview_with_exact_currency_subtotals(api):
@@ -254,7 +301,7 @@ def test_shared_filter_scopes_match_logs_and_overview(filtered_api, query):
         {"group_page": 0},
         {"group_page_size": 21},
         {"started_from": "2026-01-01"},
-        {"started_from": "2026-11-19T00:00:00+08:00"},
+        {"started_from": "2026-11-19T00:00:00.000001+08:00"},
         {
             "started_from": "2024-01-01T00:00:00+08:00",
             "started_before": "2025-01-02T00:00:00+08:00",
@@ -278,7 +325,7 @@ def test_leap_year_maximum_range_is_accepted(api):
         client,
         headers,
         started_from="2024-01-01T00:00:00+08:00",
-        started_before="2025-01-01T00:00:00+08:00",
+        started_before="2024-12-31T23:59:59+08:00",
     )
     assert len(result["daily"]) == 366
     assert result["daily"][0]["day"] == "2024-01-01"

@@ -2,8 +2,8 @@ from datetime import datetime
 from uuid import uuid4
 
 import pytest
-
 from app.services.dify_call_logs import DifyCallContext, DifyCallOutcome
+
 from tests.test_dify_call_logs_api import PATH
 from tests.test_dify_call_logs_api import api as _shared_api
 
@@ -136,17 +136,24 @@ def filtered_api(api):
                 "started_from": "2026-11-16T00:00:00+08:00",
                 "started_before": "2026-11-16T01:00:00+08:00",
             },
-            [1, 0],
+            [2, 1, 0],
         ),
         (
             {
                 "started_from": "2026-11-15T16:00:00Z",
                 "started_before": "2026-11-15T17:00:00Z",
             },
-            [1, 0],
+            [2, 1, 0],
         ),
         ({"started_from": "2026-11-15T17:00:00Z"}, [4, 3, 2]),
-        ({"started_before": "2026-11-15T16:00:00Z"}, []),
+        ({"started_before": "2026-11-15T16:00:00Z"}, [0]),
+        (
+            {
+                "started_from": "2026-11-16T00:00:00+08:00",
+                "started_before": "2026-11-15T16:00:00Z",
+            },
+            [0],
+        ),
     ],
 )
 def test_filters_match_names_ids_literal_search_and_beijing_boundaries(
@@ -210,10 +217,6 @@ def test_combination_and_filtered_pagination(filtered_api):
         {"started_before": "invalid"},
         {
             "started_from": "2026-11-16T01:00:00Z",
-            "started_before": "2026-11-16T00:00:00Z",
-        },
-        {
-            "started_from": "2026-11-16T00:00:00Z",
             "started_before": "2026-11-16T00:00:00Z",
         },
         {"student": "a" * 101},

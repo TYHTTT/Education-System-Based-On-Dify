@@ -78,7 +78,7 @@ def _filter_sql(filters: dict) -> tuple[str, list]:
     if filters.get("student_type"):
         clauses.append("l.is_anonymous=?")
         values.append(filters["student_type"] == "anonymous")
-    for name, comparison in (("started_from", ">="), ("started_before", "<")):
+    for name, comparison in (("started_from", ">="), ("started_before", "<=")):
         if filters.get(name):
             clauses.append(f"l.started_at{comparison}?")
             values.append(filters[name])
@@ -303,9 +303,7 @@ class DifyCallLogRepository:
         for row in group_currencies:
             by_group[row.pop("group_id")]["currencies"].append(row)
         first = filters["started_from"].astimezone(BEIJING).date()
-        last = (
-            filters["started_before"].astimezone(BEIJING) - timedelta(microseconds=1)
-        ).date()
+        last = filters["started_before"].astimezone(BEIJING).date()
         empty = {name: 0 for name in totals if name != "currencies"}
         return {
             "generated_at": generated_at,

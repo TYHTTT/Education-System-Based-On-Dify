@@ -7,9 +7,9 @@ import { ArrowRightIcon } from "@/components/Icons";
 
 const QUICK_LINKS = [
   {
-    href: "/admin/trends",
-    title: "用量趋势",
-    description: "按日查看调用量、Token 和费用，对比 Key 或课程。",
+    href: "/admin/dashboard",
+    title: "用量仪表盘",
+    description: "统一查看调用次数、Token、费用趋势和调用日志。",
     tint: "bg-tint-sky",
   },
   {
@@ -17,12 +17,6 @@ const QUICK_LINKS = [
     title: "密钥管理",
     description: "查看每个 Key 的累计用量，启用或停用 AI 调用。",
     tint: "bg-tint-mint",
-  },
-  {
-    href: "/admin/usage",
-    title: "用量概览",
-    description: "查看调用次数、成功率、Token 与各币种的已报告费用。",
-    tint: "bg-tint-sky",
   },
   {
     href: "/admin/courses",
@@ -47,12 +41,6 @@ const QUICK_LINKS = [
     title: "学生端预览",
     description: "以学生视角浏览课程目录与学习路径。",
     tint: "bg-tint-peach",
-  },
-  {
-    href: "/admin/call-logs",
-    title: "调用日志",
-    description: "查看最近的 Dify 调用、Token 用量、费用与执行状态。",
-    tint: "bg-tint-lavender",
   },
 ];
 

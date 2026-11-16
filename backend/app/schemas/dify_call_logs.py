@@ -34,7 +34,9 @@ class DifyCallLogFilters(BaseModel):
     business_type: DifyBusinessType | None = None
     status: DifyCallStatus | None = None
     started_from: AwareDatetime | None = None
-    started_before: AwareDatetime | None = None
+    started_before: AwareDatetime | None = Field(
+        default=None, description="截止时间，包含该时刻"
+    )
 
     @field_validator("student", "course", "topic")
     @classmethod
@@ -46,9 +48,9 @@ class DifyCallLogFilters(BaseModel):
         if (
             self.started_from
             and self.started_before
-            and self.started_from >= self.started_before
+            and self.started_from > self.started_before
         ):
-            raise ValueError("截止时间必须晚于开始时间")
+            raise ValueError("截止时间不得早于开始时间")
         return self
 
 
@@ -127,7 +129,10 @@ def trend_boundary(days: int) -> datetime:
 
 class DifyUsageTrendQuery(DifyCallLogFilters):
     started_from: AwareDatetime = Field(default_factory=lambda: trend_boundary(-29))
-    started_before: AwareDatetime = Field(default_factory=lambda: trend_boundary(1))
+    started_before: AwareDatetime = Field(
+        default_factory=lambda: trend_boundary(1) - timedelta(seconds=1),
+        description="截止时间，包含该时刻；默认今天 23:59:59（北京时间）",
+    )
     group_by: Literal["credential", "course"] = "credential"
     group_page: int = Field(default=1, ge=1)
     group_page_size: int = Field(default=10, ge=1, le=20)
@@ -136,9 +141,7 @@ class DifyUsageTrendQuery(DifyCallLogFilters):
     def check_days(self):
         # Count calendar buckets, including partially selected boundary days.
         first = self.started_from.astimezone(BEIJING).date()
-        last = (
-            self.started_before.astimezone(BEIJING) - timedelta(microseconds=1)
-        ).date()
+        last = self.started_before.astimezone(BEIJING).date()
         if (last - first).days >= 366:
             raise ValueError("最多选择 366 个北京时间日期")
         return self
