@@ -136,9 +136,7 @@ class TopicManagement:
                     "page": page,
                     "page_size": page_size,
                 }
-            where = (
-                "(t.title ILIKE ? OR t.id ILIKE ? OR c.title ILIKE ?)"
-            )
+            where = "(t.title ILIKE ? OR t.id ILIKE ? OR c.title ILIKE ?)"
             params = [f"%{query}%"] * 3
             if course is not None:
                 where += " AND t.course=?"
@@ -218,7 +216,9 @@ class TopicManagement:
                 "title": record["title"],
                 "active": bool(record["active"]),
             },
-            "groups": sorted(groups.values(), key=lambda group: (group["sort_order"], group["id"])),
+            "groups": sorted(
+                groups.values(), key=lambda group: (group["sort_order"], group["id"])
+            ),
         }
 
     def create_chapter(self, course, title):

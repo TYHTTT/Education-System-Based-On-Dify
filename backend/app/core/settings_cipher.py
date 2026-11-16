@@ -25,7 +25,9 @@ class SettingsCipher:
             if not path.exists() and create:
                 path.parent.mkdir(parents=True, exist_ok=True)
                 # Publish a complete key atomically without replacing another worker's key.
-                with tempfile.NamedTemporaryFile(dir=path.parent, delete=False) as temporary:
+                with tempfile.NamedTemporaryFile(
+                    dir=path.parent, delete=False
+                ) as temporary:
                     temporary.write(Fernet.generate_key())
                     temporary_path = temporary.name
                 try:
@@ -38,7 +40,9 @@ class SettingsCipher:
             try:
                 key = path.read_bytes().strip()
             except FileNotFoundError:
-                raise ConfigurationError("配置加密文件缺失，请恢复服务器密钥文件或在后台重新填写 Dify 密钥。") from None
+                raise ConfigurationError(
+                    "配置加密文件缺失，请恢复服务器密钥文件或在后台重新填写 Dify 密钥。"
+                ) from None
         try:
             return Fernet(key)
         except (ValueError, TypeError):
@@ -49,6 +53,12 @@ class SettingsCipher:
 
     def decrypt(self, value: str) -> str:
         try:
-            return self._fernet(create=False).decrypt(value.encode("ascii")).decode("utf-8")
+            return (
+                self._fernet(create=False)
+                .decrypt(value.encode("ascii"))
+                .decode("utf-8")
+            )
         except (InvalidToken, ValueError, UnicodeError):
-            raise ConfigurationError("Dify 密钥无法解密，请恢复服务器密钥文件或在后台重新填写。") from None
+            raise ConfigurationError(
+                "Dify 密钥无法解密，请恢复服务器密钥文件或在后台重新填写。"
+            ) from None

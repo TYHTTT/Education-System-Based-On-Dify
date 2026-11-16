@@ -152,7 +152,9 @@ function CourseDetails({ courseId }: { courseId: string }) {
                 </div>
                 <div className="flex gap-2">
                   <dt>Dify 密钥</dt>
-                  <dd>{course.dify_api_key_configured ? "已配置" : "未配置"}</dd>
+                  <dd>
+                    {course.dify_api_key_configured ? "已配置" : "未配置"}
+                  </dd>
                 </div>
                 <div className="flex gap-2">
                   <dt>最近修改</dt>

@@ -21,7 +21,8 @@ export default function AdminShell({ children }: { children: ReactNode }) {
     active:
       pathname === item.href ||
       (item.href !== "/admin" && pathname.startsWith(item.href + "/")) ||
-      (item.href === "/admin/dashboard" && pathname.startsWith("/admin/call-logs/")),
+      (item.href === "/admin/dashboard" &&
+        pathname.startsWith("/admin/call-logs/")),
   }));
   async function signOut() {
     setLeaving(true);

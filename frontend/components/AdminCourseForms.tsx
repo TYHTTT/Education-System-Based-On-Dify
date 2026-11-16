@@ -91,7 +91,8 @@ export function CourseEditor({
               className={inputClass}
             />
             <span className="mt-1.5 block text-xs font-normal text-slate-500">
-              满分 100 分，最新作答分数严格高于此门限才标记为已完成。修改后，已有评分也会按新门限重新判定。
+              满分 100
+              分，最新作答分数严格高于此门限才标记为已完成。修改后，已有评分也会按新门限重新判定。
             </span>
           </label>
           <DifyConnectionFields

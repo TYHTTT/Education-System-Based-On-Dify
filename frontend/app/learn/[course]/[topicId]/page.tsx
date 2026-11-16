@@ -82,14 +82,18 @@ function TopicContent({
   function recordEvaluation(evaluation: TopicEvaluation) {
     const { score, status: evaluatedStatus } = evaluation;
     if (!evaluation.recorded || score === null || !evaluatedStatus) return;
-    setTopic((current) => current ? {
-      ...current,
-      status: evaluatedStatus,
-      latest_score: score,
-      mastery: score / 100,
-      mastery_display: `${score}%`,
-      evidence_count: (current.evidence_count ?? 0) + 1,
-    } : current);
+    setTopic((current) =>
+      current
+        ? {
+            ...current,
+            status: evaluatedStatus,
+            latest_score: score,
+            mastery: score / 100,
+            mastery_display: `${score}%`,
+            evidence_count: (current.evidence_count ?? 0) + 1,
+          }
+        : current,
+    );
     void refresh();
     void load();
   }

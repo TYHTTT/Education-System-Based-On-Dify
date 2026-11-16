@@ -39,7 +39,9 @@ export default function SourcePanel({
       .then((courses) => {
         if (!controller.signal.aborted)
           setCourseTitles(
-            Object.fromEntries(courses.map((course) => [course.id, course.title])),
+            Object.fromEntries(
+              courses.map((course) => [course.id, course.title]),
+            ),
           );
       })
       .catch(() => {});

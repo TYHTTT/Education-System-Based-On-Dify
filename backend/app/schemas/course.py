@@ -1,6 +1,13 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    SecretStr,
+    field_validator,
+    model_validator,
+)
 from app.schemas.dify_settings import DifyApiUrl, clean_api_key
 
 
@@ -35,7 +42,9 @@ class UpdateCourseRequest(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=100)
     description: str | None = Field(default=None, max_length=1000)
     active: bool | None = None
-    completion_threshold: float | None = Field(default=None, ge=0, le=100, allow_inf_nan=False)
+    completion_threshold: float | None = Field(
+        default=None, ge=0, le=100, allow_inf_nan=False
+    )
     dify_api_base_url: DifyApiUrl | None = None
     dify_api_key: SecretStr | None = Field(default=None, max_length=8192)
 
@@ -47,7 +56,9 @@ class UpdateCourseRequest(BaseModel):
     @model_validator(mode="after")
     def check_update(self):
         if not self.model_fields_set or any(
-            getattr(self, name) is None for name in self.model_fields_set if name != "dify_api_key"
+            getattr(self, name) is None
+            for name in self.model_fields_set
+            if name != "dify_api_key"
         ):
             raise ValueError("请提供需要修改的课程信息，字段不能为 null")
         if self.title is not None:

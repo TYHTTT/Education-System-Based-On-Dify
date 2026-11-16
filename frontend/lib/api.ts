@@ -275,9 +275,13 @@ export function updateCourse(
   );
 }
 
-export function getAdminDifySettings(token: string, signal?: AbortSignal): Promise<FreeQaDifySettings> {
+export function getAdminDifySettings(
+  token: string,
+  signal?: AbortSignal,
+): Promise<FreeQaDifySettings> {
   return request<FreeQaDifySettings>("/api/v1/admin/settings/free-qa", {
-    headers: studentHeaders(token), signal,
+    headers: studentHeaders(token),
+    signal,
   });
 }
 
@@ -296,17 +300,34 @@ export function getAdminDifyCallLogs(
   });
 }
 
-export function getAdminDifyCallLogFilterOptions(token: string, signal?: AbortSignal): Promise<DifyCallLogFilterOptions> {
-  return request<DifyCallLogFilterOptions>("/api/v1/admin/dify/call-logs/filter-options", {
-    headers: studentHeaders(token), cache: "no-store", signal,
-  });
+export function getAdminDifyCallLogFilterOptions(
+  token: string,
+  signal?: AbortSignal,
+): Promise<DifyCallLogFilterOptions> {
+  return request<DifyCallLogFilterOptions>(
+    "/api/v1/admin/dify/call-logs/filter-options",
+    {
+      headers: studentHeaders(token),
+      cache: "no-store",
+      signal,
+    },
+  );
 }
 
-export function getAdminDifyUsageOverview(token: string, filters: DifyCallLogFilters, signal?: AbortSignal): Promise<DifyUsageOverview> {
+export function getAdminDifyUsageOverview(
+  token: string,
+  filters: DifyCallLogFilters,
+  signal?: AbortSignal,
+): Promise<DifyUsageOverview> {
   const query = callLogFilterQuery(filters);
-  return request<DifyUsageOverview>(`/api/v1/admin/dify/call-logs/overview${query ? "?" + query : ""}`, {
-    headers: studentHeaders(token), cache: "no-store", signal,
-  });
+  return request<DifyUsageOverview>(
+    `/api/v1/admin/dify/call-logs/overview${query ? "?" + query : ""}`,
+    {
+      headers: studentHeaders(token),
+      cache: "no-store",
+      signal,
+    },
+  );
 }
 
 export function getAdminDifyCallLog(
@@ -321,27 +342,44 @@ export function getAdminDifyCallLog(
 }
 
 export function getAdminDifyUsageTrends(
-  token: string, filters: DifyCallLogFilters, groupBy: "credential" | "course",
-  groupPage: number, signal?: AbortSignal,
+  token: string,
+  filters: DifyCallLogFilters,
+  groupBy: "credential" | "course",
+  groupPage: number,
+  signal?: AbortSignal,
 ): Promise<DifyUsageTrends> {
   const query = new URLSearchParams(callLogFilterQuery(filters));
   query.set("group_by", groupBy);
   query.set("group_page", String(groupPage));
-  return request<DifyUsageTrends>(`/api/v1/admin/dify/call-logs/trends?${query}`, {
-    headers: studentHeaders(token), cache: "no-store", signal,
-  });
+  return request<DifyUsageTrends>(
+    `/api/v1/admin/dify/call-logs/trends?${query}`,
+    {
+      headers: studentHeaders(token),
+      cache: "no-store",
+      signal,
+    },
+  );
 }
 
 export function getAdminDifyCredentials(
-  token: string, page: number, signal?: AbortSignal,
+  token: string,
+  page: number,
+  signal?: AbortSignal,
 ): Promise<DifyCredentialList> {
-  return request<DifyCredentialList>(`/api/v1/admin/dify/credentials?page=${page}&page_size=20`, {
-    headers: studentHeaders(token), cache: "no-store", signal,
-  });
+  return request<DifyCredentialList>(
+    `/api/v1/admin/dify/credentials?page=${page}&page_size=20`,
+    {
+      headers: studentHeaders(token),
+      cache: "no-store",
+      signal,
+    },
+  );
 }
 
 export function setAdminDifyCredentialEnabled(
-  token: string, id: string, enabled: boolean,
+  token: string,
+  id: string,
+  enabled: boolean,
 ): Promise<{ id: string; enabled: boolean }> {
   return request(`/api/v1/admin/dify/credentials/${encodeURIComponent(id)}`, {
     method: "PATCH",
@@ -351,7 +389,8 @@ export function setAdminDifyCredentialEnabled(
 }
 
 export function saveAdminDifySettings(
-  token: string, values: { api_base_url: string; api_key?: string },
+  token: string,
+  values: { api_base_url: string; api_key?: string },
 ): Promise<FreeQaDifySettings> {
   return request<FreeQaDifySettings>("/api/v1/admin/settings/free-qa", {
     method: "PUT",

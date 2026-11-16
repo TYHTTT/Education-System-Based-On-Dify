@@ -32,7 +32,13 @@ export interface DifyCallLogSummary {
   course_title: string | null;
   topic_id: string | null;
   topic_title: string | null;
-  business_type: "free_qa" | "topic_teaching" | "topic_clarification" | "topic_practice" | "topic_answer" | "diagnosis";
+  business_type:
+    | "free_qa"
+    | "topic_teaching"
+    | "topic_clarification"
+    | "topic_practice"
+    | "topic_answer"
+    | "diagnosis";
   is_anonymous: boolean;
   started_at: string;
   duration_ms: number | null;
@@ -118,10 +124,18 @@ export interface DifyCredentialUsage {
   currencies: DifyUsageOverview["currencies"];
 }
 
-export type DifyTrendUsage = Pick<DifyUsageOverview,
-  "total_calls" | "prompt_tokens" | "completion_tokens" | "total_tokens" |
-  "unknown_prompt_calls" | "unknown_completion_calls" | "unknown_total_token_calls" |
-  "unknown_usage_calls" | "unknown_cost_calls" | "currencies"
+export type DifyTrendUsage = Pick<
+  DifyUsageOverview,
+  | "total_calls"
+  | "prompt_tokens"
+  | "completion_tokens"
+  | "total_tokens"
+  | "unknown_prompt_calls"
+  | "unknown_completion_calls"
+  | "unknown_total_token_calls"
+  | "unknown_usage_calls"
+  | "unknown_cost_calls"
+  | "currencies"
 >;
 
 export interface DifyUsageTrends {
@@ -149,7 +163,16 @@ export interface DifyCallLogDetail extends DifyCallLogSummary {
   request_id: string;
   finished_at: string | null;
   http_status: number | null;
-  error_code: "unexpected_error" | "upstream_error" | "http_error" | "transport_error" | "invalid_response" | "incomplete_response" | "timeout" | "cancelled" | null;
+  error_code:
+    | "unexpected_error"
+    | "upstream_error"
+    | "http_error"
+    | "transport_error"
+    | "invalid_response"
+    | "incomplete_response"
+    | "timeout"
+    | "cancelled"
+    | null;
   error_summary: string | null;
   conversation_id: string | null;
   message_id: string | null;
@@ -252,18 +275,12 @@ export interface StoredChatState {
   conversations: Conversation[];
 }
 
-export const TOPIC_STATUSES = [
-  "not_started",
-  "learning",
-  "mastered",
-] as const;
+export const TOPIC_STATUSES = ["not_started", "learning", "mastered"] as const;
 
 export type TopicStatus = (typeof TOPIC_STATUSES)[number];
 
 export type NextAction =
-  | "start_learning"
-  | "continue_learning"
-  | "course_completed";
+  "start_learning" | "continue_learning" | "course_completed";
 
 export interface AuthenticatedStudent {
   student_id: string;

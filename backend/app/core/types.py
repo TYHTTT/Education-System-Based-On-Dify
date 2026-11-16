@@ -33,4 +33,3 @@ class Course(str, Enum):
         return core_schema.no_info_after_validator_function(
             cls, core_schema.str_schema(pattern=rf"^{COURSE_ID_PATTERN}$")
         )
-

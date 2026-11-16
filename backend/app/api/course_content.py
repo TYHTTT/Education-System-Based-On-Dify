@@ -90,6 +90,8 @@ def outline(
     return {
         "course": course.value,
         "title": course_record["title"],
-        "groups": sorted(groups.values(), key=lambda group: (group["sort_order"], group["id"])),
+        "groups": sorted(
+            groups.values(), key=lambda group: (group["sort_order"], group["id"])
+        ),
         "recommended_topic_id": recommended,
     }

@@ -3,7 +3,11 @@ from fastapi import APIRouter, Depends, Request
 from app.api.admins import require_admin
 from app.schemas.dify_settings import DifySettingsResponse, DifySettingsWrite
 
-router = APIRouter(prefix="/api/v1/admin/settings", tags=["admin-settings"], dependencies=[Depends(require_admin)])
+router = APIRouter(
+    prefix="/api/v1/admin/settings",
+    tags=["admin-settings"],
+    dependencies=[Depends(require_admin)],
+)
 
 
 @router.get("/free-qa", response_model=DifySettingsResponse)
