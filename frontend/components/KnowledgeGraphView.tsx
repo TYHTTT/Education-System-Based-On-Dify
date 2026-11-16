@@ -113,7 +113,8 @@ export default function KnowledgeGraphView({
     ? coursesById.get(nodesById.get(activeId)?.course ?? "")
     : undefined;
   const related = activeId ? neighbors.get(activeId) : undefined;
-  const detail = nodesById.get(focused ?? pinned ?? "");
+  const detailId = focused ?? pinned;
+  const detail = nodesById.get(detailId ?? "");
   const detailDescription = detail?.description?.trim();
   const fit = useMemo(() => fitNodes(positions, size), [positions, size]);
   const view = customView ?? fit;
@@ -146,7 +147,7 @@ export default function KnowledgeGraphView({
     for (const node of [...positions].sort(
       (a, b) => priority(b) - priority(a),
     )) {
-      if (node.id === detail?.id) continue;
+      if (node.id === detailId) continue;
       const important =
         node.id === activeId || related?.has(node.id) || matchIds.has(node.id);
       if (!important && (!labels || view.scale < 0.42)) continue;
@@ -191,7 +192,7 @@ export default function KnowledgeGraphView({
       }
     }
     return visible;
-  }, [positions, activeId, detail?.id, related, matchIds, labels, view, size]);
+  }, [positions, activeId, detailId, related, matchIds, labels, view, size]);
 
   useEffect(() => {
     simulation.current = {
