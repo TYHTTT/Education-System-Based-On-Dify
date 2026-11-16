@@ -10,6 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ApiError,
   changeCurrentAdminPassword,
@@ -20,6 +21,7 @@ import {
 import type { Administrator, AuthenticatedAdmin } from "@/lib/types";
 
 const STORAGE_KEY = "course_coach_admin_access_token";
+const PREVIEW_KEY = "course_coach_admin_preview";
 type Status = "initializing" | "ready" | "unauthenticated" | "error";
 interface AdminContextValue {
   admin: Administrator | null;
@@ -32,15 +34,21 @@ interface AdminContextValue {
     currentPassword: string,
     newPassword: string,
   ) => Promise<void>;
+  previewing: boolean;
+  beginPreview: () => void;
+  endPreview: () => void;
   retry: () => void;
   withAdmin: <T>(action: (token: string) => Promise<T>) => Promise<T>;
 }
 const Context = createContext<AdminContextValue | null>(null);
 
 export function AdminProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [admin, setAdmin] = useState<Administrator | null>(null);
   const [status, setStatus] = useState<Status>("initializing");
   const [error, setError] = useState("");
+  const [previewing, setPreviewing] = useState(false);
   const tokenRef = useRef<string | null>(null);
 
   const clear = useCallback(() => {
@@ -48,6 +56,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     setAdmin(null);
     try {
       window.localStorage.removeItem(STORAGE_KEY);
+      window.sessionStorage.removeItem(PREVIEW_KEY);
     } catch {
       /* Session still clears in memory. */
     }
@@ -58,27 +67,33 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     async (signal?: AbortSignal) => {
       setStatus("initializing");
       setError("");
+      let storedPreview: string | null = null;
       try {
         let token = tokenRef.current;
         try {
           token ??= window.localStorage.getItem(STORAGE_KEY);
+          storedPreview = window.sessionStorage.getItem(PREVIEW_KEY);
+          setPreviewing(Boolean(storedPreview));
         } catch {
           /* Browser storage is optional. */
         }
         if (!token) {
           clear();
+          if (storedPreview) router.replace("/admin");
           return;
         }
         const profile = await getCurrentAdmin(token, signal);
         if (signal?.aborted) return;
         tokenRef.current = token;
         setAdmin(profile);
+        setPreviewing(storedPreview === profile.admin_id);
         setStatus("ready");
       } catch (cause) {
         if (signal?.aborted) return;
         if (cause instanceof ApiError && cause.status === 401) {
           clear();
           setError("管理员登录已过期，请重新登录。");
+          if (storedPreview) router.replace("/admin");
         } else {
           setError(
             cause instanceof Error
@@ -89,7 +104,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [clear],
+    [clear, router],
   );
 
   useEffect(() => {
@@ -112,6 +127,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     }
     setError("");
     setStatus("ready");
+    setPreviewing(false);
   }, []);
 
   const logout = useCallback(async () => {
@@ -158,6 +174,37 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     },
     [withAdmin, clear],
   );
+  const beginPreview = useCallback(() => {
+    if (!admin) return;
+    try {
+      window.sessionStorage.setItem(PREVIEW_KEY, admin.admin_id);
+    } catch {
+      /* Keep preview in memory. */
+    }
+    setPreviewing(true);
+  }, [admin]);
+  const endPreview = useCallback(() => {
+    try {
+      window.sessionStorage.removeItem(PREVIEW_KEY);
+    } catch {
+      /* Clear in-memory preview below. */
+    }
+    if (pathname.startsWith("/admin") && pathname !== "/admin/preview") {
+      setPreviewing(false);
+    } else {
+      router.replace("/admin");
+    }
+  }, [pathname, router]);
+  useEffect(() => {
+    if (
+      !previewing ||
+      !pathname.startsWith("/admin") ||
+      pathname === "/admin/preview"
+    )
+      return;
+    const timer = window.setTimeout(endPreview, 0);
+    return () => window.clearTimeout(timer);
+  }, [previewing, pathname, endPreview]);
   const value = useMemo(
     () => ({
       admin,
@@ -167,6 +214,9 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       logout,
       deleteAccount,
       changePassword,
+      previewing,
+      beginPreview,
+      endPreview,
       retry,
       withAdmin,
     }),
@@ -178,6 +228,9 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       logout,
       deleteAccount,
       changePassword,
+      previewing,
+      beginPreview,
+      endPreview,
       retry,
       withAdmin,
     ],

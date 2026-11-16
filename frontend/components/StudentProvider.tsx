@@ -18,7 +18,8 @@ export const STUDENT_PROFILE_STORAGE_KEY = "course_coach_student_profile";
 
 type StudentStatus = "initializing" | "ready" | "unauthenticated" | "error";
 
-interface StudentContextValue {
+export interface StudentContextValue {
+  isAdminPreview?: boolean;
   studentId: string | null;
   student: Pick<
     AuthenticatedStudent,
@@ -31,7 +32,7 @@ interface StudentContextValue {
   logout: () => Promise<void>;
 }
 
-const StudentContext = createContext<StudentContextValue | null>(null);
+export const StudentContext = createContext<StudentContextValue | null>(null);
 
 export function StudentProvider({ children }: { children: ReactNode }) {
   const [studentId, setStudentId] = useState<string | null>(null);

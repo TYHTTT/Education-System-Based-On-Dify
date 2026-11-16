@@ -82,3 +82,31 @@ test("migration drops legacy scoped tokens while preserving the transcript", () 
   assert.equal(state.conversations[0].conversationToken, undefined);
   assert.equal(state.conversations[0].messages.length, 1);
 });
+
+test("administrator preview conversations are isolated from students and other admins", () => {
+  const legacy = {
+    activeConversationId: "student-chat",
+    conversations: [conversation("student-chat", "machine_learning")],
+  };
+  const entries = browserStorage(legacy);
+  const original = entries.get("course-coach:chat-state:v1");
+  assert.equal(
+    loadChatState("preview-one").conversations[0].messages.length,
+    0,
+  );
+  const preview = {
+    activeConversationId: "preview-chat",
+    conversations: [conversation("preview-chat", "machine_learning")],
+  };
+  saveChatState(preview, "preview-one");
+  assert.equal(
+    loadChatState("preview-one").conversations[0].id,
+    "preview-chat",
+  );
+  assert.equal(
+    loadChatState("preview-two").conversations[0].messages.length,
+    0,
+  );
+  assert.equal(loadChatState().conversations[0].id, "student-chat");
+  assert.equal(entries.get("course-coach:chat-state:v1"), original);
+});

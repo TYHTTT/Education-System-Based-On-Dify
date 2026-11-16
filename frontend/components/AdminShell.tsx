@@ -58,8 +58,11 @@ export default function AdminShell({ children }: { children: ReactNode }) {
             })}
           </nav>
           <div className="ml-auto hidden h-16 items-center gap-2 text-sm lg:flex">
-            <Link href="/learn" className="btn-ghost text-steel hover:text-ink">
-              学生端
+            <Link
+              href="/admin/preview"
+              className="btn-ghost text-steel hover:text-ink"
+            >
+              学生端预览
             </Link>
             <button
               type="button"
@@ -71,8 +74,8 @@ export default function AdminShell({ children }: { children: ReactNode }) {
             </button>
           </div>
           <MobileNavigation key={pathname} label="后台导航" items={navigation}>
-            <Link href="/learn" className="btn-ghost">
-              学生端
+            <Link href="/admin/preview" className="btn-ghost">
+              学生端预览
             </Link>
             <button
               type="button"

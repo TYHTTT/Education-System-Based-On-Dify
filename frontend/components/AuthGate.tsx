@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useAdmin } from "@/components/AdminProvider";
 import LoginForm from "@/components/LoginForm";
 import { useStudent } from "@/components/StudentProvider";
+import AdminStudentPreview from "@/components/AdminStudentPreview";
 
 export default function AuthGate({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -17,6 +18,21 @@ export default function AuthGate({ children }: { children: ReactNode }) {
 
 function StudentGate({ children }: { children: ReactNode }) {
   const { status, error } = useStudent();
+  const admin = useAdmin();
+  if (admin.status === "initializing")
+    return (
+      <main className="grid min-h-svh place-items-center text-sm text-steel">
+        正在恢复登录状态…
+      </main>
+    );
+  if (admin.previewing)
+    return (
+      <AdminGate>
+        <AdminStudentPreview key={admin.admin?.admin_id}>
+          {children}
+        </AdminStudentPreview>
+      </AdminGate>
+    );
   if (status === "ready") return <>{children}</>;
   if (status === "initializing")
     return (

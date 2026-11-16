@@ -100,7 +100,8 @@ function HistoryPanel({
 }
 
 export default function HomePage() {
-  const { withStudent } = useStudent();
+  const { withStudent, student, isAdminPreview } = useStudent();
+  const chatScope = isAdminPreview ? student?.student_id : undefined;
   const [chatState, setChatState] = useState<StoredChatState>(() =>
     initialChatState(),
   );
@@ -115,14 +116,14 @@ export default function HomePage() {
   const historyDialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setChatState(loadChatState());
+      setChatState(loadChatState(chatScope));
       setHydrated(true);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [chatScope]);
   useEffect(() => {
-    if (hydrated) saveChatState(chatState);
-  }, [chatState, hydrated]);
+    if (hydrated) saveChatState(chatState, chatScope);
+  }, [chatState, hydrated, chatScope]);
   useEffect(() => () => abortRef.current?.abort(), []);
   useEffect(() => {
     const dialog = historyDialog.current;

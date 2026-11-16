@@ -3,6 +3,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 from app.core.exceptions import AdminUnauthorizedError
+from app.core.admin_preview import admin_preview_student_id
 from app.core.security import hash_password, hash_session_token, verify_password
 from app.db.database import PostgresDatabase
 
@@ -99,11 +100,17 @@ class AdminRepository:
             if not verify_password(password, account["password_hash"]):
                 return False
             connection.execute(
+                "DELETE FROM students WHERE id=?",
+                (admin_preview_student_id(account["id"]),),
+            )
+            connection.execute(
                 "DELETE FROM administrators WHERE id=?", (account["id"],)
             )
         return True
 
-    def change_password(self, *, token: str, current_password: str, new_password: str) -> bool:
+    def change_password(
+        self, *, token: str, current_password: str, new_password: str
+    ) -> bool:
         now = datetime.now(UTC).isoformat()
         with self.database.connect() as connection:
             account = connection.execute(

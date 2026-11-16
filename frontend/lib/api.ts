@@ -158,6 +158,16 @@ export function loginStudent(payload: {
   });
 }
 
+export function getCurrentStudent(token: string, signal?: AbortSignal) {
+  return request<Omit<AuthenticatedStudent, "access_token">>(
+    "/api/v1/students/me",
+    {
+      headers: studentHeaders(token),
+      signal,
+    },
+  );
+}
+
 export function logoutStudent(accessToken: string): Promise<void> {
   return request<void>("/api/v1/students/logout", {
     method: "POST",

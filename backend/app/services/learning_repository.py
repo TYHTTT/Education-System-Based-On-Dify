@@ -8,10 +8,12 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from app.core.exceptions import (
+    AdminUnauthorizedError,
     CourseNotFoundError,
     StudentNotFoundError,
     TopicNotFoundError,
 )
+from app.core.admin_preview import ADMIN_PREVIEW_PREFIX, admin_preview_student_id
 from app.core.security import hash_password, hash_session_token, verify_password
 from app.core.types import Course
 from app.curriculum.models import CurriculumSeed
@@ -81,22 +83,24 @@ class LearningRepository:
             )
         return self._issue_session(student_id)
 
-    def list_students(self, *, query: str = "", page: int = 1, page_size: int = 20) -> dict:
+    def list_students(
+        self, *, query: str = "", page: int = 1, page_size: int = 20
+    ) -> dict:
         term = query.strip().lower()
-        condition = "strpos(lower(coalesce(username,'')), ?) > 0 OR strpos(lower(coalesce(display_name,'')), ?) > 0"
+        condition = "(strpos(lower(coalesce(username,'')), ?) > 0 OR strpos(lower(coalesce(display_name,'')), ?) > 0) AND strpos(coalesce(username,''), ?) <> 1"
         with self._connect() as connection:
             connection.execute(
                 "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY"
             )
             total = connection.execute(
                 f"SELECT count(*) AS total FROM students WHERE {condition}",
-                (term, term),
+                (term, term, ADMIN_PREVIEW_PREFIX),
             ).fetchone()["total"]
             items = connection.execute(
                 f"""SELECT id AS student_id, username, display_name, active=1 AS active,
                     created_at, last_active_at FROM students WHERE {condition}
                     ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?""",
-                (term, term, page_size, (page - 1) * page_size),
+                (term, term, ADMIN_PREVIEW_PREFIX, page_size, (page - 1) * page_size),
             ).fetchall()
         return {
             "items": [dict(row) for row in items],
@@ -154,6 +158,10 @@ class LearningRepository:
         return {**dict(student), "access_token": token}
 
     def student_from_token(self, token: str, *, touch: bool = True) -> dict[str, Any]:
+        if token.startswith(ADMIN_PREVIEW_PREFIX):
+            return self._admin_preview_from_token(
+                token[len(ADMIN_PREVIEW_PREFIX) :], touch=touch
+            )
         now = self._now()
         with self._connect() as connection:
             student = connection.execute(
@@ -173,6 +181,36 @@ class LearningRepository:
                     "UPDATE students SET last_active_at = ? WHERE id = ?",
                     (now, student["id"]),
                 )
+        return dict(student)
+
+    def _admin_preview_from_token(self, token: str, *, touch: bool) -> dict[str, Any]:
+        now = self._now()
+        with self._connect() as connection:
+            admin = connection.execute(
+                """SELECT id,display_name FROM administrators WHERE session_token_hash=?
+                   AND session_expires_at>? AND active=1 FOR UPDATE""",
+                (hash_session_token(token), now),
+            ).fetchone()
+            if admin is None:
+                raise AdminUnauthorizedError()
+            if touch:
+                connection.execute(
+                    "UPDATE administrators SET last_active_at=? WHERE id=?",
+                    (now, admin["id"]),
+                )
+            student = connection.execute(
+                """INSERT INTO students(id,username,display_name,password_hash,created_at,last_active_at)
+                   VALUES (?,?,?,NULL,?,?) ON CONFLICT(id) DO UPDATE SET
+                   display_name=excluded.display_name,last_active_at=excluded.last_active_at,active=1
+                   RETURNING id,username,display_name,created_at,last_active_at""",
+                (
+                    admin_preview_student_id(admin["id"]),
+                    ADMIN_PREVIEW_PREFIX + admin["id"],
+                    "管理员预览 · " + admin["display_name"],
+                    now,
+                    now,
+                ),
+            ).fetchone()
         return dict(student)
 
     def revoke_session(self, token: str) -> None:

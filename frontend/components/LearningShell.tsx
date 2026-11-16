@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useStudent } from "@/components/StudentProvider";
 import MobileNavigation from "@/components/MobileNavigation";
+import { useAdmin } from "@/components/AdminProvider";
 
 const NAV_ITEMS = [
   { href: "/?view=chat", label: "自由问答" },
@@ -15,7 +16,8 @@ const NAV_ITEMS = [
 
 export default function LearningShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { student, logout } = useStudent();
+  const { student, logout, isAdminPreview } = useStudent();
+  const { endPreview } = useAdmin();
   const navigation = NAV_ITEMS.map((item) => ({
     ...item,
     active: item.href.startsWith("/?")
@@ -49,12 +51,16 @@ export default function LearningShell({ children }: { children: ReactNode }) {
           </nav>
 
           <div className="ml-auto hidden min-w-0 items-center justify-end gap-2 lg:flex">
-            <Link href="/admin" className="btn-ghost text-steel hover:text-ink">
-              管理后台
+            <Link
+              href="/admin"
+              onClick={isAdminPreview ? endPreview : undefined}
+              className="btn-ghost text-steel hover:text-ink"
+            >
+              {isAdminPreview ? "返回管理后台" : "管理后台"}
             </Link>
             <span
               className="flex max-w-36 items-center gap-2 truncate px-2 text-sm font-medium text-charcoal"
-              title={student?.username}
+              title={isAdminPreview ? "管理员预览" : student?.username}
             >
               <span
                 aria-hidden="true"
@@ -69,22 +75,26 @@ export default function LearningShell({ children }: { children: ReactNode }) {
               onClick={() => void logout()}
               className="btn-secondary px-3.5 py-2"
             >
-              退出
+              {isAdminPreview ? "退出预览" : "退出"}
             </button>
           </div>
           <MobileNavigation key={pathname} label="主导航" items={navigation}>
             <p className="w-full truncate px-3 pb-1 text-sm font-medium text-charcoal">
               {student?.display_name}
             </p>
-            <Link href="/admin" className="btn-ghost">
-              管理后台
+            <Link
+              href="/admin"
+              onClick={isAdminPreview ? endPreview : undefined}
+              className="btn-ghost"
+            >
+              {isAdminPreview ? "返回管理后台" : "管理后台"}
             </Link>
             <button
               type="button"
               onClick={() => void logout()}
               className="btn-secondary"
             >
-              退出
+              {isAdminPreview ? "退出预览" : "退出"}
             </button>
           </MobileNavigation>
         </div>

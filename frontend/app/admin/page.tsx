@@ -39,7 +39,7 @@ const QUICK_LINKS = [
     tint: "bg-tint-mint",
   },
   {
-    href: "/learn",
+    href: "/admin/preview",
     title: "学生端预览",
     description: "以学生视角浏览课程目录与学习路径。",
     tint: "bg-tint-peach",

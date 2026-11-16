@@ -68,11 +68,13 @@ function isConversation(value: unknown): value is Conversation {
   );
 }
 
-export function loadChatState(): StoredChatState {
+export function loadChatState(scope?: string): StoredChatState {
   if (typeof window === "undefined") return initialChatState();
 
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(
+      scope ? `${STORAGE_KEY}:${scope}` : STORAGE_KEY,
+    );
     if (!raw) return initialChatState();
     const parsed = JSON.parse(raw) as Partial<StoredChatState>;
     if (!Array.isArray(parsed.conversations)) return initialChatState();
@@ -111,7 +113,7 @@ export function loadChatState(): StoredChatState {
   }
 }
 
-export function saveChatState(state: StoredChatState): void {
+export function saveChatState(state: StoredChatState, scope?: string): void {
   if (typeof window === "undefined") return;
   try {
     const sorted = [...state.conversations]
@@ -126,7 +128,7 @@ export function saveChatState(state: StoredChatState): void {
         messages: conversation.messages.slice(-MAX_MESSAGES_PER_CONVERSATION),
       }));
     window.localStorage.setItem(
-      STORAGE_KEY,
+      scope ? `${STORAGE_KEY}:${scope}` : STORAGE_KEY,
       JSON.stringify({ ...state, conversations: sorted }),
     );
   } catch {
