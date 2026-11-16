@@ -114,6 +114,7 @@ export default function KnowledgeGraphView({
     : undefined;
   const related = activeId ? neighbors.get(activeId) : undefined;
   const detail = nodesById.get(focused ?? pinned ?? "");
+  const detailDescription = detail?.description?.trim();
   const fit = useMemo(() => fitNodes(positions, size), [positions, size]);
   const view = customView ?? fit;
   const matches = useMemo(() => {
@@ -665,9 +666,9 @@ export default function KnowledgeGraphView({
           <h2 className="graph-title mt-1 break-words text-sm font-semibold">
             {detail.title}
           </h2>
-          {detail.description && (
+          {detailDescription && detailDescription.toLowerCase() !== "null" && (
             <p className="graph-secondary mt-3 line-clamp-3 text-xs leading-5">
-              {detail.description}
+              {detailDescription}
             </p>
           )}
           <div className="graph-divider my-3 border-t" />
