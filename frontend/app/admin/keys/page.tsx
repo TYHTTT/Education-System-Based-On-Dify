@@ -130,7 +130,7 @@ function KeysContent() {
       <p className="mt-6 rounded-xl bg-surface p-4 text-sm leading-6 text-steel">
         同一 Dify 服务下，共用 Key
         的课程和自由问答一起生效。停用会拦截新调用，已受理调用继续完成，历史记录保留。
-        这里仅显示内部凭据 ID；在“课程管理”或“Dify 配置”中配置 Key。
+        这里仅显示内部凭据 ID；在“课程管理”中配置课程和自由问答的 Key。
       </p>
       {notice && (
         <p
@@ -296,7 +296,7 @@ function KeysContent() {
                 >
                   {data.total
                     ? "当前页暂无凭据，可返回上一页。"
-                    : "暂无凭据，请先在课程管理或 Dify 配置中保存 Key。"}
+                    : "暂无凭据，请先在课程管理中保存课程或自由问答的 Key。"}
                 </p>
               )}
               <nav

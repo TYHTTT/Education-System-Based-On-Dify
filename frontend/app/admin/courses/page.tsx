@@ -13,6 +13,7 @@ import {
 import { getAdminCourses } from "@/lib/api";
 import type { CourseList } from "@/lib/types";
 import { PlusIcon } from "@/components/Icons";
+import FreeQaDifySettingsPanel from "@/components/FreeQaDifySettingsPanel";
 
 export default function AdminCoursesPage() {
   const { withAdmin } = useAdmin();
@@ -57,14 +58,28 @@ export default function AdminCoursesPage() {
             课程管理
           </h1>
           <p className="mt-3 text-sm leading-6 text-steel">
-            维护课程内容与知识结构，安排学生的学习路径。
+            维护课程内容与知识结构，集中管理课程和自由问答的 Dify 服务。
           </p>
         </div>
-        <Link href="/admin/courses/new-course" className={primaryClass}>
-          <PlusIcon className="size-4" />
-          新增课程
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <a
+            href="#free-qa-settings"
+            className={buttonClass}
+            onClick={() =>
+              document
+                .querySelector<HTMLDetailsElement>("#free-qa-settings")
+                ?.setAttribute("open", "")
+            }
+          >
+            自由问答配置
+          </a>
+          <Link href="/admin/courses/new-course" className={primaryClass}>
+            <PlusIcon className="size-4" />
+            新增课程
+          </Link>
+        </div>
       </div>
+      <FreeQaDifySettingsPanel />
       <form
         aria-label="搜索课程"
         onSubmit={(event) => {

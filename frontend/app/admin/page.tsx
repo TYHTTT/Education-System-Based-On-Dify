@@ -21,7 +21,7 @@ const QUICK_LINKS = [
   {
     href: "/admin/courses",
     title: "课程管理",
-    description: "新增、启用或停用课程，维护章节与知识点。",
+    description: "管理课程、章节与知识点，配置课程和自由问答的 Dify 服务。",
     tint: "bg-tint-lavender",
   },
   {
@@ -29,12 +29,6 @@ const QUICK_LINKS = [
     title: "知识图谱",
     description: "查看知识点之间的关联，检查课程结构是否完整。",
     tint: "bg-tint-mint",
-  },
-  {
-    href: "/admin/settings",
-    title: "Dify 配置",
-    description: "配置自由问答的 Dify 服务，课程 Dify 与完成门限在课程详情中设置。",
-    tint: "bg-tint-sky",
   },
   {
     href: "/learn",
