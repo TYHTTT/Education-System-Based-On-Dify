@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Header, HTTPException, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 
+from app.api.admins import require_admin
 from app.schemas.student import (
     AuthenticatedStudentResponse,
     CurrentStudentResponse,
@@ -34,7 +35,13 @@ def _auth_response(student: dict) -> AuthenticatedStudentResponse:
     )
 
 
-@router.post("/register", response_model=AuthenticatedStudentResponse, status_code=201)
+@router.post(
+    "/register",
+    response_model=AuthenticatedStudentResponse,
+    status_code=201,
+    summary="管理员分配学生账号",
+    dependencies=[Depends(require_admin)],
+)
 def register_student(
     payload: RegisterStudentRequest, request: Request
 ) -> AuthenticatedStudentResponse:

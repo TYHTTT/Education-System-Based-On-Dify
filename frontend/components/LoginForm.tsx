@@ -2,12 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import {
-  loginAdmin,
-  loginStudent,
-  registerAdmin,
-  registerStudent,
-} from "@/lib/api";
+import { loginAdmin, loginStudent, registerAdmin } from "@/lib/api";
 import { useAdmin } from "@/components/AdminProvider";
 import { useStudent } from "@/components/StudentProvider";
 
@@ -25,10 +20,16 @@ export default function LoginForm({
   const student = useStudent();
   const admin = useAdmin();
   const [role, setRole] = useState<Role>(initialRole);
-  const [registering, setRegistering] = useState(false);
+  const [creatingAdmin, setCreatingAdmin] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
   const isAdmin = role === "admin";
+  const registering = isAdmin && creatingAdmin;
+  const formTitle = isAdmin
+    ? registering
+      ? "创建管理员"
+      : "管理员登录"
+    : "学生登录";
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -60,9 +61,7 @@ export default function LoginForm({
         admin.completeLogin(account);
         router.replace("/admin");
       } else {
-        const account = registering
-          ? await registerStudent(profile)
-          : await loginStudent(credentials);
+        const account = await loginStudent(credentials);
         form.reset();
         student.completeLogin(account);
         if (initialRole === "admin") router.replace("/learn");
@@ -80,7 +79,7 @@ export default function LoginForm({
 
   function selectRole(next: Role) {
     setRole(next);
-    setRegistering(false);
+    setCreatingAdmin(false);
     setFormError("");
   }
 
@@ -105,26 +104,10 @@ export default function LoginForm({
               </button>
             ))}
           </div>
-          <h1 className="mt-7 text-heading-3 text-ink">
-            {isAdmin
-              ? registering
-                ? "创建管理员"
-                : "管理员登录"
-              : registering
-                ? "学生注册"
-                : "学生登录"}
-          </h1>
+          <h1 className="mt-7 text-heading-3 text-ink">{formTitle}</h1>
           <form
             key={`${role}:${registering}`}
-            aria-label={
-              isAdmin
-                ? registering
-                  ? "创建管理员"
-                  : "管理员登录"
-                : registering
-                  ? "学生注册"
-                  : "学生登录"
-            }
+            aria-label={formTitle}
             className="mt-6 space-y-4"
             onSubmit={submit}
           >
@@ -215,29 +198,29 @@ export default function LoginForm({
               {submitting
                 ? "正在处理…"
                 : registering
-                  ? isAdmin
-                    ? "创建并登录管理后台"
-                    : "创建并登录"
+                  ? "创建并登录管理后台"
                   : isAdmin
                     ? "登录管理后台"
                     : "登录"}
             </button>
           </form>
-          <button
-            disabled={submitting}
-            type="button"
-            onClick={() => {
-              setRegistering((value) => !value);
-              setFormError("");
-            }}
-            className="link mt-5 text-sm disabled:opacity-60"
-          >
-            {registering
-              ? "已有账户？登录"
-              : isAdmin
-                ? "创建管理员"
-                : "没有账户？创建账户"}
-          </button>
+          {isAdmin ? (
+            <button
+              disabled={submitting}
+              type="button"
+              onClick={() => {
+                setCreatingAdmin((value) => !value);
+                setFormError("");
+              }}
+              className="link mt-5 text-sm disabled:opacity-60"
+            >
+              {registering ? "已有账户？登录" : "创建管理员"}
+            </button>
+          ) : (
+            <p className="mt-5 text-sm text-slate-500">
+              学生账号由管理员统一分配，请联系管理员获取账号和初始密码。
+            </p>
+          )}
         </section>
       </div>
     </main>

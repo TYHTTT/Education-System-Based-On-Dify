@@ -1,4 +1,5 @@
 import logging
+from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
@@ -130,6 +131,62 @@ def test_protected_admin_route_rejects_missing_invalid_and_student_sessions(
     headers = {"Authorization": authorization} if authorization else {}
     assert client.get("/api/v1/admins/me", headers=headers).status_code == 401
     assert client.post("/api/v1/admins/logout", headers=headers).status_code == 401
+
+
+@pytest.mark.parametrize(
+    "authorization",
+    [None, "Basic admin-session", "Bearer student-session", "Bearer invalid"],
+)
+def test_student_account_creation_requires_admin_session(api, authorization):
+    client, _ = api
+    headers = {"Authorization": authorization} if authorization else {}
+    response = client.post(
+        "/api/v1/students/register",
+        json={
+            "username": "allocated_student",
+            "password": "initial-password",
+            "display_name": "分配的学生",
+        },
+        headers=headers,
+    )
+    assert response.status_code == 401
+
+
+def test_admin_can_allocate_student_account_and_duplicate_is_rejected(api):
+    client, _ = api
+    calls = []
+    payload = {
+        "username": "allocated_student",
+        "password": "initial-password",
+        "display_name": "分配的学生",
+    }
+
+    def register_student(**kwargs):
+        calls.append(kwargs)
+        if len(calls) > 1:
+            raise ValueError("username_taken")
+        return {
+            "id": "student-one",
+            "username": kwargs["username"],
+            "display_name": kwargs["display_name"],
+            "access_token": "allocated-student-session",
+            "created_at": "2026-11-16T08:00:00+00:00",
+        }
+
+    client.app.state.learning_repository = SimpleNamespace(register_student=register_student)
+    headers = {"Authorization": "Bearer admin-session"}
+    created = client.post("/api/v1/students/register", json=payload, headers=headers)
+    assert created.status_code == 201
+    assert created.json()["username"] == payload["username"]
+    assert created.json()["display_name"] == payload["display_name"]
+    assert "password" not in created.json()
+    assert calls == [payload]
+    assert (
+        client.post(
+            "/api/v1/students/register", json=payload, headers=headers
+        ).status_code
+        == 409
+    )
 
 
 def test_login_profile_and_logout_revoke_access(api):

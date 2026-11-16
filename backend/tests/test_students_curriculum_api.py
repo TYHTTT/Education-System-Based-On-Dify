@@ -19,29 +19,23 @@ def _client(postgres_test_database_url) -> tuple[TestClient, LearningRepository]
     return TestClient(app), repository
 
 
-def test_registered_student_can_login_and_logout(postgres_test_database_url) -> None:
+def test_allocated_student_can_login_and_logout(postgres_test_database_url) -> None:
     client, repository = _client(postgres_test_database_url)
-    response = client.post(
-        "/api/v1/students/register",
-        json={
-            "username": "test_user",
-            "password": "test-password",
-            "display_name": "测试学生",
-        },
+    student = repository.register_student(
+        username="test_user",
+        password="test-password",
+        display_name="测试学生",
     )
 
-    assert response.status_code == 201
-    payload = response.json()
-    assert payload["student_id"]
-    assert repository.get_student(payload["student_id"]) is not None
+    assert repository.get_student(student["id"]) is not None
     logged_in = client.post(
         "/api/v1/students/login",
         json={"username": "test_user", "password": "test-password"},
     )
     assert logged_in.status_code == 200
     token = logged_in.json()["access_token"]
-    assert token != payload["access_token"]
-    assert repository.student_from_token(token)["id"] == payload["student_id"]
+    assert token != student["access_token"]
+    assert repository.student_from_token(token)["id"] == student["id"]
     assert (
         client.post(
             "/api/v1/students/logout", headers={"Authorization": f"Bearer {token}"}

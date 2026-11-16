@@ -94,6 +94,8 @@ npm run dev
 
 然后访问 `http://localhost:3000`。
 
+学生登录页仅提供登录，账号和初始密码由管理员统一分配。创建学生账号需由已登录管理员调用 `POST /api/v1/students/register`，携带管理员 Bearer Token，并提交 `username`、`password` 和 `display_name`；该接口不接受学生或未登录用户自行注册。
+
 ## 测试和构建
 
 ```powershell
@@ -139,7 +141,8 @@ operations/database/ # 当前数据库初始化结构和入口
 | --- | --- |
 | `GET /health` | 服务状态 |
 | `POST /api/v1/chat` | 自由问答与知识点对话 |
-| `POST /api/v1/students/register`、`login`、`logout` | 账户操作 |
+| `POST /api/v1/students/register` | 管理员创建并分配学生账号（需要管理员登录） |
+| `POST /api/v1/students/login`、`logout` | 学生登录和退出 |
 | `GET /api/v1/students/me` | 当前学生 |
 | `POST /api/v1/admins/register`、`login`、`logout` | 管理员创建、登录和退出 |
 | `GET /api/v1/admins/me` | 验证当前管理员 |

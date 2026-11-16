@@ -146,18 +146,6 @@ export function isStudentNotFound(error: unknown): boolean {
   );
 }
 
-export function registerStudent(payload: {
-  username: string;
-  password: string;
-  display_name: string;
-}): Promise<AuthenticatedStudent> {
-  return request<AuthenticatedStudent>("/api/v1/students/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-}
-
 export function loginStudent(payload: {
   username: string;
   password: string;
