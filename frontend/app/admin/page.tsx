@@ -25,6 +25,12 @@ const QUICK_LINKS = [
     tint: "bg-tint-lavender",
   },
   {
+    href: "/admin/students",
+    title: "学生管理",
+    description: "创建学生账号，分配用户名和初始密码。",
+    tint: "bg-tint-sky",
+  },
+  {
     href: "/admin/knowledge-graph",
     title: "知识图谱",
     description: "查看知识点之间的关联，检查课程结构是否完整。",

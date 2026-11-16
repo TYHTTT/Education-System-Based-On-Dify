@@ -205,6 +205,17 @@ export function logoutAdmin(token: string): Promise<void> {
   });
 }
 
+export function createStudentAccount(
+  token: string,
+  payload: { username: string; password: string; display_name: string },
+): Promise<AuthenticatedStudent> {
+  return request<AuthenticatedStudent>("/api/v1/students/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...studentHeaders(token) },
+    body: JSON.stringify(payload),
+  });
+}
+
 export function getCourses(signal?: AbortSignal): Promise<CourseRecord[]> {
   return request<CourseRecord[]>("/api/v1/courses", { signal });
 }

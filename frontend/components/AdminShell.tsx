@@ -13,6 +13,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
   const navigation = [
     { href: "/admin", label: "概览" },
     { href: "/admin/courses", label: "课程管理" },
+    { href: "/admin/students", label: "学生管理" },
     { href: "/admin/knowledge-graph", label: "知识图谱" },
     { href: "/admin/dashboard", label: "用量仪表盘" },
     { href: "/admin/keys", label: "密钥管理" },
