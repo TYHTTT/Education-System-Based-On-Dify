@@ -27,17 +27,6 @@ export function PlusIcon(props: IconProps) {
   );
 }
 
-export function GraphIcon(props: IconProps) {
-  return (
-    <IconBase {...props}>
-      <path d="m7 7 10 1M6 9l4 9M17 10l-5 8" />
-      <circle cx="5" cy="6" r="3" />
-      <circle cx="19" cy="8" r="3" />
-      <circle cx="11" cy="20" r="2.5" />
-    </IconBase>
-  );
-}
-
 export function SparklesIcon(props: IconProps) {
   return (
     <IconBase {...props}>
@@ -154,23 +143,6 @@ export function LayersIcon(props: IconProps) {
     <IconBase {...props}>
       <path d="m12 2 9 5-9 5-9-5 9-5Z" />
       <path d="m3 12 9 5 9-5M3 17l9 5 9-5" />
-    </IconBase>
-  );
-}
-
-export function TrophyIcon(props: IconProps) {
-  return (
-    <IconBase {...props}>
-      <path d="M8 4h8v5a4 4 0 0 1-8 0V4ZM8 6H4v2a4 4 0 0 0 4 4M16 6h4v2a4 4 0 0 1-4 4M12 13v4M8 21h8M9 17h6" />
-    </IconBase>
-  );
-}
-
-export function GearIcon(props: IconProps) {
-  return (
-    <IconBase {...props}>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.2 2.2-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.2h-3.2v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1-2.2-2.2.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1h-.2v-3.2h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1 2.2-2.2.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5v-.2h3.2v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 2.2 2.2-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.2V14h-.2a1.7 1.7 0 0 0-1.5 1Z" />
     </IconBase>
   );
 }

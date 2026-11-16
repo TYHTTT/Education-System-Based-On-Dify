@@ -1,16 +1,5 @@
 import type { DifyCallLogFilters } from "@/lib/types";
-
-const FILTER_KEYS = [
-  "credential_id",
-  "student",
-  "course",
-  "topic",
-  "student_type",
-  "business_type",
-  "status",
-  "started_from",
-  "started_before",
-] as const;
+import { callLogFilterQuery } from "@/lib/dify-call-logs";
 
 export interface DashboardPages {
   page: number;
@@ -22,9 +11,7 @@ export function dashboardQuery(
   filters: DifyCallLogFilters,
   pages: Partial<DashboardPages> = {},
 ): string {
-  const params = new URLSearchParams();
-  for (const key of FILTER_KEYS)
-    if (filters[key]?.trim()) params.set(key, filters[key]!.trim());
+  const params = new URLSearchParams(callLogFilterQuery(filters));
   params.set("page", String(pages.page ?? 1));
   params.set("group_by", pages.group_by ?? "credential");
   params.set("group_page", String(pages.group_page ?? 1));

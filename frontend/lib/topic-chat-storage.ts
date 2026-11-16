@@ -25,7 +25,6 @@ export interface TopicChatState {
 }
 export interface TopicSessions {
   chats: Record<string, TopicChatState>;
-  lastPath: string | null;
 }
 
 const ACTIONS = new Set([
@@ -38,14 +37,8 @@ const UUID_ID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 const COURSE_ID = `(?:${UUID_ID}|[a-z][a-z0-9_]{1,63})`;
 const TOPIC_ID = `(?:${UUID_ID}|[a-z][a-z0-9_]*)\\.[a-z0-9_]+`;
 const SCOPE = new RegExp(`^${COURSE_ID}:${TOPIC_ID}$`);
-const LEARNING_PATH = new RegExp(
-  `^/learn/${COURSE_ID}/${TOPIC_ID}(?:\\?[^\\s#]*)?$`,
-);
 export function topicChatKey(course: Course, topicId: string): string {
   return `${course}:${topicId}`;
-}
-export function isLearningPath(path: unknown): path is string {
-  return typeof path === "string" && LEARNING_PATH.test(path);
 }
 export function emptyTopicChat(): TopicChatState {
   return {
@@ -73,7 +66,7 @@ function isTurn(value: unknown): value is TopicTurn {
   );
 }
 export function loadTopicSessions(studentId: string): TopicSessions {
-  const fallback: TopicSessions = { chats: {}, lastPath: null };
+  const fallback: TopicSessions = { chats: {} };
   if (typeof window === "undefined" || !studentId) return fallback;
   try {
     const raw = JSON.parse(
@@ -121,10 +114,7 @@ export function loadTopicSessions(studentId: string): TopicSessions {
           : null,
       };
     }
-    return {
-      chats,
-      lastPath: isLearningPath(raw.lastPath) ? raw.lastPath : null,
-    };
+    return { chats };
   } catch {
     return fallback;
   }

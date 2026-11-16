@@ -42,37 +42,3 @@ class DifyCredentialRepository:
             (canonical_api_url(api_base_url), fingerprint, api_key_encrypted),
         ).fetchone()
         return row["id"]
-
-    def backfill(self, connection: PostgresConnection) -> dict[str, int]:
-        """Bind existing settings without changing their URL, ciphertext or timestamp."""
-        counts = {"courses": 0, "free_qa": 0}
-        courses = connection.execute(
-            """SELECT id,dify_api_base_url,dify_api_key_encrypted FROM courses
-            WHERE dify_credential_id IS NULL AND dify_api_key_encrypted IS NOT NULL
-            ORDER BY id FOR UPDATE"""
-        ).fetchall()
-        # Lock settings before credential writes, matching individual saves.
-        free_qa = connection.execute(
-            """SELECT api_base_url,api_key_encrypted FROM dify_free_qa_settings
-            WHERE id=1 AND dify_credential_id IS NULL AND api_key_encrypted IS NOT NULL
-            FOR UPDATE"""
-        ).fetchone()
-        for row in courses:
-            credential_id = self.resolve(
-                connection, row["dify_api_base_url"], row["dify_api_key_encrypted"]
-            )
-            connection.execute(
-                "UPDATE courses SET dify_credential_id=? WHERE id=?",
-                (credential_id, row["id"]),
-            )
-            counts["courses"] += 1
-        if free_qa:
-            credential_id = self.resolve(
-                connection, free_qa["api_base_url"], free_qa["api_key_encrypted"]
-            )
-            connection.execute(
-                "UPDATE dify_free_qa_settings SET dify_credential_id=? WHERE id=1",
-                (credential_id,),
-            )
-            counts["free_qa"] = 1
-        return counts

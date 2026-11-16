@@ -5,4 +5,3 @@ psycopg==3.3.5
 pydantic==2.14.3
 pydantic_core==2.50.4
 pydantic_settings==2.16.3
-pytest==9.1.1

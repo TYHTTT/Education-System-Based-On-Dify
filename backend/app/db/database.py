@@ -37,18 +37,9 @@ class PostgresConnection:
         with self._connection.cursor() as cursor:
             return cursor.executemany(self._adapt_query(query), params_seq)
 
-    def execute_script(self, script: str) -> None:
-        self._connection.execute(script, prepare=False)
-
-    def commit(self) -> None:
-        self._connection.commit()
-
-    def rollback(self) -> None:
-        self._connection.rollback()
-
 
 class PostgresDatabase:
-    """PostgreSQL connection factory shared by repositories and migrations."""
+    """PostgreSQL connection factory shared by repositories."""
 
     def __init__(self, database_url: str) -> None:
         self.database_url = database_url
@@ -56,7 +47,3 @@ class PostgresDatabase:
     def connect(self) -> PostgresConnection:
         connection = psycopg.connect(self.database_url, row_factory=dict_row)
         return PostgresConnection(connection)
-
-
-def connect_postgres(database_url: str) -> PostgresConnection:
-    return PostgresDatabase(database_url).connect()

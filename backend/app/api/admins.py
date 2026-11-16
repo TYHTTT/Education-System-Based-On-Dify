@@ -6,14 +6,13 @@ from psycopg.errors import UniqueViolation
 from app.core.exceptions import AdminUnauthorizedError, ConfigurationError
 from app.schemas.admin import (
     AuthenticatedAdminResponse,
-    ChangeAdminPasswordRequest,
     CurrentAdminResponse,
     DeleteAdminRequest,
     LoginAdminRequest,
     RegisterAdminRequest,
 )
 from app.services.admin_repository import AdminRepository
-from app.schemas.account import UpdateAccountProfileRequest
+from app.schemas.account import ChangeAccountPasswordRequest, UpdateAccountProfileRequest
 
 router = APIRouter(prefix="/api/v1/admins", tags=["administrators"])
 
@@ -133,7 +132,7 @@ def delete_current_admin(
 
 @router.put("/me/password", status_code=204)
 def change_current_admin_password(
-    payload: ChangeAdminPasswordRequest,
+    payload: ChangeAccountPasswordRequest,
     authorization: str | None = Header(default=None),
     admin: dict = Depends(require_admin),
     repository: AdminRepository = Depends(admin_repository_from_request),

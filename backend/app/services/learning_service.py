@@ -129,8 +129,6 @@ class LearningService:
 
     @staticmethod
     def _status(state) -> str:
-        if state is not None and state["status"] == "mastered":
-            return "mastered"
         return state["status"] if state is not None else "not_started"
 
     @staticmethod

@@ -78,9 +78,6 @@ select {
   .btn-secondary {
     @apply btn border border-hairline-strong bg-transparent text-ink hover:bg-surface disabled:opacity-50;
   }
-  .btn-on-dark {
-    @apply btn bg-white text-ink hover:bg-surface;
-  }
   .btn-secondary-on-dark {
     @apply btn border border-stone bg-transparent text-white hover:bg-white/10;
   }
@@ -134,23 +131,14 @@ select {
   .badge {
     @apply inline-flex items-center rounded-full px-2.5 py-1 text-[13px] font-semibold leading-[1.4];
   }
-  .badge-purple {
-    @apply badge bg-primary text-white;
-  }
   .tag {
     @apply inline-flex items-center rounded-md px-2 py-0.5 text-[13px] font-semibold leading-[1.4];
   }
   .tag-purple {
     @apply tag bg-tint-lavender text-brand-purple-800;
   }
-  .tag-orange {
-    @apply tag bg-tint-peach text-brand-orange-deep;
-  }
   .tag-green {
     @apply tag bg-tint-mint text-emerald-700;
-  }
-  .tag-gray {
-    @apply tag bg-surface text-steel;
   }
 
   /* ---------- Micro-uppercase eyebrow ---------- */
@@ -162,10 +150,6 @@ select {
   .hero-band {
     @apply relative isolate overflow-hidden bg-navy text-white;
   }
-}
-
-.app-grid-bg {
-  background: var(--color-surface);
 }
 
 .chat-scrollbar {
@@ -421,16 +405,11 @@ html[data-theme="dark"] {
 [data-theme="dark"] .text-charcoal\/50 {
   color: #a4a29d;
 }
-[data-theme="dark"] .text-brand-purple-800,
-[data-theme="dark"] .text-indigo-900,
-[data-theme="dark"] .text-indigo-800 {
+[data-theme="dark"] .text-brand-purple-800 {
   color: #d6b6f6;
 }
 [data-theme="dark"] .text-emerald-700 {
   color: #8bd8a0;
-}
-[data-theme="dark"] .text-brand-orange-deep {
-  color: #ffc499;
 }
 [data-theme="dark"] .bg-white\/70 {
   background-color: #ffffff12;
@@ -438,8 +417,7 @@ html[data-theme="dark"] {
 
 [data-theme="dark"] .bg-surface,
 [data-theme="dark"] .bg-surface-soft,
-[data-theme="dark"] .bg-slate-100,
-[data-theme="dark"] .app-grid-bg {
+[data-theme="dark"] .bg-slate-100 {
   background-color: #202020 !important;
 }
 

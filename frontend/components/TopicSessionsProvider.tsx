@@ -13,7 +13,6 @@ import {
 import { useStudent } from "@/components/StudentProvider";
 import {
   emptyTopicChat,
-  isLearningPath,
   loadTopicSessions,
   saveTopicSessions,
   topicChatKey,
@@ -25,14 +24,12 @@ import type { Course } from "@/lib/types";
 type Update = (current: TopicChatState) => TopicChatState;
 type SessionContext = {
   chats: Record<string, TopicChatState>;
-  lastPath: string | null;
   storageError: boolean;
   update: (key: string, updater: Update) => void;
   begin: (key: string) => AbortController | null;
   finish: (key: string, controller: AbortController) => void;
   stop: (key: string) => void;
   clear: (key: string) => void;
-  rememberPath: (path: string) => void;
 };
 const Context = createContext<SessionContext | null>(null);
 
@@ -118,28 +115,17 @@ function SessionStore({
     },
     [studentId, updateSessions],
   );
-  const rememberPath = useCallback(
-    (path: string) => {
-      if (isLearningPath(path))
-        updateSessions((current) =>
-          current.lastPath === path ? current : { ...current, lastPath: path },
-        );
-    },
-    [updateSessions],
-  );
   const context = useMemo(
     () => ({
       chats: sessions.chats,
-      lastPath: sessions.lastPath,
       storageError,
       update,
       begin,
       finish,
       stop,
       clear,
-      rememberPath,
     }),
-    [sessions, storageError, update, begin, finish, stop, clear, rememberPath],
+    [sessions, storageError, update, begin, finish, stop, clear],
   );
   return <Context.Provider value={context}>{children}</Context.Provider>;
 }
@@ -157,7 +143,7 @@ export default function TopicSessionsProvider({
     </SessionStore>
   );
 }
-export function useTopicSessions() {
+function useTopicSessions() {
   const context = useContext(Context);
   if (!context) throw new Error("TopicSessionsProvider 未初始化");
   return context;
@@ -190,7 +176,6 @@ export function useTopicConversation(course: Course, topicId: string) {
     finish,
     stop,
     clear,
-    rememberPath: context.rememberPath,
     storageError: context.storageError,
   };
 }

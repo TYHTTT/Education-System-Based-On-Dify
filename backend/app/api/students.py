@@ -4,13 +4,13 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from psycopg.errors import UniqueViolation
 
 from app.api.admins import require_admin
+from app.api.dependencies import learning_repository_from_request
 from app.schemas.student import (
     AuthenticatedStudentResponse,
     CurrentStudentResponse,
     LoginRequest,
     RegisterStudentRequest,
 )
-from app.services.learning_repository import LearningRepository
 from app.schemas.account import (
     ChangeAccountPasswordRequest,
     UpdateAccountProfileRequest,
@@ -18,10 +18,6 @@ from app.schemas.account import (
 from app.core.admin_preview import ADMIN_PREVIEW_PREFIX
 
 router = APIRouter(prefix="/api/v1/students", tags=["students"])
-
-
-def learning_repository_from_request(request: Request) -> LearningRepository:
-    return request.app.state.learning_repository
 
 
 def _bearer_token(authorization: str) -> str:

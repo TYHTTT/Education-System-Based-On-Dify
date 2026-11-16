@@ -7,7 +7,6 @@ import type { Source } from "@/lib/types";
 
 interface SourcePanelProps {
   sources: Source[];
-  retrievalCount?: number;
   compact?: boolean;
 }
 
@@ -27,7 +26,6 @@ function location(source: Source): string {
 
 export default function SourcePanel({
   sources,
-  retrievalCount,
   compact = false,
 }: SourcePanelProps) {
   const [courseTitles, setCourseTitles] = useState<Record<string, string>>({});
@@ -68,9 +66,6 @@ export default function SourcePanel({
         <div className="flex items-center justify-between px-1">
           <span className="text-xs text-slate-500">
             展示 {sources.length} 条来源
-            {retrievalCount != null && retrievalCount !== sources.length
-              ? ` · 召回 ${retrievalCount} 条`
-              : ""}
           </span>
         </div>
       )}

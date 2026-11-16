@@ -277,14 +277,6 @@ class LearningRepository:
                 (hash_session_token(token),),
             )
 
-    def get_student(self, student_id: str) -> dict[str, Any] | None:
-        with self._connect() as connection:
-            row = connection.execute(
-                "SELECT id, created_at, last_active_at FROM students WHERE id = ?",
-                (student_id,),
-            ).fetchone()
-        return self._row(row)
-
     def require_student(self, student_id: str, *, touch: bool = True) -> dict[str, Any]:
         try:
             normalized = str(uuid.UUID(student_id))

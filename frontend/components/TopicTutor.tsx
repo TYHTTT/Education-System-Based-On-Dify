@@ -50,16 +50,13 @@ export default function TopicTutor({
   const courseName =
     courses.find((item) => item.id === course)?.title ?? course;
   const startMessage = `当前课程是${courseName}，我要开始学习${topicTitle}`;
-  const { state, update, begin, finish, stop, rememberPath, storageError } =
+  const { state, update, begin, finish, stop, storageError } =
     useTopicConversation(course, topicId);
   const { turns, pending, failure, inputMode, drafts, awaitingAnswer } = state;
   const latestAnswer = useRef<HTMLElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const inputPanel = useRef<HTMLFormElement>(null);
   const activityRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    rememberPath(window.location.pathname + window.location.search);
-  }, [rememberPath, course, topicId]);
   useEffect(() => {
     if (turns.length)
       latestAnswer.current?.scrollIntoView({

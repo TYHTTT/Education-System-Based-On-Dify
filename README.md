@@ -50,34 +50,6 @@ cd ..
 
 ## 后端
 
-新数据库先在项目根目录运行 `./backend/.venv/Scripts/python.exe operations/database/initialize.py` 初始化表结构。需要默认课程时，再进入 `backend` 目录执行 `./.venv/Scripts/python.exe -m app.cli.seed_curriculum` 手动导入；该命令会重新写入默认知识点，仅在需要导入时使用。服务启动不再自动导入课程，以免永久删除的知识点在重启后重新出现。
-
-已有数据库升级到 Dify 凭据身份版本时，在项目根目录执行：
-
-```powershell
-./backend/.venv/Scripts/python.exe operations/database/migrate_dify_credentials.py
-```
-
-该命令使用 `backend/.env.local` 中的数据库与加密配置，增量创建凭据表、添加关联字段，并为已有课程和自由问答配置建立内部 ID。可以重复执行；不会重建业务表或覆盖原有密钥。回填需要原来的 `backend/.runtime/settings.key` 或同一个 `SETTINGS_ENCRYPTION_KEY`；无法解密时整次升级回滚。新建数据库直接初始化即可。
-
-已有数据库启用 Dify 调用明细时，先完成上面的凭据身份升级，再执行：
-
-```powershell
-./backend/.venv/Scripts/python.exe operations/database/migrate_dify_call_logs.py
-```
-
-该脚本只创建调用明细表及索引，可以重复执行；新数据库直接初始化即可获得完整结构。
-
-已有数据库启用密钥使用管理时，再执行：
-
-```powershell
-./backend/.venv/Scripts/python.exe operations/database/migrate_dify_credential_status.py
-```
-
-该脚本仅为凭据增加 `enabled` 字段，已有凭据默认启用；重复执行不会重新启用已停用的凭据，也不会修改密钥、配置和调用记录。新数据库由初始化脚本直接创建该字段。
-
-Windows PowerShell：
-
 ```powershell
 cd backend
 ./.venv/Scripts/python.exe -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
@@ -94,24 +66,13 @@ npm run dev
 
 然后访问 `http://localhost:3000`。
 
-学生点击头像进入“账号信息”（`/account`），可修改姓名、用户名和密码。基本信息保存后同步更新头像和姓名；用户名须保持唯一。修改密码需验证当前密码并输入两次新密码（8–128 个字符），成功后该学生的全部登录会话失效，需重新登录。
-
-管理员点击头像进入管理员“账号信息”（`/admin/account`），也可通过首页“编辑账号信息”进入。修改姓名、用户名、密码和删除管理员账号均集中在此页面，首页不再直接显示修改密码或删除账号按钮。管理员在学生端预览时点击头像，也会进入管理员账号信息页，不能修改预览身份或已有学生资料。
-
-## 测试和构建
+## 检查和构建
 
 ```powershell
-# 后端测试
-cd backend
-./.venv/Scripts/python.exe -m pytest -q -p no:cacheprovider
-
 # 前端检查和生产构建
-cd ../frontend
+cd frontend
 npm run typecheck
 npm run lint
-npm run test:practice-content
-npm run test:storage
-npm run test:knowledge-graph
 npm run build
 ```
 
@@ -133,8 +94,6 @@ frontend/
   app/             # 自由问答、登录、课程学习、知识图谱、课程管理、设置
   components/      # 对话、目录、输入及会话状态
   lib/             # 统一 API、类型、存储、参考答案分离
-  tests/           # 存储兼容、对话恢复、答案展示与图谱布局测试
-operations/database/ # 当前数据库初始化结构和入口
 ```
 
 ## 当前 API
