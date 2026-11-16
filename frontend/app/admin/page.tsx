@@ -7,6 +7,12 @@ import { ArrowRightIcon } from "@/components/Icons";
 
 const QUICK_LINKS = [
   {
+    href: "/admin/trends",
+    title: "用量趋势",
+    description: "按日查看调用量、Token 和费用，对比 Key 或课程。",
+    tint: "bg-tint-sky",
+  },
+  {
     href: "/admin/keys",
     title: "密钥管理",
     description: "查看每个 Key 的累计用量，启用或停用 AI 调用。",

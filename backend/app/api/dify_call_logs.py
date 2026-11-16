@@ -11,6 +11,8 @@ from app.schemas.dify_call_logs import (
     DifyCallLogList,
     DifyCallLogQuery,
     DifyUsageOverview,
+    DifyUsageTrendQuery,
+    DifyUsageTrends,
 )
 
 router = APIRouter(
@@ -55,6 +57,27 @@ def usage_overview(
     result["currencies"] = [
         request.app.state.cny_converter.enrich(item) for item in result["currencies"]
     ]
+    return result
+
+
+@router.get("/trends", response_model=DifyUsageTrends)
+def usage_trends(
+    request: Request, response: Response, query: Annotated[DifyUsageTrendQuery, Query()]
+):
+    response.headers["Cache-Control"] = "no-store"
+    result = request.app.state.dify_call_log_repository.trends(
+        filters=query.model_dump(
+            exclude={"group_by", "group_page", "group_page_size"}, exclude_none=True
+        ),
+        group_by=query.group_by,
+        group_page=query.group_page,
+        group_page_size=query.group_page_size,
+    )
+    for item in [result["totals"], *result["daily"], *result["groups"]]:
+        item["currencies"] = [
+            request.app.state.cny_converter.enrich(currency)
+            for currency in item["currencies"]
+        ]
     return result
 
 

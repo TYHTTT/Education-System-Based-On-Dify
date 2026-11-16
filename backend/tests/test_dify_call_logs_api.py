@@ -5,8 +5,6 @@ from uuid import uuid4
 
 import httpx
 import pytest
-from fastapi.testclient import TestClient
-
 from app.core.config import Settings
 from app.main import create_app
 from app.services.cny_conversion import CnyConverter
@@ -15,6 +13,8 @@ from app.services.dify_call_logs import (
     DifyCallLogRepository,
     DifyCallOutcome,
 )
+from fastapi.testclient import TestClient
+
 from tests.mocks import MockLLMClient
 from tests.test_admin_api import FakeAdmins
 
@@ -64,6 +64,7 @@ def api(postgres_test_database_url):
     [
         PATH,
         PATH + "/overview",
+        PATH + "/trends",
         PATH + "/filter-options",
         PATH + "/00000000-0000-4000-8000-000000000000",
     ],
@@ -85,6 +86,7 @@ def test_unauthorized_requests_never_query_call_logs(authorization, endpoint):
     logs.get.assert_not_called()
     logs.filter_options.assert_not_called()
     logs.overview.assert_not_called()
+    logs.trends.assert_not_called()
 
 
 def test_actual_student_session_cannot_access_call_logs(api):
@@ -93,6 +95,13 @@ def test_actual_student_session_cannot_access_call_logs(api):
         PATH, headers={"Authorization": "Bearer " + student["access_token"]}
     )
     assert response.status_code == 401
+    assert (
+        client.get(
+            PATH + "/trends",
+            headers={"Authorization": "Bearer " + student["access_token"]},
+        ).status_code
+        == 401
+    )
     detail = client.get(
         PATH + "/" + str(uuid4()),
         headers={"Authorization": "Bearer " + student["access_token"]},

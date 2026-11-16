@@ -17,6 +17,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
     { href: "/admin/settings", label: "Dify 配置" },
     { href: "/admin/call-logs", label: "调用日志" },
     { href: "/admin/usage", label: "用量概览" },
+    { href: "/admin/trends", label: "用量趋势" },
     { href: "/admin/keys", label: "密钥管理" },
   ].map((item) => ({
     ...item,

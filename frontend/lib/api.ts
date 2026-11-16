@@ -10,6 +10,7 @@ import type {
   DifyCallLogFilters,
   DifyCallLogFilterOptions,
   DifyUsageOverview,
+  DifyUsageTrends,
   DifyCredentialList,
   CourseInput,
   CourseDetail,
@@ -317,6 +318,18 @@ export function getAdminDifyCallLog(
     `/api/v1/admin/dify/call-logs/${encodeURIComponent(id)}`,
     { headers: studentHeaders(token), cache: "no-store", signal },
   );
+}
+
+export function getAdminDifyUsageTrends(
+  token: string, filters: DifyCallLogFilters, groupBy: "credential" | "course",
+  groupPage: number, signal?: AbortSignal,
+): Promise<DifyUsageTrends> {
+  const query = new URLSearchParams(callLogFilterQuery(filters));
+  query.set("group_by", groupBy);
+  query.set("group_page", String(groupPage));
+  return request<DifyUsageTrends>(`/api/v1/admin/dify/call-logs/trends?${query}`, {
+    headers: studentHeaders(token), cache: "no-store", signal,
+  });
 }
 
 export function getAdminDifyCredentials(

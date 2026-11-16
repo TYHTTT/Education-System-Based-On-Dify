@@ -2,7 +2,7 @@
 
 import re
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 from app.core.exceptions import (
@@ -11,6 +11,22 @@ from app.core.exceptions import (
     DifyCredentialNotFoundError,
 )
 from app.db.database import PostgresDatabase
+from app.schemas.dify_call_logs import BEIJING
+
+TREND_TOTALS_SQL = """count(*) AS total_calls,
+    CASE WHEN count(*)=0 THEN 0 ELSE sum(l.prompt_tokens) END AS prompt_tokens,
+    CASE WHEN count(*)=0 THEN 0 ELSE sum(l.completion_tokens) END AS completion_tokens,
+    CASE WHEN count(*)=0 THEN 0 ELSE sum(l.total_tokens) END AS total_tokens,
+    count(*) FILTER (WHERE l.prompt_tokens IS NULL) AS unknown_prompt_calls,
+    count(*) FILTER (WHERE l.completion_tokens IS NULL) AS unknown_completion_calls,
+    count(*) FILTER (WHERE l.total_tokens IS NULL) AS unknown_total_token_calls,
+    count(*) FILTER (WHERE l.prompt_tokens IS NULL OR l.completion_tokens IS NULL OR l.total_tokens IS NULL) AS unknown_usage_calls,
+    count(*) FILTER (WHERE l.total_price IS NULL OR l.currency IS NULL) AS unknown_cost_calls"""
+
+TREND_CURRENCY_SQL = """l.currency,count(*) AS call_count,
+    count(l.total_price) AS known_price_calls,
+    count(*) FILTER (WHERE l.total_price IS NULL) AS unknown_price_calls,
+    sum(l.total_price) AS total_price"""
 
 ERROR_SUMMARIES = {
     "unexpected_error": "调用发生未预期错误，请结合调用状态和上游标识核对。",
@@ -200,6 +216,115 @@ class DifyCallLogRepository:
             raise CallLogNotFoundError()
         row["error_summary"] = ERROR_SUMMARIES.get(row["error_code"])
         return row
+
+    def trends(
+        self,
+        *,
+        filters: dict,
+        group_by: str = "credential",
+        group_page: int = 1,
+        group_page_size: int = 10,
+    ) -> dict:
+        where, parameters = _filter_sql(filters)
+        group_column = {"credential": "l.credential_id", "course": "l.course_id"}[
+            group_by
+        ]
+        day_column = "(l.started_at AT TIME ZONE 'Asia/Shanghai')::date"
+        with self.database.connect() as connection:
+            connection.execute(
+                "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
+            )
+            generated_at = connection.execute(
+                "SELECT CURRENT_TIMESTAMP AS now"
+            ).fetchone()["now"]
+            daily_rows = connection.execute(
+                f"SELECT {day_column} AS day,{TREND_TOTALS_SQL} "
+                + CALL_LOG_JOINS
+                + where
+                + f" GROUP BY GROUPING SETS ((),({day_column})) ORDER BY day",
+                parameters,
+            ).fetchall()
+            currency_rows = connection.execute(
+                f"SELECT {day_column} AS day,{TREND_CURRENCY_SQL} "
+                + CALL_LOG_JOINS
+                + where
+                + f" GROUP BY GROUPING SETS ((l.currency),({day_column},l.currency)) ORDER BY day,l.currency NULLS LAST",
+                parameters,
+            ).fetchall()
+            group_total = connection.execute(
+                "SELECT count(*) AS count FROM (SELECT "
+                + group_column
+                + " "
+                + CALL_LOG_JOINS
+                + where
+                + " GROUP BY "
+                + group_column
+                + ") grouped",
+                parameters,
+            ).fetchone()["count"]
+            groups = connection.execute(
+                f"SELECT {group_column} AS group_id,max(c.title) AS course_title,{TREND_TOTALS_SQL} "
+                + CALL_LOG_JOINS
+                + where
+                + f" GROUP BY {group_column}"
+                + " ORDER BY total_calls DESC,group_id NULLS LAST LIMIT ? OFFSET ?",
+                (*parameters, group_page_size, (group_page - 1) * group_page_size),
+            ).fetchall()
+            ids = [item["group_id"] for item in groups if item["group_id"] is not None]
+            group_currencies = connection.execute(
+                f"SELECT {group_column} AS group_id,{TREND_CURRENCY_SQL} "
+                + CALL_LOG_JOINS
+                + where
+                + f" AND ({group_column}=ANY(?) OR ({group_column} IS NULL AND ?))"
+                + f" GROUP BY {group_column},l.currency ORDER BY l.currency NULLS LAST",
+                (*parameters, ids, any(item["group_id"] is None for item in groups)),
+            ).fetchall()
+        daily = {}
+        totals = None
+        for row in daily_rows:
+            day = row.pop("day")
+            row["currencies"] = []
+            if day is None:
+                totals = row
+            else:
+                daily[day] = row
+        for row in currency_rows:
+            day = row.pop("day")
+            (totals if day is None else daily[day])["currencies"].append(row)
+        by_group = {item["group_id"]: item for item in groups}
+        for item in groups:
+            title = item.pop("course_title")
+            item["label"] = (
+                (title or item["group_id"] or "自由问答／未关联课程")
+                if group_by == "course"
+                else ("凭据 " + item["group_id"] if item["group_id"] else "未关联凭据")
+            )
+            item["currencies"] = []
+        for row in group_currencies:
+            by_group[row.pop("group_id")]["currencies"].append(row)
+        first = filters["started_from"].astimezone(BEIJING).date()
+        last = (
+            filters["started_before"].astimezone(BEIJING) - timedelta(microseconds=1)
+        ).date()
+        empty = {name: 0 for name in totals if name != "currencies"}
+        return {
+            "generated_at": generated_at,
+            "timezone": "Asia/Shanghai",
+            "started_from": filters["started_from"],
+            "started_before": filters["started_before"],
+            "group_by": group_by,
+            "totals": totals,
+            "daily": [
+                {"day": day, **daily.get(day, {**empty, "currencies": []})}
+                for day in (
+                    first + timedelta(days=i) for i in range((last - first).days + 1)
+                )
+            ],
+            "groups": groups,
+            "group_total": group_total,
+            "group_page": group_page,
+            "group_page_size": group_page_size,
+        }
 
     def start(self, context: DifyCallContext, credential_id: str | None) -> str:
         call_id = str(uuid4())

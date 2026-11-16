@@ -118,6 +118,26 @@ export interface DifyCredentialUsage {
   currencies: DifyUsageOverview["currencies"];
 }
 
+export type DifyTrendUsage = Pick<DifyUsageOverview,
+  "total_calls" | "prompt_tokens" | "completion_tokens" | "total_tokens" |
+  "unknown_prompt_calls" | "unknown_completion_calls" | "unknown_total_token_calls" |
+  "unknown_usage_calls" | "unknown_cost_calls" | "currencies"
+>;
+
+export interface DifyUsageTrends {
+  generated_at: string;
+  timezone: "Asia/Shanghai";
+  started_from: string;
+  started_before: string;
+  group_by: "credential" | "course";
+  totals: DifyTrendUsage;
+  daily: (DifyTrendUsage & { day: string })[];
+  groups: (DifyTrendUsage & { group_id: string | null; label: string })[];
+  group_total: number;
+  group_page: number;
+  group_page_size: number;
+}
+
 export interface DifyCredentialList {
   items: DifyCredentialUsage[];
   total: number;

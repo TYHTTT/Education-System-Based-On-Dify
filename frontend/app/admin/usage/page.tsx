@@ -134,6 +134,9 @@ function UsageContent() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          <Link href={`/admin/trends${query ? "?" + query : ""}`} className="btn-secondary">
+            查看用量趋势
+          </Link>
           <Link
             href={`/admin/call-logs?${callLogQuery(filters)}`}
             className="btn-secondary"

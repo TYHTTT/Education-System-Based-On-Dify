@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Literal
 from uuid import UUID
@@ -112,6 +112,72 @@ class DifyUsageOverview(BaseModel):
     unknown_currency_calls: int
     unknown_cost_calls: int
     currencies: list[DifyCurrencyUsage]
+
+
+BEIJING = timezone(timedelta(hours=8))
+
+
+def trend_boundary(days: int) -> datetime:
+    return datetime.combine(
+        datetime.now(BEIJING).date() + timedelta(days=days),
+        datetime.min.time(),
+        BEIJING,
+    )
+
+
+class DifyUsageTrendQuery(DifyCallLogFilters):
+    started_from: AwareDatetime = Field(default_factory=lambda: trend_boundary(-29))
+    started_before: AwareDatetime = Field(default_factory=lambda: trend_boundary(1))
+    group_by: Literal["credential", "course"] = "credential"
+    group_page: int = Field(default=1, ge=1)
+    group_page_size: int = Field(default=10, ge=1, le=20)
+
+    @model_validator(mode="after")
+    def check_days(self):
+        # Count calendar buckets, including partially selected boundary days.
+        first = self.started_from.astimezone(BEIJING).date()
+        last = (
+            self.started_before.astimezone(BEIJING) - timedelta(microseconds=1)
+        ).date()
+        if (last - first).days >= 366:
+            raise ValueError("最多选择 366 个北京时间日期")
+        return self
+
+
+class DifyTrendUsage(BaseModel):
+    total_calls: int
+    prompt_tokens: int | None
+    completion_tokens: int | None
+    total_tokens: int | None
+    unknown_prompt_calls: int
+    unknown_completion_calls: int
+    unknown_total_token_calls: int
+    unknown_usage_calls: int
+    unknown_cost_calls: int
+    currencies: list[DifyCurrencyUsage]
+
+
+class DifyTrendDay(DifyTrendUsage):
+    day: date
+
+
+class DifyTrendGroup(DifyTrendUsage):
+    group_id: str | None
+    label: str
+
+
+class DifyUsageTrends(BaseModel):
+    generated_at: datetime
+    timezone: Literal["Asia/Shanghai"]
+    started_from: datetime
+    started_before: datetime
+    group_by: Literal["credential", "course"]
+    totals: DifyTrendUsage
+    daily: list[DifyTrendDay]
+    groups: list[DifyTrendGroup]
+    group_total: int
+    group_page: int
+    group_page_size: int
 
 
 class DifyCallLogSummary(BaseModel):
