@@ -9,6 +9,8 @@ import type {
   DifyCallLogDetail,
   DifyCallLogFilters,
   DifyCallLogFilterOptions,
+  DifyUsageOverview,
+  DifyCredentialList,
   CourseInput,
   CourseDetail,
   CourseList,
@@ -20,7 +22,7 @@ import type {
   LearningDashboard,
   CurriculumTopic,
 } from "@/lib/types";
-import { callLogQuery } from "@/lib/dify-call-logs";
+import { callLogQuery, callLogFilterQuery } from "@/lib/dify-call-logs";
 
 const configuredBaseUrl =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
@@ -299,6 +301,13 @@ export function getAdminDifyCallLogFilterOptions(token: string, signal?: AbortSi
   });
 }
 
+export function getAdminDifyUsageOverview(token: string, filters: DifyCallLogFilters, signal?: AbortSignal): Promise<DifyUsageOverview> {
+  const query = callLogFilterQuery(filters);
+  return request<DifyUsageOverview>(`/api/v1/admin/dify/call-logs/overview${query ? "?" + query : ""}`, {
+    headers: studentHeaders(token), cache: "no-store", signal,
+  });
+}
+
 export function getAdminDifyCallLog(
   token: string,
   id: string,
@@ -308,6 +317,24 @@ export function getAdminDifyCallLog(
     `/api/v1/admin/dify/call-logs/${encodeURIComponent(id)}`,
     { headers: studentHeaders(token), cache: "no-store", signal },
   );
+}
+
+export function getAdminDifyCredentials(
+  token: string, page: number, signal?: AbortSignal,
+): Promise<DifyCredentialList> {
+  return request<DifyCredentialList>(`/api/v1/admin/dify/credentials?page=${page}&page_size=20`, {
+    headers: studentHeaders(token), cache: "no-store", signal,
+  });
+}
+
+export function setAdminDifyCredentialEnabled(
+  token: string, id: string, enabled: boolean,
+): Promise<{ id: string; enabled: boolean }> {
+  return request(`/api/v1/admin/dify/credentials/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...studentHeaders(token) },
+    body: JSON.stringify({ enabled }),
+  });
 }
 
 export function saveAdminDifySettings(

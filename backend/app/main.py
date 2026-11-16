@@ -18,6 +18,7 @@ from app.api.courses import admin_router as admin_courses_router
 from app.api.courses import router as courses_router
 from app.api.curriculum import router as curriculum_router
 from app.api.dify_call_logs import router as dify_call_logs_router
+from app.api.dify_credentials import router as dify_credentials_router
 from app.api.dify_settings import router as dify_settings_router
 from app.api.health import router as health_router
 from app.api.knowledge_graph import router as knowledge_graph_router
@@ -32,6 +33,7 @@ from app.services.cny_conversion import CnyConverter
 from app.services.course_repository import CourseRepository
 from app.services.dify import DifyClient
 from app.services.dify_call_logs import DifyCallLogRepository
+from app.services.dify_credential_management import DifyCredentialManagementRepository
 from app.services.dify_settings_repository import DifySettingsRepository
 from app.services.learning_repository import LearningRepository
 
@@ -46,6 +48,8 @@ def create_app(
     admin_repository: AdminRepository | None = None,
     course_repository: CourseRepository | None = None,
     dify_call_log_repository: DifyCallLogRepository | None = None,
+    dify_credential_management_repository: DifyCredentialManagementRepository
+    | None = None,
     cny_converter: CnyConverter | None = None,
 ) -> FastAPI:
     app_settings = settings or get_settings()
@@ -93,6 +97,10 @@ def create_app(
         app_settings.database_url
     )
     app.state.dify_settings_repository = DifySettingsRepository(app_settings)
+    app.state.dify_credential_management_repository = (
+        dify_credential_management_repository
+        or DifyCredentialManagementRepository(app_settings.database_url)
+    )
     app.state.dify_call_log_repository = (
         dify_call_log_repository or DifyCallLogRepository(app_settings.database_url)
     )
@@ -160,6 +168,7 @@ def create_app(
     app.include_router(admin_courses_router)
     app.include_router(dify_settings_router)
     app.include_router(dify_call_logs_router)
+    app.include_router(dify_credentials_router)
     app.include_router(topic_management_router)
     app.include_router(curriculum_router)
     app.include_router(learning_router)

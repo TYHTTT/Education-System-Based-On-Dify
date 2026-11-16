@@ -38,6 +38,18 @@ class CallLogNotFoundError(AppError):
     public_message = "调用记录不存在"
 
 
+class DifyCredentialDisabledError(AppError):
+    status_code = 403
+    code = "DIFY_CREDENTIAL_DISABLED"
+    public_message = "当前 AI 服务已停用，请联系管理员"
+
+
+class DifyCredentialNotFoundError(AppError):
+    status_code = 404
+    code = "DIFY_CREDENTIAL_NOT_FOUND"
+    public_message = "Dify 凭据不存在"
+
+
 class StudentNotFoundError(AppError):
     status_code = 404
     code = "STUDENT_NOT_FOUND"

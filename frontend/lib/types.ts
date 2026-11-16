@@ -73,6 +73,58 @@ export interface DifyCallLogFilterOptions {
   credentials: { id: string; course_titles: string[]; free_qa: boolean }[];
 }
 
+export interface DifyUsageOverview {
+  generated_at: string;
+  total_calls: number;
+  completed_calls: number;
+  success_rate: number | null;
+  status_counts: Record<DifyCallLogSummary["status"], number>;
+  prompt_tokens: number | null;
+  completion_tokens: number | null;
+  total_tokens: number | null;
+  unknown_prompt_calls: number;
+  unknown_completion_calls: number;
+  unknown_total_token_calls: number;
+  unknown_usage_calls: number;
+  unknown_price_calls: number;
+  unknown_currency_calls: number;
+  unknown_cost_calls: number;
+  currencies: {
+    currency: string | null;
+    total_price: string | null;
+    call_count: number;
+    known_price_calls: number;
+    unknown_price_calls: number;
+    cny_conversion: DifyCallLogSummary["cny_conversion"];
+  }[];
+}
+
+export interface DifyCredentialUsage {
+  id: string;
+  enabled: boolean;
+  created_at: string;
+  course_titles: string[];
+  free_qa: boolean;
+  total_calls: number;
+  in_progress_calls: number;
+  prompt_tokens: number | null;
+  completion_tokens: number | null;
+  total_tokens: number | null;
+  unknown_prompt_calls: number;
+  unknown_completion_calls: number;
+  unknown_total_token_calls: number;
+  unknown_usage_calls: number;
+  unknown_cost_calls: number;
+  currencies: DifyUsageOverview["currencies"];
+}
+
+export interface DifyCredentialList {
+  items: DifyCredentialUsage[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
 export interface DifyCallLogDetail extends DifyCallLogSummary {
   request_id: string;
   finished_at: string | null;

@@ -5,7 +5,11 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from app.core.exceptions import CallLogNotFoundError
+from app.core.exceptions import (
+    CallLogNotFoundError,
+    DifyCredentialDisabledError,
+    DifyCredentialNotFoundError,
+)
 from app.db.database import PostgresDatabase
 
 ERROR_SUMMARIES = {
@@ -124,6 +128,57 @@ class DifyCallLogRepository:
                 ORDER BY d.created_at DESC,d.id DESC""").fetchall()
         return {"credentials": credentials}
 
+    def overview(self, *, filters: dict | None = None) -> dict:
+        where, parameters = _filter_sql(filters or {})
+        with self.database.connect() as connection:
+            connection.execute(
+                "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
+            )
+            totals = connection.execute(
+                """SELECT CURRENT_TIMESTAMP AS generated_at,count(*) AS total_calls,
+                count(*) FILTER (WHERE l.status='succeeded') AS succeeded,
+                count(*) FILTER (WHERE l.status='failed') AS failed,
+                count(*) FILTER (WHERE l.status='timeout') AS timeout,
+                count(*) FILTER (WHERE l.status='cancelled') AS cancelled,
+                count(*) FILTER (WHERE l.status='in_progress') AS in_progress,
+                CASE WHEN count(*)=0 THEN 0 ELSE sum(l.prompt_tokens) END AS prompt_tokens,
+                CASE WHEN count(*)=0 THEN 0 ELSE sum(l.completion_tokens) END AS completion_tokens,
+                CASE WHEN count(*)=0 THEN 0 ELSE sum(l.total_tokens) END AS total_tokens,
+                count(*) FILTER (WHERE l.prompt_tokens IS NULL) AS unknown_prompt_calls,
+                count(*) FILTER (WHERE l.completion_tokens IS NULL) AS unknown_completion_calls,
+                count(*) FILTER (WHERE l.total_tokens IS NULL) AS unknown_total_token_calls,
+                count(*) FILTER (WHERE l.prompt_tokens IS NULL OR l.completion_tokens IS NULL OR l.total_tokens IS NULL) AS unknown_usage_calls,
+                count(*) FILTER (WHERE l.total_price IS NULL) AS unknown_price_calls,
+                count(*) FILTER (WHERE l.currency IS NULL) AS unknown_currency_calls,
+                count(*) FILTER (WHERE l.total_price IS NULL OR l.currency IS NULL) AS unknown_cost_calls
+                """
+                + CALL_LOG_JOINS
+                + where,
+                parameters,
+            ).fetchone()
+            currencies = connection.execute(
+                """SELECT l.currency,count(*) AS call_count,
+                count(l.total_price) AS known_price_calls,
+                count(*) FILTER (WHERE l.total_price IS NULL) AS unknown_price_calls,
+                sum(l.total_price) AS total_price """
+                + CALL_LOG_JOINS
+                + where
+                + " GROUP BY l.currency ORDER BY l.currency NULLS LAST",
+                parameters,
+            ).fetchall()
+        statuses = {
+            name: totals.pop(name)
+            for name in ("succeeded", "failed", "timeout", "cancelled", "in_progress")
+        }
+        completed = totals["total_calls"] - statuses["in_progress"]
+        return {
+            **totals,
+            "status_counts": statuses,
+            "completed_calls": completed,
+            "success_rate": statuses["succeeded"] / completed if completed else None,
+            "currencies": currencies,
+        }
+
     def get(self, call_id: str) -> dict:
         with self.database.connect() as connection:
             row = connection.execute(
@@ -149,6 +204,18 @@ class DifyCallLogRepository:
     def start(self, context: DifyCallContext, credential_id: str | None) -> str:
         call_id = str(uuid4())
         with self.database.connect() as connection:
+            if credential_id is not None:
+                # Serialize admission with administrative status updates, even
+                # when the caller already holds an older runtime settings copy.
+                # Release the lock on commit, before any network operation.
+                credential = connection.execute(
+                    "SELECT enabled FROM dify_credentials WHERE id=? FOR SHARE",
+                    (credential_id,),
+                ).fetchone()
+                if credential is None:
+                    raise DifyCredentialNotFoundError()
+                if not credential["enabled"]:
+                    raise DifyCredentialDisabledError()
             connection.execute(
                 """INSERT INTO dify_call_logs(id,request_id,credential_id,student_id,
                 course_id,topic_id,business_type,is_anonymous,started_at,status)

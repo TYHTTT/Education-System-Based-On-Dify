@@ -17,6 +17,7 @@ import {
   formatCallDuration,
   callLogQuery,
   readCallLogFilters,
+  callLogFilterQuery,
 } from "@/lib/dify-call-logs";
 import type { DifyCallLogList, DifyCallLogFilters } from "@/lib/types";
 
@@ -126,14 +127,22 @@ function CallLogsContent() {
             按时间倒序查看 Dify 调用，人民币按当前参考汇率估算，原始费用保留。
           </p>
         </div>
-        <button
-          type="button"
-          onClick={refresh}
-          disabled={busy}
-          className="btn-secondary"
-        >
-          刷新
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href={`/admin/usage?${callLogFilterQuery(filters)}`}
+            className="btn-secondary"
+          >
+            查看用量概览
+          </Link>
+          <button
+            type="button"
+            onClick={refresh}
+            disabled={busy}
+            className="btn-secondary"
+          >
+            刷新
+          </button>
+        </div>
       </div>
       <CallLogFilters
         key={filterQuery}

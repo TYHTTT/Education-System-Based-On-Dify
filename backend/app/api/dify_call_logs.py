@@ -7,8 +7,10 @@ from app.api.admins import require_admin
 from app.schemas.dify_call_logs import (
     DifyCallLogDetail,
     DifyCallLogFilterOptions,
+    DifyCallLogFilters,
     DifyCallLogList,
     DifyCallLogQuery,
+    DifyUsageOverview,
 )
 
 router = APIRouter(
@@ -40,6 +42,20 @@ def list_call_logs(
 def call_log_filter_options(request: Request, response: Response):
     response.headers["Cache-Control"] = "no-store"
     return request.app.state.dify_call_log_repository.filter_options()
+
+
+@router.get("/overview", response_model=DifyUsageOverview)
+def usage_overview(
+    request: Request, response: Response, query: Annotated[DifyCallLogFilters, Query()]
+):
+    response.headers["Cache-Control"] = "no-store"
+    result = request.app.state.dify_call_log_repository.overview(
+        filters=query.model_dump(exclude_none=True)
+    )
+    result["currencies"] = [
+        request.app.state.cny_converter.enrich(item) for item in result["currencies"]
+    ]
+    return result
 
 
 @router.get("/{call_id}", response_model=DifyCallLogDetail)

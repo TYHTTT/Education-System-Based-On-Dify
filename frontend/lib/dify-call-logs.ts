@@ -80,6 +80,14 @@ export function readCallLogFilters(
 
 export function callLogQuery(filters: DifyCallLogFilters, page = 1): string {
   const params = new URLSearchParams({ page: String(page) });
+  new URLSearchParams(callLogFilterQuery(filters)).forEach((value, key) =>
+    params.set(key, value),
+  );
+  return params.toString();
+}
+
+export function callLogFilterQuery(filters: DifyCallLogFilters): string {
+  const params = new URLSearchParams();
   for (const key of CALL_LOG_FILTER_KEYS) {
     const value = filters[key]?.trim();
     if (value) params.set(key, value);

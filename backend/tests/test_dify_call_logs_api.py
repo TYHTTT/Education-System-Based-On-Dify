@@ -61,7 +61,12 @@ def api(postgres_test_database_url):
 )
 @pytest.mark.parametrize(
     "endpoint",
-    [PATH, PATH + "/filter-options", PATH + "/00000000-0000-4000-8000-000000000000"],
+    [
+        PATH,
+        PATH + "/overview",
+        PATH + "/filter-options",
+        PATH + "/00000000-0000-4000-8000-000000000000",
+    ],
 )
 def test_unauthorized_requests_never_query_call_logs(authorization, endpoint):
     logs = Mock(spec=DifyCallLogRepository)
@@ -79,6 +84,7 @@ def test_unauthorized_requests_never_query_call_logs(authorization, endpoint):
     logs.list.assert_not_called()
     logs.get.assert_not_called()
     logs.filter_options.assert_not_called()
+    logs.overview.assert_not_called()
 
 
 def test_actual_student_session_cannot_access_call_logs(api):
@@ -92,6 +98,13 @@ def test_actual_student_session_cannot_access_call_logs(api):
         headers={"Authorization": "Bearer " + student["access_token"]},
     )
     assert detail.status_code == 401
+    assert (
+        client.get(
+            PATH + "/overview",
+            headers={"Authorization": "Bearer " + student["access_token"]},
+        ).status_code
+        == 401
+    )
 
 
 def test_empty_list_and_no_store_header(api):

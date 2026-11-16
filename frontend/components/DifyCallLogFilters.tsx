@@ -15,9 +15,11 @@ import type { DifyCallLogFilters, DifyCallLogFilterOptions } from "@/lib/types";
 export default function CallLogFilters({
   initial,
   onApply,
+  label = "筛选调用日志",
 }: {
   initial: DifyCallLogFilters;
   onApply: (filters: DifyCallLogFilters) => void;
+  label?: string;
 }) {
   const { withAdmin, status } = useAdmin();
   const [options, setOptions] = useState<DifyCallLogFilterOptions | null>(null);
@@ -75,7 +77,7 @@ export default function CallLogFilters({
 
   return (
     <form
-      aria-label="筛选调用日志"
+      aria-label={label}
       onSubmit={apply}
       onInput={(event) =>
         (

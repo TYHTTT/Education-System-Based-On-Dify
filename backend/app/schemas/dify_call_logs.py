@@ -24,10 +24,8 @@ DifyBusinessType = Literal[
 DifyCallStatus = Literal["in_progress", "succeeded", "failed", "timeout", "cancelled"]
 
 
-class DifyCallLogQuery(BaseModel):
+class DifyCallLogFilters(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    page: int = Field(default=1, ge=1)
-    page_size: int = Field(default=20, ge=1, le=50)
     credential_id: UUID | Literal["unassigned"] | None = None
     student: str | None = Field(default=None, max_length=100)
     course: str | None = Field(default=None, max_length=100)
@@ -54,6 +52,11 @@ class DifyCallLogQuery(BaseModel):
         return self
 
 
+class DifyCallLogQuery(DifyCallLogFilters):
+    page: int = Field(default=1, ge=1)
+    page_size: int = Field(default=20, ge=1, le=50)
+
+
 class DifyCallCredentialOption(BaseModel):
     id: str
     course_titles: list[str]
@@ -73,6 +76,42 @@ class CnyConversion(BaseModel):
     @field_serializer("amount", "rate", when_used="json")
     def decimal_string(self, value: Decimal) -> str:
         return format(value, "f")
+
+
+class DifyCurrencyUsage(BaseModel):
+    currency: str | None
+    call_count: int
+    known_price_calls: int
+    unknown_price_calls: int
+    total_price: Decimal | None
+    cny_conversion: CnyConversion | None = None
+
+
+class DifyUsageStatusCounts(BaseModel):
+    succeeded: int
+    failed: int
+    timeout: int
+    cancelled: int
+    in_progress: int
+
+
+class DifyUsageOverview(BaseModel):
+    generated_at: datetime
+    total_calls: int
+    completed_calls: int
+    success_rate: float | None
+    status_counts: DifyUsageStatusCounts
+    prompt_tokens: int | None
+    completion_tokens: int | None
+    total_tokens: int | None
+    unknown_prompt_calls: int
+    unknown_completion_calls: int
+    unknown_total_token_calls: int
+    unknown_usage_calls: int
+    unknown_price_calls: int
+    unknown_currency_calls: int
+    unknown_cost_calls: int
+    currencies: list[DifyCurrencyUsage]
 
 
 class DifyCallLogSummary(BaseModel):

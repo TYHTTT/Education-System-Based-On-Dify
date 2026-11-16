@@ -7,6 +7,18 @@ import { ArrowRightIcon } from "@/components/Icons";
 
 const QUICK_LINKS = [
   {
+    href: "/admin/keys",
+    title: "密钥管理",
+    description: "查看每个 Key 的累计用量，启用或停用 AI 调用。",
+    tint: "bg-tint-mint",
+  },
+  {
+    href: "/admin/usage",
+    title: "用量概览",
+    description: "查看调用次数、成功率、Token 与各币种的已报告费用。",
+    tint: "bg-tint-sky",
+  },
+  {
     href: "/admin/courses",
     title: "课程管理",
     description: "新增、启用或停用课程，维护章节与知识点。",
